@@ -30,5 +30,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Walon-Foundation/monime-package"
+  },
+  "dependencies": {
+    "axios": "^1.12.2"
   }
 }
