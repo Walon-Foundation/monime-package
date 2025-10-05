@@ -1,7 +1,7 @@
 {
   "name": "monime-package",
-  "version": "0.0.1",
-  "description": "",
+  "version": "1.0.0",
+  "description": "A focused TypeScript helper library for interacting with Monime's common endpoints. It provides small, typed helpers that handle request composition, headers, and basic response/error plumbing so your application code stays clean.",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -16,7 +16,9 @@
   ],
   "keywords": [
     "monime",
-    "payment"
+    "payment",
+    "typescript",
+    "mobile-money"
   ],
   "author": "Mohamed Lamin Walon-Jalloh",
   "license": "MIT",

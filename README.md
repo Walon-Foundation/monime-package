@@ -1,10 +1,12 @@
 
 # monime-package
 
+A focused TypeScript helper library for interacting with Monime's common endpoints. It provides small, typed helpers that handle request composition, headers, and basic response/error plumbing so your application code stays clean.
+
+
 ![TypeScript](https://img.shields.io/badge/TypeScript-4.9-blue.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-%3E=14-green.svg)
 
-A focused TypeScript helper library for interacting with Monime's common endpoints. It provides small, typed helpers that handle request composition, headers, and basic response/error plumbing so your application code stays clean.
 
 Package name: `monime-package`
 
