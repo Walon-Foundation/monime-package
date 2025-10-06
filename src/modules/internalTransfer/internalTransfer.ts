@@ -13,6 +13,15 @@ interface Return {
 }
 
 export async function createInternalTransfer(sourceAccount:string, destinationAccount:string, client:MonimeClient, value:number):Promise<Return>{
+
+    if(value <= 0){
+        return { success:false, error:new Error("value must be larger that zero")}
+    }
+
+    if(sourceAccount.trim() === "" || destinationAccount.trim() === ""){
+        return { success:false, error:new Error("sourceAccount or destinationAccount is missing")}
+    }
+    
     const body = {
         amount :{
             currency:"SLE",
