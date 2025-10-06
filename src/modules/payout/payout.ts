@@ -3,7 +3,7 @@ import { randomBytes } from "crypto"
 import { CreatePayout } from "./payoutTypes"
 import { MonimeClient } from "../../client"
 
-const URL = ""
+const URL = "https://api.monime.io/v1/payouts"
 const value = randomBytes(20).toString("hex")
 
 interface Return {
@@ -13,6 +13,10 @@ interface Return {
 }
 
 export async function CreatePayoutMobileMoney(amount:number,phoneNumber:string, sourceAccount:string, client:MonimeClient):Promise<Return> {
+    if(phoneNumber.trim() === ""){
+        return { success:false, error:new Error("phoneNumber is required")}
+    }
+    
     let provider = "m17"
     const africell = ["077", "033", "088", "080","090","030"]
     for (let value of africell){
@@ -20,6 +24,10 @@ export async function CreatePayoutMobileMoney(amount:number,phoneNumber:string, 
             provider = 'm18'
             break;
         }
+    }
+
+    if(amount <= 0) {
+        return { error:new Error("amount must be greater than 0"), success:false}
     }
 
     const { accessToken, monimeSpaceId} = client._getConfig()
