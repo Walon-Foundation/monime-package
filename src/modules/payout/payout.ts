@@ -1,6 +1,7 @@
 import axios from "axios"
 import { randomBytes } from "crypto"
-import { CreatePayout } from "./payout/payoutTypes"
+import { CreatePayout } from "./payoutTypes"
+import { MonimeClient } from "../../client"
 
 const URL = ""
 const value = randomBytes(20).toString("hex")
@@ -11,7 +12,7 @@ interface Return {
     success:boolean
 }
 
-export async function CreatePayoutMobileMoney(amount:number,phoneNumber:string, sourceAccount:string,  monime_access_token:string, monime_space_id:string):Promise<Return> {
+export async function CreatePayoutMobileMoney(amount:number,phoneNumber:string, sourceAccount:string, client:MonimeClient):Promise<Return> {
     let provider = "m17"
     const africell = ["077", "033", "088", "080","090","030"]
     for (let value of africell){
@@ -20,6 +21,9 @@ export async function CreatePayoutMobileMoney(amount:number,phoneNumber:string, 
             break;
         }
     }
+
+    const { accessToken, monimeSpaceId} = client.getConfig()
+
     const body = {
         amount:{
             currency:'SLE',
@@ -40,8 +44,8 @@ export async function CreatePayoutMobileMoney(amount:number,phoneNumber:string, 
         const res = await axios.post(URL, body, {
             headers:{
                 'Idempotency-Key': `${value}`,
-                'Monime-Space-Id': `${monime_space_id}`,
-                Authorization: `Bearer ${monime_access_token}`,
+                'Monime-Space-Id': `${monimeSpaceId}`,
+                Authorization: `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'  
             }
         })
