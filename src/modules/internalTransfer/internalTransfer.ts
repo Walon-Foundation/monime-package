@@ -1,6 +1,7 @@
 import axios from "axios";
 import { randomBytes } from "crypto";
 import { CreateInternalTransfer } from "./internalTransferTypes";
+import { MonimeClient } from "../../client";
 
 const URL = 'https://api.monime.io/v1/internal-transfers';
 const value = randomBytes(20).toString("hex")
@@ -11,7 +12,7 @@ interface Return {
     success:boolean
 }
 
-export async function createInternalTransfer(sourceAccount:string, destinationAccount:string, monime_access_token:string, monime_space_id:string, value:number):Promise<Return>{
+export async function createInternalTransfer(sourceAccount:string, destinationAccount:string, client:MonimeClient, value:number):Promise<Return>{
     const body = {
         amount :{
             currency:"SLE",
@@ -25,12 +26,15 @@ export async function createInternalTransfer(sourceAccount:string, destinationAc
         },
         metadata:{}
     }
+
+    const { accessToken, monimeSpaceId }  = client.getConfig()
+
     try{
         const res = await axios.post(URL, body, {
             headers:{
                 'Idempotency-Key': `${value}`,
-                'Monime-Space-Id': `${monime_space_id}`,
-                Authorization: `Bearer ${monime_access_token}`,
+                'Monime-Space-Id': `${monimeSpaceId}`,
+                Authorization: `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'  
             }
         })
