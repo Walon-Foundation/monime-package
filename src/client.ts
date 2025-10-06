@@ -41,7 +41,8 @@ export class MonimeClient {
         this.createPayout = (amount:number,phoneNumber:string, sourceAccount:string) => CreatePayoutMobileMoney(amount, phoneNumber, sourceAccount, this)
     }
 
-    getConfig(){
+    /** @internal */
+    _getConfig(){
         return {
             monimeSpaceId :this.monimeSpaceId,
             accessToken:this.accessToken

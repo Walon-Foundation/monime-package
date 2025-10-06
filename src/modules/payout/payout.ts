@@ -22,7 +22,7 @@ export async function CreatePayoutMobileMoney(amount:number,phoneNumber:string, 
         }
     }
 
-    const { accessToken, monimeSpaceId} = client.getConfig()
+    const { accessToken, monimeSpaceId} = client._getConfig()
 
     const body = {
         amount:{

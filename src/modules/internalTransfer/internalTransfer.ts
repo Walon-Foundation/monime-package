@@ -27,7 +27,7 @@ export async function createInternalTransfer(sourceAccount:string, destinationAc
         metadata:{}
     }
 
-    const { accessToken, monimeSpaceId }  = client.getConfig()
+    const { accessToken, monimeSpaceId }  = client._getConfig()
 
     try{
         const res = await axios.post(URL, body, {

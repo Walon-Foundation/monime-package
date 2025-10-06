@@ -21,7 +21,7 @@ export async function createFinancialAccount(accountName:string, client:MonimeCl
     }
 
     //getting the accessToken and monime space id
-    const { accessToken, monimeSpaceId} = client.getConfig()
+    const { accessToken, monimeSpaceId} = client._getConfig()
 
     try{
         const res = await axios.post(URL, body, {
@@ -54,7 +54,7 @@ interface GetFinancialAccountReturn {
 }
 
 export async function getFinancialAccount(financialAccountId:string, client:MonimeClient):Promise<GetFinancialAccountReturn>{
-    const { monimeSpaceId, accessToken} = client.getConfig()
+    const { monimeSpaceId, accessToken} = client._getConfig()
     try{
         const res = await axios.get(`${URL}/${financialAccountId}`, {
             headers:{

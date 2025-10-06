@@ -18,7 +18,7 @@ export async function createPaymentCode(paymentName:string, amount:number, finan
         financialAccount = financialAccountId
     }
 
-    const { accessToken, monimeSpaceId} = client.getConfig()
+    const { accessToken, monimeSpaceId} = client._getConfig()
 
 
     const bodyData = {
@@ -69,8 +69,8 @@ export async function createPaymentCode(paymentName:string, amount:number, finan
 
 
 export async function deletePaymentCode(paymentCodeId:string, client:MonimeClient):Promise<Return>{
-    const { accessToken, monimeSpaceId} = client.getConfig()
-    
+    const { accessToken, monimeSpaceId} = client._getConfig()
+
     try{
         const res = await axios.delete(`${URL}/${paymentCodeId}`, {
             headers:{
