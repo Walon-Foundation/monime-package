@@ -2,6 +2,7 @@ import axios  from "axios";
 import { randomBytes } from "crypto"
 import { CreatePaymentCode, DeletePaymentCode } from "./paymentCodeTypes";
 import { MonimeClient } from "../../client";
+import { error } from "console";
 
 const value = randomBytes(20).toString("hex")
 const URL = "https://api.monime.io/v1/payment-codes"
@@ -18,6 +19,14 @@ export async function createPaymentCode(paymentName:string, amount:number, finan
         financialAccount = financialAccountId
     }
 
+    if(paymentName.trim() === "" || name.trim() === "" || phoneNumber.trim() === ""){
+        return {success:false, error:new Error("paymentName, name, or phoneNumber is missing")}
+    }
+
+    if(amount <= 0){
+        return {success:false, error:new Error("amonut number be greater than zero")}
+    }
+
     const { accessToken, monimeSpaceId} = client._getConfig()
 
 
@@ -26,22 +35,22 @@ export async function createPaymentCode(paymentName:string, amount:number, finan
         mode: "recurrent",
         enable:true,
         amount: {
-        currency: "SLE",
-        value:(amount) * 100
+            currency: "SLE",
+            value:(amount) * 100
         },
         duration: "1h30m",
         customer: {
-        name: `${name}`,
+            name: `${name}`,
         },
         reference:"",
         authorizedPhoneNumber:phoneNumber,
         // authorizedProviders: ["m17", "m18"],
         recurrentPaymentTarget:{
-        expectedPaymentCount: 1,
-        expectedPaymentTotal:{
-            currency:"SLE",
-            value:(amount) * 100
-        }
+            expectedPaymentCount: 1,
+            expectedPaymentTotal:{
+                currency:"SLE",
+                value:(amount) * 100
+            }
         },
         financialAccountId:financialAccount,
         metadata: {}
@@ -70,6 +79,10 @@ export async function createPaymentCode(paymentName:string, amount:number, finan
 
 export async function deletePaymentCode(paymentCodeId:string, client:MonimeClient):Promise<Return>{
     const { accessToken, monimeSpaceId} = client._getConfig()
+
+    if(paymentCodeId.trim() === ""){
+        return { success:false, error:new Error("paymentCodeId is required")}
+    }
 
     try{
         const res = await axios.delete(`${URL}/${paymentCodeId}`, {
