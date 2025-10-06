@@ -1,6 +1,6 @@
 import axios from "axios"
 import { randomBytes } from "crypto"
-import { CreatePayout } from "./payoutTypes"
+import { CreatePayout } from "./payout/payoutTypes"
 
 const URL = ""
 const value = randomBytes(20).toString("hex")

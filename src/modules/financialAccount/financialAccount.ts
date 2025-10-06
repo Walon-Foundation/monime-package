@@ -1,6 +1,7 @@
 import axios  from "axios";
 import { randomBytes } from "crypto"
 import { CreateFinancialAccount, GetFinancialAccount } from "./financialAccountTypes";
+import { MonimeClient} from "../../client"
 
 const URL = 'https://api.monime.io/v1/financial-accounts'
 const value = randomBytes(20).toString("hex")
@@ -11,7 +12,7 @@ interface createFinancialAccountReturn {
     success:boolean
 }
 
-export async function createFinancialAccount(accountName:string, monime_space_id:string, monime_access_token:string):Promise<createFinancialAccountReturn>{
+export async function createFinancialAccount(accountName:string, client:MonimeClient):Promise<createFinancialAccountReturn>{
     const body = {
         name:accountName,
         currency:'SLE',
@@ -19,12 +20,15 @@ export async function createFinancialAccount(accountName:string, monime_space_id
         metadata:{}
     }
 
+    //getting the accessToken and monime space id
+    const { accessToken, monimeSpaceId} = client.getConfig()
+
     try{
         const res = await axios.post(URL, body, {
             headers:{
                 'Idempotency-Key': `${value}`,
-                'Monime-Space-Id': `${monime_space_id}`,
-                Authorization: `Bearer ${monime_access_token}`,
+                'Monime-Space-Id': `${monimeSpaceId}`,
+                Authorization: `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'  
             }
         })
@@ -49,12 +53,13 @@ interface GetFinancialAccountReturn {
     success:boolean
 }
 
-export async function getFinancialAccount(financialAccountId:string, monime_access_token:string, monime_space_id:string):Promise<GetFinancialAccountReturn>{
+export async function getFinancialAccount(financialAccountId:string, client:MonimeClient):Promise<GetFinancialAccountReturn>{
+    const { monimeSpaceId, accessToken} = client.getConfig()
     try{
         const res = await axios.get(`${URL}/${financialAccountId}`, {
             headers:{
-                'Monime-Space-Id': `${monime_space_id}`,
-                Authorization: `Bearer ${monime_access_token}`, 
+                'Monime-Space-Id': `${monimeSpaceId}`,
+                Authorization: `Bearer ${accessToken}`, 
             }
         })
 
