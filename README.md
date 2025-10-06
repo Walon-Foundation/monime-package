@@ -1,165 +1,218 @@
 
 # monime-package
 
-A focused TypeScript helper library for interacting with Monime's common endpoints. It provides small, typed helpers that handle request composition, headers, and basic response/error plumbing so your application code stays clean.
-
+A **TypeScript SDK for Monime**, providing a lightweight, typed client for common Monime endpoints. Simplifies requests, headers, and error handling so your code stays clean and type-safe.
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-4.9-blue.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-%3E=14-green.svg)
+![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)
 
+Package: `monime-package`
 
-Package name: `monime-package`
+---
 
-## Table of contents
+## Table of Contents
 
-- [Description](#description)
-- [Features](#features)
-- [Installation](#installation)
-- [Quick start](#quick-start)
-- [API reference](#api-reference)
-- [Examples](#examples)
-- [Folder structure](#folder-structure)
-- [Configuration & env](#configuration--env)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
+* [Features](#features)
+* [Installation](#installation)
+* [Environment Variables](#environment-variables)
+* [Quick Start](#quick-start)
+* [Client API](#client-api)
+* [Examples](#examples)
+* [Migration from Old Helpers](#migration-from-old-helpers)
+* [Folder Structure](#folder-structure)
+* [Error Handling](#error-handling)
+* [Contributing](#contributing)
+* [License](#license)
 
-## Description
-
-monime-package wraps a subset of Monime endpoints into a tiny, typed client suitable for server-side Node.js use. It's intentionally small — the package focuses on convenience functions you can call directly from services, lambdas, or scripts.
+---
 
 ## Features
 
-- Lightweight wrapper around Monime endpoints
-- TypeScript-first: exported types for request/response shapes
-- Predictable return shape: { success: boolean, data?, error? }
-- Small dependency surface (axios)
+* Full **TypeScript support** with typed request/response objects
+* Lightweight client wrapper around Monime endpoints
+* Predictable return shape: `{ success: boolean, data?, error? }`
+* Single client instance handles credentials automatically
+* Minimal dependencies (`axios` only)
+
+---
 
 ## Installation
 
-Install with npm or pnpm:
-
 ```bash
 npm install monime-package
-```
-
-or
-
-```bash
+# or
 pnpm add monime-package
 ```
 
-## Quick start
+---
 
-1. Add your credentials to environment variables (recommended) or pass them directly to the functions.
-2. Import the helpers and call them.
+## Environment Variables
 
-Example (TypeScript):
+Recommended to store credentials in `.env`:
 
-```ts
-import {
-  createFinancialAccount,
-  createPaymentCode,
-  createInternalTransfer,
-  getFinancialAccount,
-  deletePaymentCode,
-  CreatePayoutMobileMoney,
-} from 'monime-package'
-
-async function demo() {
-  const MONIME_SPACE_ID = process.env.MONIME_SPACE_ID!
-  const MONIME_ACCESS_TOKEN = process.env.MONIME_ACCESS_TOKEN!
-
-  // Create a financial account
-  const createRes = await createFinancialAccount('My App Account', MONIME_SPACE_ID, MONIME_ACCESS_TOKEN)
-  if (!createRes.success) throw createRes.error
-
-  const accountId = createRes.data?.result?.id
-  console.log('Created account id', accountId)
-}
-
-demo().catch(err => console.error(err))
+```bash
+MONIME_SPACE_ID=space_XXXXXXXX
+MONIME_ACCESS_TOKEN=sk_live_xxx
 ```
 
-## API reference
+You can also pass credentials directly when creating the client.
 
-All functions return a Promise resolving to an object with the following minimal shape:
+---
+
+## Quick Start
+
+### Create a client
+
+```ts
+import { createClient } from 'monime-package'
+
+const client = createClient({
+  monimeSpaceeId: process.env.MONIME_SPACE_ID!,
+  accessToken: process.env.MONIME_ACCESS_TOKEN!,
+})
+```
+
+Now all methods automatically use the client’s credentials.
+
+---
+
+## Client API
+
+All methods return:
 
 ```ts
 type Result<T> = {
   success: boolean
   data?: T
-  error?: any
+  error?: Error
 }
 ```
 
-Top-level exports (signatures simplified):
+### Financial Accounts
 
-- createFinancialAccount(accountName: string, monime_space_id: string, monime_access_token: string): Promise<Result<CreateFinancialAccount>>
-- getFinancialAccount(financialAccountId: string, monime_access_token: string, monime_space_id: string): Promise<Result<GetFinancialAccount>>
-- createInternalTransfer(sourceAccount: string, destinationAccount: string, monime_access_token: string, monime_space_id: string, value: number): Promise<Result<CreateInternalTransfer>>
-- createPaymentCode(paymentName: string, amount: number, financialAccountId: string | null, name: string, phoneNumber: string, monime_access_token: string, monime_space_id: string): Promise<Result<{ code?: string }>>
-- deletePaymentCode(paymentCodeId: string, monime_access_token: string, monime_space_id: string): Promise<Result<null>>
-- CreatePayoutMobileMoney(amount: number, phoneNumber: string, sourceAccount: string, monime_access_token: string, monime_space_id: string): Promise<Result<CreatePayout>>
+```ts
+client.createFinancialAccount(name: string): Promise<Result<CreateFinancialAccount>>
+client.getFinancialAccount(financialAccountId: string): Promise<Result<GetFinancialAccount>>
+```
 
-Refer to `src/functions/*Types.ts` for full TypeScript interfaces.
+### Internal Transfers
 
-### Important behaviors
+```ts
+client.createInternalTransfer(
+  sourceAccount: string,
+  destinationAccount: string,
+  amount: number
+): Promise<Result<CreateInternalTransfer>>
+```
 
-- createPaymentCode: input `amount` is multiplied by 100 before being sent (to match Monime's expected minor currency units).
-- createPaymentCode: passing `financialAccountId` as an empty string results in `financialAccountId` being omitted from the request body.
-- CreatePayoutMobileMoney: provider is inferred from phone number prefixes; check `src/functions/payout.ts` for the exact rules.
-- Error responses: network/API errors may come back as axios error objects or the remote response body — handle both.
+### Payment Codes
+
+```ts
+client.createPaymentCode(
+  paymentName: string,
+  amount: number,
+  financialAccount: string,
+  username: string,
+  phoneNumber: string
+): Promise<Result<CreatePaymentCode>>
+
+client.deletePaymentCode(paymentCodeId: string): Promise<Result<DeletePaymentCode>>
+```
+
+### Payouts
+
+```ts
+client.createPayout(
+  amount: number,
+  phoneNumber: string,
+  sourceAccount: string
+): Promise<Result<CreatePayout>>
+```
+
+> Provider is inferred automatically from the phone number prefix.
+
+---
 
 ## Examples
 
-Create a payment code and handle errors gracefully:
+### Create a financial account
 
 ```ts
-import { createPaymentCode } from 'monime-package'
-
-async function createCode() {
-  const res = await createPaymentCode('Order-001', 5, 'financial-account-id', 'Alice', '0771234567', process.env.MONIME_ACCESS_TOKEN!, process.env.MONIME_SPACE_ID!)
-  if (!res.success) {
-    console.error('Failed to create payment code', res.error)
-    return
-  }
-  console.log('USSD code:', res.code)
-}
+const account = await client.createFinancialAccount('App Wallet')
+if (!account.success) throw account.error
+console.log(account.data)
 ```
 
-Create an internal transfer:
+### Get account details
 
 ```ts
-import { createInternalTransfer } from 'monime-package'
-
-const t = await createInternalTransfer('acc-src', 'acc-dest', process.env.MONIME_ACCESS_TOKEN!, process.env.MONIME_SPACE_ID!, 1500)
-if (!t.success) console.error('transfer error', t.error)
-else console.log('transfer result', t.data)
+const details = await client.getFinancialAccount(account.data!.result.id)
+console.log(details)
 ```
 
-Payout (note: set `src/functions/payout.ts` URL before use):
+### Internal transfer
 
 ```ts
-import { CreatePayoutMobileMoney } from 'monime-package'
-
-const p = await CreatePayoutMobileMoney(1000, '0771234567', 'source-account-id', process.env.MONIME_ACCESS_TOKEN!, process.env.MONIME_SPACE_ID!)
-if (!p.success) console.error(p.error)
-else console.log('payout', p.data)
+const transfer = await client.createInternalTransfer('acc-src', 'acc-dest', 5000)
+if (!transfer.success) console.error(transfer.error)
+else console.log(transfer.data)
 ```
 
-## Folder structure
+### Create payment code
+
+```ts
+const code = await client.createPaymentCode('Order-001', 5, 'financial-account-id', 'Alice', '0771234567')
+if (!code.success) console.error(code.error)
+else console.log('Payment code:', code.data)
+```
+
+### Delete payment code
+
+```ts
+const deleted = await client.deletePaymentCode('payment-code-id')
+console.log(deleted.success)
+```
+
+### Payout (mobile money)
+
+```ts
+const payout = await client.createPayout(1000, '0771234567', 'source-account-id')
+if (!payout.success) console.error(payout.error)
+else console.log('Payout:', payout.data)
+```
+
+---
+
+## Migration from Old Helpers
+
+Previously, you had to pass `monimeSpaceId` and `accessToken` into every function:
+
+```ts
+createFinancialAccount('name', MONIME_SPACE_ID, MONIME_ACCESS_TOKEN)
+```
+
+Now, create a client once:
+
+```ts
+const client = createClient({ monimeSpaceeId, accessToken })
+client.createFinancialAccount('name') // credentials auto-applied
+```
+
+---
+
+## Folder Structure
 
 ```
-. 
+.
 ├── LICENSE
 ├── README.md
 ├── package.json
 ├── tsconfig.json
 ├── tsup.config.ts
 ├── src
-│   ├── index.ts                # re-exports
-│   └── functions
+│   ├── index.ts               # entry point
+│   └── modules
 │       ├── financialAccount.ts
 │       ├── financialAccountTypes.ts
 │       ├── internalTransfer.ts
@@ -170,31 +223,34 @@ else console.log('payout', p.data)
 │       └── payoutTypes.ts
 ```
 
-## Configuration & env
+---
 
-Recommended environment variables (you can store them in `.env` during development):
+## Error Handling
 
-```
-MONIME_SPACE_ID=space_XXXXXXXX
-MONIME_ACCESS_TOKEN=sk_live_xxx
-```
+* Network/API errors are returned as `error` in the `{ success, data?, error? }` object.
+* Use `axios.isAxiosError(error)` to inspect response details if needed.
 
-## Troubleshooting
-
-- Empty or invalid credentials: most functions will log or return an error if `monime_space_id` or `monime_access_token` are missing. Always validate env vars before calling the helpers.
-- Network errors: axios errors are returned directly in some functions. Use `axios.isAxiosError` to inspect `error.response` and `error.response.data`.
-- Payouts: if payout calls fail unexpectedly, check `src/functions/payout.ts` — its `URL` constant is empty and must be configured.
+---
 
 ## Contributing
 
-Contributions appreciated. Suggested small first PRs:
 
-- Add an `examples/` folder with a safe demo script that reads env vars and shows each helper.
-- Add tests using `vitest` or `jest` with `nock` or axios mocking.
-- Normalize returned errors to a consistent shape.
+We welcome contributions.
 
-When opening a PR, include a short description and tests for new behavior.
+### Getting Started
+1. **Fork the repository** on GitHub
+2. **Clone your fork** locally
+3. **Create a feature branch** from `main`
+4. **Make your changes** following our coding conventions
+5. **Test your changes** thoroughly
+6. **Submit a pull request** with a clear description
+
+For detailed contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+---
 
 ## License
 
-MIT — see `LICENSE`.
+MIT — see [LICENSE](./LICENSE).
+
+---
