@@ -13,6 +13,10 @@ interface createFinancialAccountReturn {
 }
 
 export async function createFinancialAccount(accountName:string, client:MonimeClient):Promise<createFinancialAccountReturn>{
+    if(accountName.trim() === ""){
+        return { success:false, error:new Error("accountName is required")}
+    }
+
     const body = {
         name:accountName,
         currency:'SLE',
@@ -54,6 +58,10 @@ interface GetFinancialAccountReturn {
 }
 
 export async function getFinancialAccount(financialAccountId:string, client:MonimeClient):Promise<GetFinancialAccountReturn>{
+    if(financialAccountId.trim() === ""){
+        return { success:false, error:new Error("financialAccountId is required")}
+    }
+    
     const { monimeSpaceId, accessToken} = client._getConfig()
     try{
         const res = await axios.get(`${URL}/${financialAccountId}`, {
