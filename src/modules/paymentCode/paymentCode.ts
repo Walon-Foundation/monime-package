@@ -1,26 +1,24 @@
 import axios  from "axios";
 import { randomBytes } from "crypto"
 import { CreatePaymentCode, DeletePaymentCode } from "./paymentCodeTypes";
+import { MonimeClient } from "../../client";
 
 const value = randomBytes(20).toString("hex")
 const URL = "https://api.monime.io/v1/payment-codes"
 
 interface Return {
-    code?:string,
+    data?:CreatePaymentCode,
     error?:Error
     success:boolean
 }
 
-export async function createPaymentCode(paymentName:string, amount:number, financialAccountId:string |null, name:string, phoneNumber:string, monime_access_token:string, monime_space_id:string):Promise<Return>{
+export async function createPaymentCode(paymentName:string, amount:number, financialAccountId:string |null, name:string, phoneNumber:string, client:MonimeClient):Promise<Return>{
     let financialAccount = null
     if(financialAccountId !== ""){
         financialAccount = financialAccountId
     }
 
-    if(monime_access_token === "" || monime_space_id === ""){
-        console.log("monime_access_token or monime_space_id is required")
-        return {error:new Error("monime_access_token and monime_space_id is required"), success:false}
-    }
+    const { accessToken, monimeSpaceId} = client.getConfig()
 
 
     const bodyData = {
@@ -53,14 +51,14 @@ export async function createPaymentCode(paymentName:string, amount:number, finan
         const res = await axios.post(URL, bodyData, {
             headers:{
                 'Idempotency-Key': `${value}`,
-                'Monime-Space-Id': `${monime_space_id}`,
-                Authorization: `Bearer ${monime_access_token}`,
+                'Monime-Space-Id': `${monimeSpaceId}`,
+                Authorization: `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'  
             }
         })
 
         const data = res.data as CreatePaymentCode
-        return { code:data.result.ussdCode, success:true}
+        return { data:data, success:true}
     }catch(error){
         if(axios.isAxiosError(error)){
             return {error:error.response?.data, success:false}
@@ -70,13 +68,15 @@ export async function createPaymentCode(paymentName:string, amount:number, finan
 }
 
 
-export async function deletePaymentCode(paymentCodeId:string, monime_access_token:string, monime_space_id:string):Promise<Return>{
+export async function deletePaymentCode(paymentCodeId:string, client:MonimeClient):Promise<Return>{
+    const { accessToken, monimeSpaceId} = client.getConfig()
+    
     try{
         const res = await axios.delete(`${URL}/${paymentCodeId}`, {
             headers:{
                 'Idempotency-Key': `${value}`,
-                'Monime-Space-Id': `${monime_space_id}`,
-                Authorization: `Bearer ${monime_access_token}`,
+                'Monime-Space-Id': `${monimeSpaceId}`,
+                Authorization: `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'  
             }
         })
