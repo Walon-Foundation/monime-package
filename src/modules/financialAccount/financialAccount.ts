@@ -1,7 +1,8 @@
+import { randomBytes } from "node:crypto";
 import axios from "axios";
-import { randomBytes } from "crypto";
 import type { MonimeClient } from "../../client";
 import type {
+	AllFinancialAccount,
 	CreateFinancialAccount,
 	GetFinancialAccount,
 } from "./financialAccountTypes";
@@ -90,5 +91,36 @@ export async function getFinancialAccount(
 		}
 
 		return { error: new Error("unknown error"), success: false };
+	}
+}
+
+
+interface GetAllFinancialAccount {
+	success:boolean
+	error?:Error
+	data?:AllFinancialAccount
+}
+
+export async function getAllFinancialAccount(
+	client: MonimeClient
+): Promise<GetAllFinancialAccount>{
+	const { monimeSpaceId, accessToken } = client._getConfig()
+
+	try{
+		const res = await axios.get(URL,{
+			headers:{
+				"Monime-Space-Id": `${monimeSpaceId}`,
+				Authorization: `Bearer ${accessToken}`,
+			}
+		})
+		const data = res.data as AllFinancialAccount
+
+		return { success:true, data:data }
+	}catch(error){
+		if(axios.isAxiosError(error)){
+			return { error:error, success:false}
+		}
+
+		return { error:new Error("unknown error"), success:false}
 	}
 }
