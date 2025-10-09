@@ -1,39 +1,41 @@
 {
-  "name": "monime-package",
-  "version": "1.0.4",
-  "description": "A focused TypeScript helper library for interacting with Monime's common endpoints. It provides small, typed helpers that handle request composition, headers, and basic response/error plumbing so your application code stays clean.",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "scripts": {
-    "test": "vitest",
-    "build": "tsup"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "keywords": [
-    "monime",
-    "payment",
-    "typescript",
-    "mobile-money"
-  ],
-  "author": "Mohamed Lamin Walon-Jalloh",
-  "license": "MIT",
-  "packageManager": "pnpm@10.17.1",
-  "devDependencies": {
-    "@types/node": "^24.6.2",
-    "tsup": "^8.5.0",
-    "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Walon-Foundation/monime-package"
-  },
-  "dependencies": {
-    "axios": "^1.12.2"
-  }
+	"name": "monime-package",
+	"version": "1.0.4",
+	"description": "A focused TypeScript helper library for interacting with Monime's common endpoints. It provides small, typed helpers that handle request composition, headers, and basic response/error plumbing so your application code stays clean.",
+	"main": "./dist/index.js",
+	"module": "./dist/index.mjs",
+	"types": "./dist/index.d.ts",
+	"scripts": {
+		"test": "vitest",
+		"build": "tsup",
+		"lint-format": "biome check --write"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"keywords": [
+		"monime",
+		"payment",
+		"typescript",
+		"mobile-money"
+	],
+	"author": "Mohamed Lamin Walon-Jalloh",
+	"license": "MIT",
+	"packageManager": "pnpm@10.17.1",
+	"devDependencies": {
+		"@biomejs/biome": "2.2.5",
+		"@types/node": "^24.6.2",
+		"tsup": "^8.5.0",
+		"typescript": "^5.9.3",
+		"vitest": "^3.2.4"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Walon-Foundation/monime-package"
+	},
+	"dependencies": {
+		"axios": "^1.12.2"
+	}
 }

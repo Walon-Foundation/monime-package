@@ -1,85 +1,94 @@
-import axios  from "axios";
-import { randomBytes } from "crypto"
-import { CreateFinancialAccount, GetFinancialAccount } from "./financialAccountTypes";
-import { MonimeClient} from "../../client"
+import axios from "axios";
+import { randomBytes } from "crypto";
+import type { MonimeClient } from "../../client";
+import type {
+	CreateFinancialAccount,
+	GetFinancialAccount,
+} from "./financialAccountTypes";
 
-const URL = 'https://api.monime.io/v1/financial-accounts'
-const value = randomBytes(20).toString("hex")
+const URL = "https://api.monime.io/v1/financial-accounts";
+const value = randomBytes(20).toString("hex");
 
 interface createFinancialAccountReturn {
-    data?:CreateFinancialAccount,
-    error?:Error
-    success:boolean
+	data?: CreateFinancialAccount;
+	error?: Error;
+	success: boolean;
 }
 
-export async function createFinancialAccount(accountName:string, client:MonimeClient):Promise<createFinancialAccountReturn>{
-    if(accountName.trim() === ""){
-        return { success:false, error:new Error("accountName is required")}
-    }
+export async function createFinancialAccount(
+	accountName: string,
+	client: MonimeClient,
+): Promise<createFinancialAccountReturn> {
+	if (accountName.trim() === "") {
+		return { success: false, error: new Error("accountName is required") };
+	}
 
-    const body = {
-        name:accountName,
-        currency:'SLE',
-        description:"",
-        metadata:{}
-    }
+	const body = {
+		name: accountName,
+		currency: "SLE",
+		description: "",
+		metadata: {},
+	};
 
-    //getting the accessToken and monime space id
-    const { accessToken, monimeSpaceId} = client._getConfig()
+	//getting the accessToken and monime space id
+	const { accessToken, monimeSpaceId } = client._getConfig();
 
-    try{
-        const res = await axios.post(URL, body, {
-            headers:{
-                'Idempotency-Key': `${value}`,
-                'Monime-Space-Id': `${monimeSpaceId}`,
-                Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json'  
-            }
-        })
+	try {
+		const res = await axios.post(URL, body, {
+			headers: {
+				"Idempotency-Key": `${value}`,
+				"Monime-Space-Id": `${monimeSpaceId}`,
+				Authorization: `Bearer ${accessToken}`,
+				"Content-Type": "application/json",
+			},
+		});
 
-        const data = res.data as CreateFinancialAccount
+		const data = res.data as CreateFinancialAccount;
 
-        return { success:true, data}
-    }catch(error){
-        if(axios.isAxiosError(error)){
-            return { error:error, success:false}
-        }
+		return { success: true, data };
+	} catch (error) {
+		if (axios.isAxiosError(error)) {
+			return { error: error, success: false };
+		}
 
-        return { error:new Error("unknown error"), success:false}
-    }
+		return { error: new Error("unknown error"), success: false };
+	}
 }
-
-
 
 interface GetFinancialAccountReturn {
-    data?:GetFinancialAccount
-    error?:Error
-    success:boolean
+	data?: GetFinancialAccount;
+	error?: Error;
+	success: boolean;
 }
 
-export async function getFinancialAccount(financialAccountId:string, client:MonimeClient):Promise<GetFinancialAccountReturn>{
-    if(financialAccountId.trim() === ""){
-        return { success:false, error:new Error("financialAccountId is required")}
-    }
-    
-    const { monimeSpaceId, accessToken} = client._getConfig()
-    try{
-        const res = await axios.get(`${URL}/${financialAccountId}`, {
-            headers:{
-                'Monime-Space-Id': `${monimeSpaceId}`,
-                Authorization: `Bearer ${accessToken}`, 
-            }
-        })
+export async function getFinancialAccount(
+	financialAccountId: string,
+	client: MonimeClient,
+): Promise<GetFinancialAccountReturn> {
+	if (financialAccountId.trim() === "") {
+		return {
+			success: false,
+			error: new Error("financialAccountId is required"),
+		};
+	}
 
-        const data = res.data as GetFinancialAccount
+	const { monimeSpaceId, accessToken } = client._getConfig();
+	try {
+		const res = await axios.get(`${URL}/${financialAccountId}`, {
+			headers: {
+				"Monime-Space-Id": `${monimeSpaceId}`,
+				Authorization: `Bearer ${accessToken}`,
+			},
+		});
 
-        return { success:true, data}
-    }catch(error){
-        if(axios.isAxiosError(error)){
-            return { error:error, success:false}
-        }
+		const data = res.data as GetFinancialAccount;
 
-        return { error:new Error("unknown error"), success:false}
-    }
+		return { success: true, data };
+	} catch (error) {
+		if (axios.isAxiosError(error)) {
+			return { error: error, success: false };
+		}
+
+		return { error: new Error("unknown error"), success: false };
+	}
 }
-

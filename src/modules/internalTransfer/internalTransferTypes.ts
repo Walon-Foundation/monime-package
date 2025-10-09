@@ -1,57 +1,56 @@
 export interface CreateInternalTransfer {
-  success: boolean;
-  messages: string[];
-  result: Result;
+	success: boolean;
+	messages: string[];
+	result: Result;
 }
 
 interface Result {
-  id: string;
-  status: string;
-  amount: Amount;
-  sourceFinancialAccount: SourceFinancialAccount;
-  destinationFinancialAccount: SourceFinancialAccount;
-  financialTransactionReference: string;
-  description: string;
-  failureDetail: FailureDetail;
-  ownershipGraph: OwnershipGraph;
-  createTime: string;
-  updateTime: string;
-  metadata: Metadata;
+	id: string;
+	status: string;
+	amount: Amount;
+	sourceFinancialAccount: SourceFinancialAccount;
+	destinationFinancialAccount: SourceFinancialAccount;
+	financialTransactionReference: string;
+	description: string;
+	failureDetail: FailureDetail;
+	ownershipGraph: OwnershipGraph;
+	createTime: string;
+	updateTime: string;
+	metadata: Metadata;
 }
 
 interface OwnershipGraph {
-  owner: Owner2;
+	owner: Owner2;
 }
 
 interface Owner2 {
-  id: string;
-  type: string;
-  metadata: Metadata;
-  owner: Owner;
+	id: string;
+	type: string;
+	metadata: Metadata;
+	owner: Owner;
 }
 
 interface Owner {
-  id: string;
-  type: string;
-  metadata: Metadata;
-  owner: Metadata;
+	id: string;
+	type: string;
+	metadata: Metadata;
+	owner: Metadata;
 }
 
-interface Metadata {
-}
+type Metadata = {};
 
 interface FailureDetail {
-  code: string;
-  message: string;
+	code: string;
+	message: string;
 }
 
 interface SourceFinancialAccount {
-  id: string;
+	id: string;
 }
 
 interface Amount {
-  currency: string;
-  value: number;
+	currency: string;
+	value: number;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
