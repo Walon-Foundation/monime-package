@@ -3,7 +3,7 @@ import {
 	getFinancialAccount,
 	getAllFinancialAccount
 } from "./modules/financialAccount/financialAccount";
-import { createInternalTransfer } from "./modules/internalTransfer/internalTransfer";
+import { createInternalTransfer,getAllInternalTransfers, getInternalTransfer, deleteInternalTransfer } from "./modules/internalTransfer/internalTransfer";
 import {
 	createPaymentCode,
 	deletePaymentCode,
@@ -11,11 +11,14 @@ import {
 import { CreatePayoutMobileMoney } from "./modules/payout/payout";
 import type {
 	AllFinancialAccount,
+	AllInternalTransfers,
 	CreateFinancialAccount,
 	CreateInternalTransfer,
 	CreatePaymentCode,
 	CreatePayout,
 	GetFinancialAccount,
+	InternalTransfer,
+	DeleteTransfer
 } from "./modules/types";
 
 export interface ClientOptions {
@@ -52,6 +55,14 @@ export class MonimeClient {
 		data?: CreateInternalTransfer;
 		error?: Error;
 	}>;
+	getInternalTransfer: (
+		internalTransferId:string
+	) => Promise<{ success:boolean, data?:InternalTransfer, error?:Error}>;
+	getAllInternalTransfer: (
+	) => Promise<{ success:boolean, data?:AllInternalTransfers, error?:Error}>;
+	deleteInternalTransfer:(
+		internalTransferId:string
+	) => Promise<{ success:boolean, data?:DeleteTransfer, error?:Error}>;
 
 	//method for payment code
 	createPaymentCode: (
@@ -109,6 +120,9 @@ export class MonimeClient {
 			sourceAccount: string,
 		) => CreatePayoutMobileMoney(amount, phoneNumber, sourceAccount, this);
 		this.getAllFinancialAccount = () => getAllFinancialAccount(this)
+		this.getAllInternalTransfer = () => getAllInternalTransfers(this);
+		this.getInternalTransfer = (internalFinancialId) => getInternalTransfer(this, internalFinancialId);
+		this.deleteInternalTransfer = (internalFinancialId) => deleteInternalTransfer(this, internalFinancialId)
 	}
 
 	/** @internal */
