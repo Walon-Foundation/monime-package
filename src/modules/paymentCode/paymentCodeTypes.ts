@@ -34,19 +34,19 @@ interface Result {
 	createTime: string;
 	updateTime: string;
 	ownershipGraph: OwnershipGraph;
-	metadata: {};
+	// metadata: {};
 }
 
 interface OwnershipGraph {
 	owner: {
 		id: string;
 		type: string;
-		metadata: {};
+		// metadata: {};
 		owner: {
 			id: string;
 			type: string;
-			metadata: {};
-			owner: {};
+			// metadata: {};
+			// owner: {};
 		};
 	};
 }
@@ -65,12 +65,12 @@ interface ProcessedPaymentData {
 		reference: string;
 	};
 	financialTransactionReference: string;
-	metadata: {};
+	// metadata: {};
 }
 
 //--------------------------------------------------------------------------------
 
 export interface DeletePaymentCode {
 	success: boolean;
-	messages: [any];
+	messages: [];
 }
