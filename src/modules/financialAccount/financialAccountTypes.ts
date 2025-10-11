@@ -17,7 +17,6 @@ interface Result {
 	// metadata: any;
 }
 
-
 interface Balance {
 	available: Available;
 }
@@ -57,40 +56,38 @@ interface Available {
 	value: number;
 }
 
-
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 export interface AllFinancialAccount {
-  success: boolean;
-  messages: string[];
-  result: Result[];
-  pagination: Pagination;
+	success: boolean;
+	messages: string[];
+	result: Result[];
+	pagination: Pagination;
 }
 
 interface Pagination {
-  count: number;
-  next: string;
+	count: number;
+	next: string;
 }
 
 interface Result {
-  id: string;
-  uvan: string;
-  name: string;
-  currency: string;
-  reference: string;
-  description: string;
-  balance: Balance;
-  createTime: string;
-  updateTime: string;
-//   metadata: Metadata;
+	id: string;
+	uvan: string;
+	name: string;
+	currency: string;
+	reference: string;
+	description: string;
+	balance: Balance;
+	createTime: string;
+	updateTime: string;
+	//   metadata: Metadata;
 }
 
-
 interface Balance {
-  available: Available;
+	available: Available;
 }
 
 interface Available {
-  currency: string;
-  value: number;
+	currency: string;
+	value: number;
 }

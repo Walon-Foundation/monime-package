@@ -94,33 +94,32 @@ export async function getFinancialAccount(
 	}
 }
 
-
 interface GetAllFinancialAccount {
-	success:boolean
-	error?:Error
-	data?:AllFinancialAccount
+	success: boolean;
+	error?: Error;
+	data?: AllFinancialAccount;
 }
 
 export async function getAllFinancialAccount(
-	client: MonimeClient
-): Promise<GetAllFinancialAccount>{
-	const { monimeSpaceId, accessToken } = client._getConfig()
+	client: MonimeClient,
+): Promise<GetAllFinancialAccount> {
+	const { monimeSpaceId, accessToken } = client._getConfig();
 
-	try{
-		const res = await axios.get(URL,{
-			headers:{
+	try {
+		const res = await axios.get(URL, {
+			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
-			}
-		})
-		const data = res.data as AllFinancialAccount
+			},
+		});
+		const data = res.data as AllFinancialAccount;
 
-		return { success:true, data:data }
-	}catch(error){
-		if(axios.isAxiosError(error)){
-			return { error:error, success:false}
+		return { success: true, data: data };
+	} catch (error) {
+		if (axios.isAxiosError(error)) {
+			return { error: error, success: false };
 		}
 
-		return { error:new Error("unknown error"), success:false}
+		return { error: new Error("unknown error"), success: false };
 	}
 }
