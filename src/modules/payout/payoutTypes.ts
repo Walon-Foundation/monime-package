@@ -15,7 +15,7 @@ interface Result {
 	createTime: string;
 	updateTime: string;
 	ownershipGraph: OwnershipGraph;
-	metadata: Metadata;
+	// metadata: Metadata;
 }
 
 interface OwnershipGraph {
@@ -25,15 +25,15 @@ interface OwnershipGraph {
 interface Owner2 {
 	id: string;
 	type: string;
-	metadata: Metadata;
+	// metadata: Metadata;
 	owner: Owner;
 }
 
 interface Owner {
 	id: string;
 	type: string;
-	metadata: Metadata;
-	owner: Metadata;
+	// metadata: Metadata;
+	// owner: Metadata;
 }
 
 interface FailureDetail {
@@ -44,10 +44,8 @@ interface FailureDetail {
 interface Fee {
 	code: string;
 	amount: Amount;
-	metadata: Metadata;
+	// metadata: Metadata;
 }
-
-type Metadata = {};
 
 interface Destination {
 	type: string;

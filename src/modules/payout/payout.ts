@@ -1,5 +1,5 @@
+import { randomBytes } from "node:crypto";
 import axios from "axios";
-import { randomBytes } from "crypto";
 import type { MonimeClient } from "../../client";
 import type { CreatePayout } from "./payoutTypes";
 
