@@ -5,7 +5,7 @@ import type {
 	GetTransaction,
 } from "./financialTransactionTypes";
 
-export async function FinancialTransactionAPI(client: MonimeClient) {
+export function FinancialTransactionAPI(client: MonimeClient) {
 	return {
 		get: (transactionId: string) =>
 			getTransaction(client, transactionId) as Promise<{

@@ -11,7 +11,7 @@ import type {
 	InternalTransfer,
 } from "./internalTransferTypes";
 
-export async function InternalTransferAPI(client: MonimeClient) {
+export function InternalTransferAPI(client: MonimeClient) {
 	return {
 		create: (
 			sourceAccount: string,
