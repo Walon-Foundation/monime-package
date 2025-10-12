@@ -118,7 +118,7 @@ export async function deletePaymentCode(
 				Authorization: `Bearer ${accessToken}`,
 				"Content-Type": "application/json",
 			},
-		})
+		});
 
 		return { success: true };
 	} catch (error) {

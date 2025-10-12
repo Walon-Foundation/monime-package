@@ -1,9 +1,5 @@
 import type { MonimeClient } from "../../client";
-import type {
-	CreatePaymentCode,
-	GetAllPaymentCode,
-	GetOne,
-} from "../types";
+import type { CreatePaymentCode, GetAllPaymentCode, GetOne } from "../types";
 import {
 	createPaymentCode,
 	deletePaymentCode,

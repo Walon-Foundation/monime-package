@@ -155,7 +155,6 @@ export async function deleteInternalTransfer(
 			},
 		});
 
-		
 		return { success: true };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

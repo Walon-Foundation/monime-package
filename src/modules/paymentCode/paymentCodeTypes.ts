@@ -68,7 +68,6 @@ interface ProcessedPaymentData {
 	// metadata: {};
 }
 
-
 //-------------------------------------------------------------------------------------
 export interface GetAllPaymentCode {
 	success: boolean;
