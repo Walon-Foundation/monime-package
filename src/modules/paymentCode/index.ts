@@ -1,6 +1,16 @@
 import type { MonimeClient } from "../../client";
-import type { CreatePaymentCode, DeletePaymentCode, GetAllPaymentCode, GetOne } from "../types";
-import { createPaymentCode, deletePaymentCode, getAllPaymentCode, getPaymentCode } from "./paymentCode";
+import type {
+	CreatePaymentCode,
+	DeletePaymentCode,
+	GetAllPaymentCode,
+	GetOne,
+} from "../types";
+import {
+	createPaymentCode,
+	deletePaymentCode,
+	getAllPaymentCode,
+	getPaymentCode,
+} from "./paymentCode";
 
 export function PaymentCodeAPI(client: MonimeClient) {
 	return {
@@ -31,18 +41,18 @@ export function PaymentCodeAPI(client: MonimeClient) {
 				error?: Error;
 			}>,
 
-		getAll: () => 
+		getAll: () =>
 			getAllPaymentCode(client) as Promise<{
 				success: boolean;
 				data?: GetAllPaymentCode;
 				error?: Error;
 			}>,
 
-		get: (paymentCodeId:string) => 
+		get: (paymentCodeId: string) =>
 			getPaymentCode(paymentCodeId, client) as Promise<{
 				success: boolean;
 				data?: GetOne;
 				error?: Error;
-			}>
+			}>,
 	};
 }

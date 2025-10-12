@@ -1,7 +1,12 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
 import type { MonimeClient } from "../../client";
-import type { CreatePaymentCode, DeletePaymentCode, GetAllPaymentCode, GetOne } from "./paymentCodeTypes";
+import type {
+	CreatePaymentCode,
+	DeletePaymentCode,
+	GetAllPaymentCode,
+	GetOne,
+} from "./paymentCodeTypes";
 
 const value = randomBytes(20).toString("hex");
 const URL = "https://api.monime.io/v1/payment-codes";
@@ -91,11 +96,10 @@ export async function createPaymentCode(
 	}
 }
 
-
-interface DeleteReturn{
-	success:boolean
-	data?:DeletePaymentCode
-	error?:Error
+interface DeleteReturn {
+	success: boolean;
+	data?: DeletePaymentCode;
+	error?: Error;
 }
 
 export async function deletePaymentCode(
@@ -129,27 +133,26 @@ export async function deletePaymentCode(
 	}
 }
 
-
-interface GetAll{
-	success:boolean
-	error?:Error
-	data?:GetAllPaymentCode
+interface GetAll {
+	success: boolean;
+	error?: Error;
+	data?: GetAllPaymentCode;
 }
 
-export async function getAllPaymentCode(client:MonimeClient):Promise<GetAll>{
-	const { monimeSpaceId, accessToken} = client._getConfig()
-	try{
-		const res = await axios.get(URL,{
-			headers:{
+export async function getAllPaymentCode(client: MonimeClient): Promise<GetAll> {
+	const { monimeSpaceId, accessToken } = client._getConfig();
+	try {
+		const res = await axios.get(URL, {
+			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
-			}
-		})
+			},
+		});
 
-		const data = res.data as GetAllPaymentCode
+		const data = res.data as GetAllPaymentCode;
 
-		return { success:true, data}
-	}catch(error){
+		return { success: true, data };
+	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };
 		}
@@ -157,28 +160,29 @@ export async function getAllPaymentCode(client:MonimeClient):Promise<GetAll>{
 	}
 }
 
-
-
 interface GetOneReturn {
-	success:boolean
-	data?:GetOne
-	error?:Error
+	success: boolean;
+	data?: GetOne;
+	error?: Error;
 }
 
-export async function getPaymentCode(paymentCodeId:string, client:MonimeClient):Promise<GetOneReturn>{
-	const { monimeSpaceId, accessToken} = client._getConfig()
-	try{
-		const res = await axios.get(`${URL}/${paymentCodeId}`,{
-			headers:{
+export async function getPaymentCode(
+	paymentCodeId: string,
+	client: MonimeClient,
+): Promise<GetOneReturn> {
+	const { monimeSpaceId, accessToken } = client._getConfig();
+	try {
+		const res = await axios.get(`${URL}/${paymentCodeId}`, {
+			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
-			}
-		})
+			},
+		});
 
-		const data = res.data as GetOne
+		const data = res.data as GetOne;
 
-		return { success:true, data}
-	}catch(error){
+		return { success: true, data };
+	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };
 		}

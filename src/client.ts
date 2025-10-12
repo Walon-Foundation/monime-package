@@ -17,7 +17,7 @@ export class MonimeClient {
 	public internalTransfer: ReturnType<typeof InternalTransferAPI>;
 	public paymentCode: ReturnType<typeof PaymentCodeAPI>;
 	public payout: ReturnType<typeof PayoutAPI>;
-	public financialTransaction: ReturnType<typeof FinancialTransactionAPI>
+	public financialTransaction: ReturnType<typeof FinancialTransactionAPI>;
 
 	constructor(options: ClientOptions) {
 		this.accessToken = options.accessToken;
@@ -27,7 +27,7 @@ export class MonimeClient {
 		this.internalTransfer = InternalTransferAPI(this);
 		this.paymentCode = PaymentCodeAPI(this);
 		this.payout = PayoutAPI(this);
-		this.financialTransaction = FinancialTransactionAPI(this)
+		this.financialTransaction = FinancialTransactionAPI(this);
 	}
 
 	/** @internal */

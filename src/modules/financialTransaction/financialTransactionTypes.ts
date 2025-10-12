@@ -1,129 +1,126 @@
 export interface GetTransaction {
-  success: boolean;
-  messages: string[];
-  result: Result;
+	success: boolean;
+	messages: string[];
+	result: Result;
 }
 
 interface Result {
-  id: string;
-  type: string;
-  amount: Amount;
-  timestamp: string;
-  reference: string;
-  financialAccount: FinancialAccount;
-  originatingReversal: OriginatingReversal;
-  originatingFee: OriginatingFee;
-  ownershipGraph: OwnershipGraph;
-//   metadata: Metadata;
+	id: string;
+	type: string;
+	amount: Amount;
+	timestamp: string;
+	reference: string;
+	financialAccount: FinancialAccount;
+	originatingReversal: OriginatingReversal;
+	originatingFee: OriginatingFee;
+	ownershipGraph: OwnershipGraph;
+	//   metadata: Metadata;
 }
 
 interface OwnershipGraph {
-  owner: Owner2;
+	owner: Owner2;
 }
 
 interface Owner2 {
-  id: string;
-  type: string;
-//   metadata: Metadata;
-  owner: Owner;
+	id: string;
+	type: string;
+	//   metadata: Metadata;
+	owner: Owner;
 }
 
 interface Owner {
-  id: string;
-  type: string;
-//   metadata: Metadata;
-//   owner: Metadata;
+	id: string;
+	type: string;
+	//   metadata: Metadata;
+	//   owner: Metadata;
 }
 
-
 interface OriginatingFee {
-  code: string;
+	code: string;
 }
 
 interface OriginatingReversal {
-  originTxnId: string;
-  originTxnRef: string;
+	originTxnId: string;
+	originTxnRef: string;
 }
 
 interface FinancialAccount {
-  id: string;
-  balance: Balance;
+	id: string;
+	balance: Balance;
 }
 
 interface Balance {
-  after: Amount;
+	after: Amount;
 }
 
 interface Amount {
-  currency: string;
-  value: number;
+	currency: string;
+	value: number;
 }
-
-
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 export interface AllTransaction {
-  success: boolean;
-  messages: string[];
-  result: Result[];
-  pagination: Pagination;
+	success: boolean;
+	messages: string[];
+	result: Result[];
+	pagination: Pagination;
 }
 
 interface Pagination {
-  count: number;
-  next: string;
+	count: number;
+	next: string;
 }
 
 interface Result {
-  id: string;
-  type: string;
-  amount: Amount;
-  timestamp: string;
-  reference: string;
-  financialAccount: FinancialAccount;
-  originatingReversal: OriginatingReversal;
-  originatingFee: OriginatingFee;
-  ownershipGraph: OwnershipGraph;
-//   metadata: Metadata;
+	id: string;
+	type: string;
+	amount: Amount;
+	timestamp: string;
+	reference: string;
+	financialAccount: FinancialAccount;
+	originatingReversal: OriginatingReversal;
+	originatingFee: OriginatingFee;
+	ownershipGraph: OwnershipGraph;
+	//   metadata: Metadata;
 }
 
 interface OwnershipGraph {
-  owner: Owner2;
+	owner: Owner2;
 }
 
 interface Owner2 {
-  id: string;
-  type: string;
-//   metadata: Metadata;
-  owner: Owner;
+	id: string;
+	type: string;
+	//   metadata: Metadata;
+	owner: Owner;
 }
 
 interface Owner {
-  id: string;
-  type: string;
-//   metadata: Metadata;
-//   owner: Metadata;
+	id: string;
+	type: string;
+	//   metadata: Metadata;
+	//   owner: Metadata;
 }
 
 interface OriginatingFee {
-  code: string;
+	code: string;
 }
 
 interface OriginatingReversal {
-  originTxnId: string;
-  originTxnRef: string;
+	originTxnId: string;
+	originTxnRef: string;
 }
 
 interface FinancialAccount {
-  id: string;
-  balance: Balance;
+	id: string;
+	balance: Balance;
 }
 
 interface Balance {
-  after: Amount;
+	after: Amount;
 }
 
 interface Amount {
-  currency: string;
-  value: number;
+	currency: string;
+	value: number;
 }
