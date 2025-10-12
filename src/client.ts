@@ -5,7 +5,7 @@ import { PaymentCodeAPI } from "./modules/paymentCode";
 import { PayoutAPI } from "./modules/payout";
 
 export interface ClientOptions {
-	monimeSpaceeId: string;
+	monimeSpaceId: string;
 	accessToken: string;
 }
 
@@ -21,7 +21,7 @@ export class MonimeClient {
 
 	constructor(options: ClientOptions) {
 		this.accessToken = options.accessToken;
-		this.monimeSpaceId = options.monimeSpaceeId;
+		this.monimeSpaceId = options.monimeSpaceId;
 
 		this.financialAccount = FinancialAccountAPI(this);
 		this.internalTransfer = InternalTransferAPI(this);
