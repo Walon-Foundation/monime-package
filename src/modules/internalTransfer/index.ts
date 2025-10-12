@@ -8,7 +8,6 @@ import {
 import type {
 	AllInternalTransfers,
 	CreateInternalTransfer,
-	DeleteTransfer,
 	InternalTransfer,
 } from "./internalTransferTypes";
 
@@ -48,7 +47,6 @@ export async function InternalTransferAPI(client: MonimeClient) {
 			deleteInternalTransfer(client, internalTransferId) as Promise<{
 				success: boolean;
 				error?: Error;
-				data?: DeleteTransfer;
 			}>,
 	};
 }

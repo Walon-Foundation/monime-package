@@ -68,12 +68,6 @@ interface ProcessedPaymentData {
 	// metadata: {};
 }
 
-//--------------------------------------------------------------------------------
-
-export interface DeletePaymentCode {
-	success: boolean;
-	messages: [];
-}
 
 //-------------------------------------------------------------------------------------
 export interface GetAllPaymentCode {

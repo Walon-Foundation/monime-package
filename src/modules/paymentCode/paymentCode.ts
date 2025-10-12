@@ -3,7 +3,6 @@ import axios from "axios";
 import type { MonimeClient } from "../../client";
 import type {
 	CreatePaymentCode,
-	DeletePaymentCode,
 	GetAllPaymentCode,
 	GetOne,
 } from "./paymentCodeTypes";
@@ -98,7 +97,6 @@ export async function createPaymentCode(
 
 interface DeleteReturn {
 	success: boolean;
-	data?: DeletePaymentCode;
 	error?: Error;
 }
 
@@ -113,18 +111,16 @@ export async function deletePaymentCode(
 	}
 
 	try {
-		const res = await axios.delete(`${URL}/${paymentCodeId}`, {
+		await axios.delete(`${URL}/${paymentCodeId}`, {
 			headers: {
 				"Idempotency-Key": `${value}`,
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
 				"Content-Type": "application/json",
 			},
-		});
+		})
 
-		const data = res.data as DeletePaymentCode;
-
-		return { success: true, data };
+		return { success: true };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };

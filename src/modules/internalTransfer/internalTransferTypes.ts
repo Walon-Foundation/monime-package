@@ -167,9 +167,3 @@ interface Amount {
 	value: number;
 }
 
-//----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-export interface DeleteTransfer {
-	success: boolean;
-	messages: string[];
-}

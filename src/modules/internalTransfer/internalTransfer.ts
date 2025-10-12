@@ -4,7 +4,6 @@ import type { MonimeClient } from "../../client";
 import type {
 	AllInternalTransfers,
 	CreateInternalTransfer,
-	DeleteTransfer,
 	InternalTransfer,
 } from "./internalTransferTypes";
 
@@ -140,7 +139,6 @@ export async function getInternalTransfer(
 interface DeleteTransferResult {
 	success: boolean;
 	error?: Error;
-	data?: DeleteTransfer;
 }
 
 export async function deleteInternalTransfer(
@@ -150,15 +148,15 @@ export async function deleteInternalTransfer(
 	const { monimeSpaceId, accessToken } = client._getConfig();
 
 	try {
-		const res = await axios.delete(`${URL}/${internalTransferId}`, {
+		await axios.delete(`${URL}/${internalTransferId}`, {
 			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
 			},
 		});
 
-		const data = res.data as DeleteTransfer;
-		return { success: true, data };
+		
+		return { success: true };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error };
