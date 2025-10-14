@@ -1,3 +1,4 @@
+import { CheckoutSessionAPI } from "./modules/checkout session";
 import { FinancialAccountAPI } from "./modules/financialAccount";
 import { FinancialTransactionAPI } from "./modules/financialTransaction";
 import { InternalTransferAPI } from "./modules/internalTransfer";
@@ -18,6 +19,7 @@ export class MonimeClient {
 	public paymentCode: ReturnType<typeof PaymentCodeAPI>;
 	public payout: ReturnType<typeof PayoutAPI>;
 	public financialTransaction: ReturnType<typeof FinancialTransactionAPI>;
+	public checkoutSession: ReturnType<typeof CheckoutSessionAPI>;
 
 	constructor(options: ClientOptions) {
 		this.accessToken = options.accessToken;
@@ -28,6 +30,7 @@ export class MonimeClient {
 		this.paymentCode = PaymentCodeAPI(this);
 		this.payout = PayoutAPI(this);
 		this.financialTransaction = FinancialTransactionAPI(this);
+		this.checkoutSession = CheckoutSessionAPI(this);
 	}
 
 	/** @internal */
