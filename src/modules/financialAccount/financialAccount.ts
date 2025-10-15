@@ -16,7 +16,7 @@ interface createFinancialAccountReturn {
 	success: boolean;
 }
 
-type Currency = "USD" | "SLE";
+export type Currency = "USD" | "SLE";
 
 export async function createFinancialAccount(
 	accountName: string,

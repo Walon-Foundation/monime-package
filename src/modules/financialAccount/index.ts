@@ -5,6 +5,7 @@ import type {
 	GetFinancialAccount,
 } from "../types";
 import {
+	type Currency,
 	createFinancialAccount,
 	getAllFinancialAccount,
 	getFinancialAccount,
@@ -12,8 +13,8 @@ import {
 
 export function FinancialAccountAPI(client: MonimeClient) {
 	return {
-		create: (name: string) =>
-			createFinancialAccount(name, client) as Promise<{
+		create: (name: string, currency: Currency) =>
+			createFinancialAccount(name, currency, client) as Promise<{
 				success: boolean;
 				data?: CreateFinancialAccount;
 				error?: Error;
