@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import axios from "axios";
 import type { MonimeClient } from "../../client";
 import type {
@@ -6,6 +7,7 @@ import type {
 	OneCheckout,
 } from "./checkoutSessionType";
 
+const value = randomBytes(20).toString("hex");
 const URL = "https://api.monime.io/v1/checkout-sessions";
 
 interface CreateCheckoutReturn {
@@ -80,6 +82,9 @@ export async function createCheckout(
 			headers: {
 				"Monime-Space-Id": monimeSpaceId,
 				Authorization: `Bearer ${accessToken}`,
+				"Content-Type": "application/json",
+				"Idempotency-Key": value,
+				"Monime-Version": "caph.2025-08-23",
 			},
 		});
 		const data = res.data as CreateCheckout;
