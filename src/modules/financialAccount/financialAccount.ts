@@ -16,8 +16,11 @@ interface createFinancialAccountReturn {
 	success: boolean;
 }
 
+type Currency = "USD" | "SLE";
+
 export async function createFinancialAccount(
 	accountName: string,
+	currency: Currency,
 	client: MonimeClient,
 ): Promise<createFinancialAccountReturn> {
 	if (accountName.trim() === "") {
@@ -26,7 +29,7 @@ export async function createFinancialAccount(
 
 	const body = {
 		name: accountName,
-		currency: "SLE",
+		currency: currency,
 		description: "",
 		metadata: {},
 	};

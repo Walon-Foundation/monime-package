@@ -76,7 +76,7 @@ export async function createCheckout(
 	};
 
 	try {
-		const res = await axios.patch(URL, body, {
+		const res = await axios.post(URL, body, {
 			headers: {
 				"Monime-Space-Id": monimeSpaceId,
 				Authorization: `Bearer ${accessToken}`,
