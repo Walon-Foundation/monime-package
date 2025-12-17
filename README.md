@@ -70,6 +70,7 @@ Recommended to store credentials in `.env`:
 ```bash
 MONIME_SPACE_ID=space_XXXXXXXX
 MONIME_ACCESS_TOKEN=sk_live_xxx
+MONIME_VERSION=caph.2025-08-23 # Optional, defaults to latest
 ```
 
 You can also pass credentials directly when creating the client.
@@ -86,6 +87,7 @@ import { createClient } from "monime-package";
 const client = createClient({
   monimeSpaceId: process.env.MONIME_SPACE_ID!,
   accessToken: process.env.MONIME_ACCESS_TOKEN!,
+  monimeVersion: "caph.2025-08-23", // Optional
 });
 ```
 
@@ -116,6 +118,72 @@ type Result<T> = {
 ```
 
 The client exposes namespaced APIs under `client.<module>`. Below is the complete API reference:
+
+### Payments (New)
+
+Manage all incoming payments (payins).
+
+```ts
+// Get payment details
+client.payment.get(paymentId: string): Promise<Result<GetPayment>>
+
+// List payments
+client.payment.getAll(params?: any): Promise<Result<ListPayments>>
+
+// Patch payment
+client.payment.patch(paymentId: string, body: any): Promise<Result<PatchPayment>>
+```
+
+### Webhooks (New)
+
+Manage webhooks for real-time notifications.
+
+```ts
+// Create webhook
+client.webhook.create(body: CreateWebhookRequest): Promise<Result<CreateWebhookResponse>>
+
+// Get webhook
+client.webhook.get(webhookId: string): Promise<Result<GetWebhookResponse>>
+
+// List webhooks
+client.webhook.getAll(): Promise<Result<ListWebhooksResponse>>
+
+// Update webhook
+client.webhook.update(webhookId: string, body: UpdateWebhookRequest): Promise<Result<UpdateWebhookResponse>>
+
+// Delete webhook
+client.webhook.delete(webhookId: string): Promise<{ success: boolean; error?: Error }>
+```
+
+### Receipts (New)
+
+Manage payment receipts.
+
+```ts
+// Get receipt
+client.receipt.get(orderNumber: string): Promise<Result<GetReceiptResponse>>
+
+// Redeem receipt
+client.receipt.redeem(orderNumber: string, body: any): Promise<Result<RedeemReceiptResponse>>
+```
+
+### USSD OTPs (New)
+
+Generate USSD OTPs.
+
+```ts
+// Create USSD OTP
+client.ussdOtp.create(body: CreateUssdOtpRequest): Promise<Result<CreateUssdOtpResponse>>
+```
+
+### Provider KYC (New)
+
+Get provider KYC details.
+
+```ts
+// Get provider KYC
+client.providerKyc.get(providerId: string): Promise<Result<GetProviderKycResponse>>
+```
 
 ### Financial Accounts
 
@@ -387,6 +455,7 @@ The client accepts the following options (see `src/client.ts`):
 type ClientOptions = {
   monimeSpaceId: string; // Your Monime Space ID
   accessToken: string;   // Your Monime API token
+  monimeVersion?: "caph.2025-08-23" | "caph.2025-06-20"; // API Version
 };
 ```
 
