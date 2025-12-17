@@ -47,7 +47,7 @@ export async function createPaymentCode(
 		};
 	}
 
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 
 	const bodyData = {
 		name: `${paymentName}`,
@@ -82,6 +82,7 @@ export async function createPaymentCode(
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
 				"Content-Type": "application/json",
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -104,7 +105,7 @@ export async function deletePaymentCode(
 	paymentCodeId: string,
 	client: MonimeClient,
 ): Promise<DeleteReturn> {
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 
 	if (paymentCodeId.trim() === "") {
 		return { success: false, error: new Error("paymentCodeId is required") };
@@ -117,6 +118,7 @@ export async function deletePaymentCode(
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
 				"Content-Type": "application/json",
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -136,12 +138,13 @@ interface GetAll {
 }
 
 export async function getAllPaymentCode(client: MonimeClient): Promise<GetAll> {
-	const { monimeSpaceId, accessToken } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
 	try {
 		const res = await axios.get(URL, {
 			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -166,12 +169,13 @@ export async function getPaymentCode(
 	paymentCodeId: string,
 	client: MonimeClient,
 ): Promise<GetOneReturn> {
-	const { monimeSpaceId, accessToken } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
 	try {
 		const res = await axios.get(`${URL}/${paymentCodeId}`, {
 			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 

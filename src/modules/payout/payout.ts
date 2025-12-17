@@ -37,7 +37,7 @@ export async function createPayout(
 		};
 	}
 
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 
 	const body = {
 		amount: {
@@ -58,6 +58,7 @@ export async function createPayout(
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
 				"Content-Type": "application/json",
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -80,12 +81,13 @@ interface AllPayout {
 }
 
 export async function getAllPayout(client: MonimeClient): Promise<AllPayout> {
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 	try {
 		const res = await axios.get(URL, {
 			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -111,12 +113,13 @@ export async function getPayout(
 	payoutId: string,
 	client: MonimeClient,
 ): Promise<OnePayout> {
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 	try {
 		const res = await axios.get(`${URL}/${payoutId}`, {
 			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -141,12 +144,13 @@ export async function deletePayout(
 	payoutId: string,
 	client: MonimeClient,
 ): Promise<Delete> {
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 	try {
 		await axios.delete(`${URL}/${payoutId}`, {
 			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 

@@ -35,7 +35,8 @@ export async function createFinancialAccount(
 	};
 
 	//getting the accessToken and monime space id
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	//getting the accessToken and monime space id
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 
 	try {
 		const res = await axios.post(URL, body, {
@@ -44,6 +45,7 @@ export async function createFinancialAccount(
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
 				"Content-Type": "application/json",
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -76,12 +78,13 @@ export async function getFinancialAccount(
 		};
 	}
 
-	const { monimeSpaceId, accessToken } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
 	try {
 		const res = await axios.get(`${URL}/${financialAccountId}`, {
 			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -106,7 +109,7 @@ interface GetAllFinancialAccount {
 export async function getAllFinancialAccount(
 	client: MonimeClient,
 ): Promise<GetAllFinancialAccount> {
-	const { monimeSpaceId, accessToken } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
 
 	try {
 		const res = await axios.get(URL, {

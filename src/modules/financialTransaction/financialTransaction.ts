@@ -16,12 +16,13 @@ interface GetAllTransactionReturn {
 export async function getAllTransaction(
 	client: MonimeClient,
 ): Promise<GetAllTransactionReturn> {
-	const { monimeSpaceId, accessToken } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
 	try {
 		const res = await axios.get(URL, {
 			headers: {
 				Authorization: `Bearer ${accessToken}`,
 				"Monime-Space-Id": `${monimeSpaceId}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 		const data = res.data as AllTransaction;
@@ -45,7 +46,7 @@ export async function getTransaction(
 	client: MonimeClient,
 	transactionId: string,
 ): Promise<GetTransactionReturn> {
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 	if (transactionId.trim() === "") {
 		return {
 			error: new Error("transactionId must not be empty"),
@@ -58,6 +59,7 @@ export async function getTransaction(
 			headers: {
 				Authorization: `Bearer ${accessToken}`,
 				"Monime-Space-Id": `${monimeSpaceId}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 		const data = res.data as GetTransaction;

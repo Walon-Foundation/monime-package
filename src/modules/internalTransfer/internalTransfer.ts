@@ -50,7 +50,7 @@ export async function createInternalTransfer(
 		metadata: {},
 	};
 
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 
 	try {
 		const res = await axios.post(URL, body, {
@@ -59,6 +59,7 @@ export async function createInternalTransfer(
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
 				"Content-Type": "application/json",
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -83,12 +84,13 @@ interface AllInternalTransfersResult {
 export async function getAllInternalTransfers(
 	client: MonimeClient,
 ): Promise<AllInternalTransfersResult> {
-	const { monimeSpaceId, accessToken } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
 	try {
 		const res = await axios.get(URL, {
 			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -114,13 +116,14 @@ export async function getInternalTransfer(
 	client: MonimeClient,
 	internalTransferId: string,
 ): Promise<InternalTransferResult> {
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 
 	try {
 		const res = await axios.get(`${URL}/${internalTransferId}`, {
 			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -145,13 +148,14 @@ export async function deleteInternalTransfer(
 	client: MonimeClient,
 	internalTransferId: string,
 ): Promise<DeleteTransferResult> {
-	const { monimeSpaceId, accessToken } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
 
 	try {
 		await axios.delete(`${URL}/${internalTransferId}`, {
 			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
