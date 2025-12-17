@@ -28,7 +28,7 @@ export async function createCheckout(
 	primaryColor?: string,
 	images?: string[],
 ): Promise<CreateCheckoutReturn> {
-	const { monimeSpaceId, accessToken } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
 	const body = {
 		name: name,
 		description: description,
@@ -84,7 +84,7 @@ export async function createCheckout(
 				Authorization: `Bearer ${accessToken}`,
 				"Content-Type": "application/json",
 				"Idempotency-Key": value,
-				"Monime-Version": "caph.2025-08-23",
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 		const data = res.data as CreateCheckout;
@@ -105,12 +105,13 @@ interface AllReturn {
 }
 
 export async function getAllCheckout(client: MonimeClient): Promise<AllReturn> {
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 	try {
 		const res = await axios.get(URL, {
 			headers: {
 				"Monime-Space-Id": monimeSpaceId,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -136,12 +137,13 @@ export async function getOnecheckout(
 	client: MonimeClient,
 	checkoutId: string,
 ): Promise<OneReturn> {
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 	try {
 		const res = await axios.get(`${URL}/${checkoutId}`, {
 			headers: {
 				"Monime-Space-Id": monimeSpaceId,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
@@ -165,12 +167,13 @@ export async function deleteCheckout(
 	client: MonimeClient,
 	checkoutId: string,
 ): Promise<DeleteCheckout> {
-	const { accessToken, monimeSpaceId } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
 	try {
 		await axios.delete(`${URL}/${checkoutId}`, {
 			headers: {
 				"Monime-Space-Id": monimeSpaceId,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
 
