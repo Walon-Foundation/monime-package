@@ -1,13 +1,14 @@
 
 # monime-package
 
-Official, lightweight TypeScript SDK for Monime. It provides a typed client for common Monime endpoints with consistent results and simple ergonomics.
+Official TypeScript SDK for Monime - a modern, type-safe client library for Sierra Leone's leading payment platform. Provides comprehensive API coverage with predictable response patterns and excellent developer experience.
 
 ![npm version](https://img.shields.io/npm/v/monime-package.svg)
 ![npm downloads](https://img.shields.io/npm/dm/monime-package.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)
 ![Node.js](https://img.shields.io/badge/Node.js-%3E=14-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)
+![Package Size](https://img.shields.io/bundlephobia/minzip/monime-package.svg)
 
 Package: `monime-package`
 
@@ -20,6 +21,11 @@ Package: `monime-package`
 - **[Environment Variables](#environment-variables)**
 - **[Quick Start](#quick-start)**
 - **[API Reference](#api-reference)**
+  - **[Payments](#payments)**
+  - **[Webhooks](#webhooks)**
+  - **[Receipts](#receipts)**
+  - **[USSD OTPs](#ussd-otps)**
+  - **[Provider KYC](#provider-kyc)**
   - **[Financial Accounts](#financial-accounts)**
   - **[Internal Transfers](#internal-transfers)**
   - **[Payment Codes](#payment-codes)**
@@ -47,6 +53,8 @@ Package: `monime-package`
 - **Client-based** auth: set credentials once per instance
 - **Minimal deps** (`axios`) and small surface area
 - **Full API coverage** for all Monime endpoints
+- **Tree-shaking support** - only bundle what you use
+- **Dual module output** - works with both CommonJS and ES modules
 - **Mobile Money support** (Africell, Orange, etc.)
 - **Bank transfers** and digital wallet integrations
 - **Checkout sessions** for hosted payment pages
@@ -59,7 +67,14 @@ Package: `monime-package`
 npm install monime-package
 # or
 pnpm add monime-package
+# or
+yarn add monime-package
 ```
+
+**Requirements:**
+- Node.js >= 14
+- TypeScript >= 4.5 (for type safety)
+- Modern bundler that supports ES modules and tree-shaking
 
 ---
 
@@ -464,6 +479,35 @@ type ClientOptions = {
 
 ---
 
+## Development & Build
+
+This package uses modern tooling for development and building:
+
+### Build System
+- **tsup** for fast TypeScript compilation with dual CJS/ESM output
+- **Biome** for code formatting and linting
+- **Vitest** for testing framework
+
+### Available Scripts
+```bash
+# Build the package
+pnpm build
+
+# Run tests
+pnpm test
+
+# Format and lint code
+pnpm lint-format
+```
+
+### Module Structure
+The package is organized into modules under `src/modules/`:
+- Each module has its own types, implementation, and index file
+- All types are exported from `src/modules/types.ts`
+- The main client (`MonimeClient`) exposes all modules as properties
+
+---
+
 ## Complete Examples
 
 Here are comprehensive examples showing real-world usage patterns:
@@ -733,6 +777,30 @@ All result payload types are exported from the package for complete type safety:
 import type {
   // Core types
   ClientOptions,
+  
+  // Payment types
+  GetPayment,
+  ListPayments,
+  PatchPayment,
+  
+  // Webhook types
+  CreateWebhookRequest,
+  CreateWebhookResponse,
+  GetWebhookResponse,
+  ListWebhooksResponse,
+  UpdateWebhookRequest,
+  UpdateWebhookResponse,
+  
+  // Receipt types
+  GetReceiptResponse,
+  RedeemReceiptResponse,
+  
+  // USSD OTP types
+  CreateUssdOtpRequest,
+  CreateUssdOtpResponse,
+  
+  // Provider KYC types
+  GetProviderKycResponse,
   
   // Financial Account types
   CreateFinancialAccount,
@@ -1031,10 +1099,13 @@ We welcome contributions.
 ### Getting Started
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally
-3. **Create a feature branch** from `main`
-4. **Make your changes** following our coding conventions
-5. **Test your changes** thoroughly
-6. **Submit a pull request** with a clear description
+3. **Install dependencies** with `pnpm install`
+4. **Create a feature branch** from `main`
+5. **Make your changes** following our coding conventions
+6. **Run linting** with `pnpm lint-format`
+7. **Test your changes** with `pnpm test`
+8. **Build the package** with `pnpm build`
+9. **Submit a pull request** with a clear description
 
 For detailed contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
