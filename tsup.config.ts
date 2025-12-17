@@ -7,8 +7,8 @@ export default defineConfig({
 	shims: true,
 	skipNodeModulesBundle: true,
 	clean: true,
-	sourcemap: true,
-	minify: false,
+	sourcemap: false,
+	minify: true,
 	outDir: "dist",
 	splitting: false,
 });
