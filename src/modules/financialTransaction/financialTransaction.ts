@@ -28,7 +28,10 @@ export async function getAllTransaction(
 		const response = res.data as MonimeApiResponse<AllTransaction["result"]>;
 		return {
 			success: true,
-			data: { result: response.result, pagination: response.pagination },
+			data: {
+				result: response.result,
+				pagination: response.pagination ?? { next: null },
+			},
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

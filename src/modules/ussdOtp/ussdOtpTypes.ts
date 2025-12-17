@@ -3,12 +3,12 @@ export interface UssdOtp {
 	phoneNumber: string;
 	otp: string;
 	expiresAt: string;
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 export interface CreateUssdOtpRequest {
 	phoneNumber: string;
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 export interface CreateUssdOtpResponse extends UssdOtp {}

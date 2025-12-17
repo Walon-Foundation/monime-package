@@ -1,3 +1,4 @@
+import type { Pagination } from "../../types";
 export interface GetTransaction {
 	id: string;
 	type: string;
@@ -10,8 +11,6 @@ export interface GetTransaction {
 	ownershipGraph: OwnershipGraph;
 	//   metadata: Metadata;
 }
-
-
 
 interface OwnershipGraph {
 	owner: Owner2;
@@ -58,11 +57,6 @@ interface Amount {
 export interface AllTransaction {
 	result: Transaction[];
 	pagination: Pagination;
-}
-
-interface Pagination {
-	count: number;
-	next: string;
 }
 
 interface Transaction {

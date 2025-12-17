@@ -1,3 +1,4 @@
+import type { Pagination } from "../../types";
 export interface CreateInternalTransfer {
 	id: string;
 	status: string;
@@ -12,8 +13,6 @@ export interface CreateInternalTransfer {
 	updateTime: string;
 	// metadata: Metadata;
 }
-
-
 
 interface OwnershipGraph {
 	owner: Owner2;
@@ -52,11 +51,6 @@ interface Amount {
 export interface AllInternalTransfers {
 	result: Transfer[];
 	pagination: Pagination;
-}
-
-interface Pagination {
-	count: number;
-	next: string;
 }
 
 interface Transfer {
@@ -122,8 +116,6 @@ export interface InternalTransfer {
 	updateTime: string;
 	//   metadata: Metadata;
 }
-
-
 
 interface OwnershipGraph {
 	owner: Owner2;

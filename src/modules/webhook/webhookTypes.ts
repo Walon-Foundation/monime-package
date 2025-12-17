@@ -1,3 +1,4 @@
+import type { Pagination } from "../../types";
 export interface WebhookVerificationMethod {
 	type: "HS256" | "ES256";
 	secret: string;
@@ -15,7 +16,7 @@ export interface Webhook {
 	alertEmails: string[];
 	createTime: string;
 	updateTime: string;
-	metadata: Record<string, any>;
+	metadata: Record<string, unknown>;
 }
 
 export interface CreateWebhookRequest {
@@ -27,7 +28,7 @@ export interface CreateWebhookRequest {
 	headers?: Record<string, string>;
 	alertEmails?: string[];
 	verificationMethod?: WebhookVerificationMethod;
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 }
 
 export interface CreateWebhookResponse extends Webhook {}
@@ -36,9 +37,7 @@ export interface GetWebhookResponse extends Webhook {}
 
 export interface ListWebhooksResponse {
 	result: Webhook[];
-	pagination?: {
-		next: string | null;
-	};
+	pagination?: Pagination;
 }
 
 export interface UpdateWebhookRequest {
@@ -49,7 +48,7 @@ export interface UpdateWebhookRequest {
 	headers?: Record<string, string>;
 	alertEmails?: string[];
 	verificationMethod?: WebhookVerificationMethod;
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 }
 
 export interface UpdateWebhookResponse extends Webhook {}

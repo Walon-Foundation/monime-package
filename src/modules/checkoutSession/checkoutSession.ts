@@ -120,7 +120,10 @@ export async function getAllCheckout(
 		const response = res.data as MonimeApiResponse<AllCheckout["result"]>;
 		return {
 			success: true,
-			data: { result: response.result, pagination: response.pagination },
+			data: {
+				result: response.result,
+				pagination: response.pagination ?? { next: null },
+			},
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

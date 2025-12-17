@@ -1,11 +1,7 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
 import type { ClientConfig, MonimeApiResponse } from "../../types";
-import type {
-	GetPayment,
-	ListPayments,
-	PatchPayment,
-} from "./paymentTypes";
+import type { GetPayment, ListPayments, PatchPayment } from "./paymentTypes";
 
 const URL = "https://api.monime.io/v1/payments";
 
@@ -39,7 +35,7 @@ export async function getPayment(
 
 export async function listPayments(
 	config: ClientConfig,
-	params?: Record<string, any>,
+	params?: Record<string, unknown>,
 ): Promise<{ success: boolean; data?: ListPayments; error?: Error }> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
@@ -55,7 +51,10 @@ export async function listPayments(
 		const response = res.data as MonimeApiResponse<ListPayments["result"]>;
 		return {
 			success: true,
-			data: { result: response.result, pagination: response.pagination },
+			data: {
+				result: response.result,
+				pagination: response.pagination ?? { next: null },
+			},
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -67,7 +66,7 @@ export async function listPayments(
 
 export async function patchPayment(
 	paymentId: string,
-	body: Record<string, any>,
+	body: Record<string, unknown>,
 	config: ClientConfig,
 ): Promise<{ success: boolean; data?: PatchPayment; error?: Error }> {
 	if (!paymentId) {

@@ -6,7 +6,10 @@ import {
 	listWebhooks,
 	updateWebhook,
 } from "./webhook";
-import type { CreateWebhookRequest, UpdateWebhookRequest } from "./webhookTypes";
+import type {
+	CreateWebhookRequest,
+	UpdateWebhookRequest,
+} from "./webhookTypes";
 
 export function WebhookAPI(config: ClientConfig) {
 	return {

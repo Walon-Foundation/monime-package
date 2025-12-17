@@ -1,3 +1,4 @@
+import type { Pagination } from "../../types";
 export interface CreateFinancialAccount {
 	id: string;
 	uvan: string;
@@ -8,10 +9,8 @@ export interface CreateFinancialAccount {
 	balance: Balance;
 	createTime: string;
 	updateTime: string;
-	// metadata: any;
+	// metadata: unknown;
 }
-
-
 
 interface Balance {
 	available: Available;
@@ -37,8 +36,6 @@ export interface GetFinancialAccount {
 	// metadata: Metadata;
 }
 
-
-
 interface Balance {
 	available: Available;
 }
@@ -53,11 +50,6 @@ interface Available {
 export interface AllFinancialAccount {
 	result: FinancialAccount[];
 	pagination: Pagination;
-}
-
-interface Pagination {
-	count: number;
-	next: string;
 }
 
 interface FinancialAccount {

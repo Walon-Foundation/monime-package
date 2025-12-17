@@ -1,3 +1,4 @@
+import type { Pagination } from "../../types";
 export type DestinationOption =
 	| {
 			type: "momo";
@@ -28,8 +29,6 @@ export interface CreatePayout {
 	ownershipGraph: OwnershipGraph;
 	// metadata: Metadata;
 }
-
-
 
 interface OwnershipGraph {
 	owner: Owner2;
@@ -82,11 +81,6 @@ interface Amount {
 export interface GetAll {
 	result: Payout[];
 	pagination: Pagination;
-}
-
-interface Pagination {
-	count: number;
-	next: string;
 }
 
 interface Payout {
@@ -164,8 +158,6 @@ export interface GetOnePayout {
 	ownershipGraph: OwnershipGraph;
 	//   metadata: Metadata;
 }
-
-
 
 interface OwnershipGraph {
 	owner: Owner2;

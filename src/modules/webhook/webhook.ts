@@ -76,10 +76,15 @@ export async function listWebhooks(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<ListWebhooksResponse["result"]>;
+		const response = res.data as MonimeApiResponse<
+			ListWebhooksResponse["result"]
+		>;
 		return {
 			success: true,
-			data: { result: response.result, pagination: response.pagination },
+			data: {
+				result: response.result,
+				pagination: response.pagination ?? { next: null },
+			},
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

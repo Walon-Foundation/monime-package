@@ -31,7 +31,7 @@ export async function getReceipt(
 
 export async function redeemReceipt(
 	orderNumber: string,
-	body: Record<string, any>,
+	body: Record<string, unknown>,
 	config: ClientConfig,
 ): Promise<{ success: boolean; data?: RedeemReceiptResponse; error?: Error }> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;

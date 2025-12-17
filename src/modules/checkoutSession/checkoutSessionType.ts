@@ -1,11 +1,7 @@
+import type { Pagination } from "../../types";
 export interface AllCheckout {
 	result: CheckoutSession[];
 	pagination: Pagination;
-}
-
-interface Pagination {
-	count: number;
-	next: string;
 }
 
 interface CheckoutSession {
@@ -90,8 +86,6 @@ export interface OneCheckout {
 	//   metadata: Metadata;
 }
 
-
-
 interface OwnershipGraph {
 	owner: Owner2;
 }
@@ -154,8 +148,6 @@ export interface CreateCheckout {
 	ownershipGraph: OwnershipGraph;
 	//   metadata: Metadata;
 }
-
-
 
 interface OwnershipGraph {
 	owner: Owner2;

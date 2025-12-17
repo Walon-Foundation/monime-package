@@ -114,12 +114,18 @@ export async function getAllFinancialAccount(
 			headers: {
 				"Monime-Space-Id": `${monimeSpaceId}`,
 				Authorization: `Bearer ${accessToken}`,
+				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<AllFinancialAccount["result"]>;
+		const response = res.data as MonimeApiResponse<
+			AllFinancialAccount["result"]
+		>;
 		return {
 			success: true,
-			data: { result: response.result, pagination: response.pagination },
+			data: {
+				result: response.result,
+				pagination: response.pagination ?? { next: null },
+			},
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

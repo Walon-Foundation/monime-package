@@ -93,10 +93,15 @@ export async function getAllInternalTransfers(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<AllInternalTransfers["result"]>;
+		const response = res.data as MonimeApiResponse<
+			AllInternalTransfers["result"]
+		>;
 		return {
 			success: true,
-			data: { result: response.result, pagination: response.pagination },
+			data: {
+				result: response.result,
+				pagination: response.pagination ?? { next: null },
+			},
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

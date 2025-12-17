@@ -1,3 +1,4 @@
+import type { Pagination } from "../../types";
 export interface Payment {
 	id: string;
 	status: "pending" | "processing" | "completed" | "failed";
@@ -26,19 +27,17 @@ export interface Payment {
 		owner: {
 			id: string;
 			type: string;
-			metadata: Record<string, any> | null;
+			metadata: Record<string, unknown> | null;
 		};
 	};
-	metadata: Record<string, any> | null;
+	metadata: Record<string, unknown> | null;
 }
 
 export interface GetPayment extends Payment {}
 
 export interface ListPayments {
 	result: Payment[];
-	pagination: {
-		next: string | null;
-	};
+	pagination: Pagination;
 }
 
 export interface PatchPayment extends Payment {}

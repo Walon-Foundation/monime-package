@@ -1,3 +1,4 @@
+import type { Pagination } from "../../types";
 export interface CreatePaymentCode {
 	id: string;
 	mode: string;
@@ -30,8 +31,6 @@ export interface CreatePaymentCode {
 	ownershipGraph: OwnershipGraph;
 	// metadata: {};
 }
-
-
 
 interface OwnershipGraph {
 	owner: {
@@ -68,11 +67,6 @@ interface ProcessedPaymentData {
 export interface GetAllPaymentCode {
 	result: PaymentCode[];
 	pagination: Pagination;
-}
-
-interface Pagination {
-	count: number;
-	next: string;
 }
 
 interface PaymentCode {
@@ -168,8 +162,6 @@ export interface GetOne {
 	ownershipGraph: OwnershipGraph;
 	//   metadata: Metadata;
 }
-
-
 
 interface OwnershipGraph {
 	owner: Owner2;

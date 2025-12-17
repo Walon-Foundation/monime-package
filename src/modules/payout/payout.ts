@@ -79,7 +79,9 @@ interface GetAllReturn {
 	error?: Error;
 }
 
-export async function getAllPayout(config: ClientConfig): Promise<GetAllReturn> {
+export async function getAllPayout(
+	config: ClientConfig,
+): Promise<GetAllReturn> {
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {
@@ -93,7 +95,10 @@ export async function getAllPayout(config: ClientConfig): Promise<GetAllReturn> 
 		const response = res.data as MonimeApiResponse<GetAll["result"]>;
 		return {
 			success: true,
-			data: { result: response.result, pagination: response.pagination },
+			data: {
+				result: response.result,
+				pagination: response.pagination ?? { next: null },
+			},
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

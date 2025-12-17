@@ -1,6 +1,6 @@
 export interface Receipt {
 	orderNumber: string;
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 export interface GetReceiptResponse extends Receipt {}

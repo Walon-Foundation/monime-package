@@ -151,7 +151,10 @@ export async function getAllPaymentCode(config: ClientConfig): Promise<GetAll> {
 		const response = res.data as MonimeApiResponse<GetAllPaymentCode["result"]>;
 		return {
 			success: true,
-			data: { result: response.result, pagination: response.pagination },
+			data: {
+				result: response.result,
+				pagination: response.pagination ?? { next: null },
+			},
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
