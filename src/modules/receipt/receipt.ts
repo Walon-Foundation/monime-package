@@ -1,15 +1,15 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import type { GetReceiptResponse, RedeemReceiptResponse } from "./receiptTypes";
 
 const URL = "https://api.monime.io/v1/receipts";
 
 export async function getReceipt(
 	orderNumber: string,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<{ success: boolean; data?: GetReceiptResponse; error?: Error }> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
 		const res = await axios.get(`${URL}/${orderNumber}`, {
@@ -31,9 +31,9 @@ export async function getReceipt(
 export async function redeemReceipt(
 	orderNumber: string,
 	body: Record<string, any>,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<{ success: boolean; data?: RedeemReceiptResponse; error?: Error }> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	const idempotencyKey = randomBytes(20).toString("hex");
 
 	try {

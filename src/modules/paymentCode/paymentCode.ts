@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import type {
 	CreatePaymentCode,
 	GetAllPaymentCode,
@@ -22,7 +22,7 @@ export async function createPaymentCode(
 	financialAccountId: string | null,
 	name: string,
 	phoneNumber: string,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<Return> {
 	let financialAccount = null;
 	if (financialAccountId !== "") {
@@ -47,7 +47,7 @@ export async function createPaymentCode(
 		};
 	}
 
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 
 	const bodyData = {
 		name: `${paymentName}`,
@@ -103,9 +103,9 @@ interface DeleteReturn {
 
 export async function deletePaymentCode(
 	paymentCodeId: string,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<DeleteReturn> {
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 
 	if (paymentCodeId.trim() === "") {
 		return { success: false, error: new Error("paymentCodeId is required") };
@@ -137,8 +137,8 @@ interface GetAll {
 	data?: GetAllPaymentCode;
 }
 
-export async function getAllPaymentCode(client: MonimeClient): Promise<GetAll> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+export async function getAllPaymentCode(config: ClientConfig): Promise<GetAll> {
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {
 			headers: {
@@ -167,9 +167,9 @@ interface GetOneReturn {
 
 export async function getPaymentCode(
 	paymentCodeId: string,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<GetOneReturn> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	try {
 		const res = await axios.get(`${URL}/${paymentCodeId}`, {
 			headers: {

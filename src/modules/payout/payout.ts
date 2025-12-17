@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import type {
 	CreatePayout,
 	DestinationOption,
@@ -21,7 +21,7 @@ export async function createPayout(
 	amount: number,
 	sourceAccount: string,
 	destination: DestinationOption,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<Return> {
 	if (sourceAccount.trim() === "") {
 		return {
@@ -37,7 +37,7 @@ export async function createPayout(
 		};
 	}
 
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 
 	const body = {
 		amount: {
@@ -74,14 +74,14 @@ export async function createPayout(
 	}
 }
 
-interface AllPayout {
+interface GetAllReturn {
 	success: boolean;
 	data?: GetAll;
 	error?: Error;
 }
 
-export async function getAllPayout(client: MonimeClient): Promise<AllPayout> {
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+export async function getAllPayout(config: ClientConfig): Promise<GetAllReturn> {
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {
 			headers: {
@@ -103,7 +103,7 @@ export async function getAllPayout(client: MonimeClient): Promise<AllPayout> {
 	}
 }
 
-interface OnePayout {
+interface GetOneReturn {
 	success: boolean;
 	data?: GetOnePayout;
 	error?: Error;
@@ -111,9 +111,9 @@ interface OnePayout {
 
 export async function getPayout(
 	payoutId: string,
-	client: MonimeClient,
-): Promise<OnePayout> {
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+	config: ClientConfig,
+): Promise<GetOneReturn> {
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		const res = await axios.get(`${URL}/${payoutId}`, {
 			headers: {
@@ -135,16 +135,16 @@ export async function getPayout(
 	}
 }
 
-interface Delete {
+interface DeleteReturn {
 	success: boolean;
 	error?: Error;
 }
 
 export async function deletePayout(
 	payoutId: string,
-	client: MonimeClient,
-): Promise<Delete> {
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+	config: ClientConfig,
+): Promise<DeleteReturn> {
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		await axios.delete(`${URL}/${payoutId}`, {
 			headers: {

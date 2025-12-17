@@ -1,21 +1,21 @@
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import { getAllTransaction, getTransaction } from "./financialTransaction";
 import type {
 	AllTransaction,
 	GetTransaction,
 } from "./financialTransactionTypes";
 
-export function FinancialTransactionAPI(client: MonimeClient) {
+export function FinancialTransactionAPI(config: ClientConfig) {
 	return {
 		get: (transactionId: string) =>
-			getTransaction(client, transactionId) as Promise<{
+			getTransaction(config, transactionId) as Promise<{
 				success: boolean;
 				error?: Error;
 				data?: GetTransaction;
 			}>,
 
 		getAll: () =>
-			getAllTransaction(client) as Promise<{
+			getAllTransaction(config) as Promise<{
 				success: boolean;
 				error?: Error;
 				data?: AllTransaction;

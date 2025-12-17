@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import type {
 	AllFinancialAccount,
 	CreateFinancialAccount,
@@ -21,7 +21,7 @@ export type Currency = "USD" | "SLE";
 export async function createFinancialAccount(
 	accountName: string,
 	currency: Currency,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<createFinancialAccountReturn> {
 	if (accountName.trim() === "") {
 		return { success: false, error: new Error("accountName is required") };
@@ -36,7 +36,7 @@ export async function createFinancialAccount(
 
 	//getting the accessToken and monime space id
 	//getting the accessToken and monime space id
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 
 	try {
 		const res = await axios.post(URL, body, {
@@ -69,7 +69,7 @@ interface GetFinancialAccountReturn {
 
 export async function getFinancialAccount(
 	financialAccountId: string,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<GetFinancialAccountReturn> {
 	if (financialAccountId.trim() === "") {
 		return {
@@ -78,7 +78,7 @@ export async function getFinancialAccount(
 		};
 	}
 
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	try {
 		const res = await axios.get(`${URL}/${financialAccountId}`, {
 			headers: {
@@ -107,9 +107,9 @@ interface GetAllFinancialAccount {
 }
 
 export async function getAllFinancialAccount(
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<GetAllFinancialAccount> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
 		const res = await axios.get(URL, {

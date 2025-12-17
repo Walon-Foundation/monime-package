@@ -1,9 +1,9 @@
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import { createUssdOtp } from "./ussdOtp";
 import type { CreateUssdOtpRequest } from "./ussdOtpTypes";
 
-export function UssdOtpAPI(client: MonimeClient) {
+export function UssdOtpAPI(config: ClientConfig) {
 	return {
-		create: (body: CreateUssdOtpRequest) => createUssdOtp(body, client),
+		create: (body: CreateUssdOtpRequest) => createUssdOtp(body, config),
 	};
 }

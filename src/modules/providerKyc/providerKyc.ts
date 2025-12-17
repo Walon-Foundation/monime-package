@@ -1,14 +1,14 @@
 import axios from "axios";
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import type { GetProviderKycResponse } from "./providerKycTypes";
 
 const URL = "https://api.monime.io/v1/provider-kyc";
 
 export async function getProviderKyc(
 	providerId: string,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<{ success: boolean; data?: GetProviderKycResponse; error?: Error }> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
 		const res = await axios.get(`${URL}/${providerId}`, {

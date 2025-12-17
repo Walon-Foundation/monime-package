@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import type {
 	CreateWebhookRequest,
 	CreateWebhookResponse,
@@ -14,9 +14,9 @@ const URL = "https://api.monime.io/v1/webhooks";
 
 export async function createWebhook(
 	body: CreateWebhookRequest,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<{ success: boolean; data?: CreateWebhookResponse; error?: Error }> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	const idempotencyKey = randomBytes(20).toString("hex");
 
 	try {
@@ -40,9 +40,9 @@ export async function createWebhook(
 
 export async function getWebhook(
 	webhookId: string,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<{ success: boolean; data?: GetWebhookResponse; error?: Error }> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
 		const res = await axios.get(`${URL}/${webhookId}`, {
@@ -62,9 +62,9 @@ export async function getWebhook(
 }
 
 export async function listWebhooks(
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<{ success: boolean; data?: ListWebhooksResponse; error?: Error }> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
 		const res = await axios.get(URL, {
@@ -86,9 +86,9 @@ export async function listWebhooks(
 export async function updateWebhook(
 	webhookId: string,
 	body: UpdateWebhookRequest,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<{ success: boolean; data?: UpdateWebhookResponse; error?: Error }> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	const idempotencyKey = randomBytes(20).toString("hex");
 
 	try {
@@ -112,9 +112,9 @@ export async function updateWebhook(
 
 export async function deleteWebhook(
 	webhookId: string,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<{ success: boolean; error?: Error }> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
 		await axios.delete(`${URL}/${webhookId}`, {

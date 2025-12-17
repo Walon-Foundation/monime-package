@@ -38,25 +38,22 @@ export class MonimeClient {
 		this.monimeSpaceId = options.monimeSpaceId;
 		this.monimeVersion = options.monimeVersion;
 
-		this.financialAccount = FinancialAccountAPI(this);
-		this.internalTransfer = InternalTransferAPI(this);
-		this.paymentCode = PaymentCodeAPI(this);
-		this.payment = PaymentAPI(this);
-		this.payout = PayoutAPI(this);
-		this.providerKyc = ProviderKycAPI(this);
-		this.receipt = ReceiptAPI(this);
-		this.ussdOtp = UssdOtpAPI(this);
-		this.webhook = WebhookAPI(this);
-		this.financialTransaction = FinancialTransactionAPI(this);
-		this.checkoutSession = CheckoutSessionAPI(this);
-	}
-
-	/** @internal */
-	_getConfig() {
-		return {
+		const config = {
 			monimeSpaceId: this.monimeSpaceId,
 			accessToken: this.accessToken,
 			monimeVersion: this.monimeVersion,
 		};
+
+		this.financialAccount = FinancialAccountAPI(config);
+		this.internalTransfer = InternalTransferAPI(config);
+		this.paymentCode = PaymentCodeAPI(config);
+		this.payment = PaymentAPI(config);
+		this.payout = PayoutAPI(config);
+		this.providerKyc = ProviderKycAPI(config);
+		this.receipt = ReceiptAPI(config);
+		this.ussdOtp = UssdOtpAPI(config);
+		this.webhook = WebhookAPI(config);
+		this.financialTransaction = FinancialTransactionAPI(config);
+		this.checkoutSession = CheckoutSessionAPI(config);
 	}
 }

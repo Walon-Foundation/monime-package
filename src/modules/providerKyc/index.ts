@@ -1,8 +1,8 @@
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import { getProviderKyc } from "./providerKyc";
 
-export function ProviderKycAPI(client: MonimeClient) {
+export function ProviderKycAPI(config: ClientConfig) {
 	return {
-		get: (providerId: string) => getProviderKyc(providerId, client),
+		get: (providerId: string) => getProviderKyc(providerId, config),
 	};
 }

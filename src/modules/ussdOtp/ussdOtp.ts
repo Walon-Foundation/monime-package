@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import type {
 	CreateUssdOtpRequest,
 	CreateUssdOtpResponse,
@@ -10,9 +10,9 @@ const URL = "https://api.monime.io/v1/ussd-otps";
 
 export async function createUssdOtp(
 	body: CreateUssdOtpRequest,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<{ success: boolean; data?: CreateUssdOtpResponse; error?: Error }> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	const idempotencyKey = randomBytes(20).toString("hex");
 
 	try {

@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import type {
 	AllTransaction,
 	GetTransaction,
@@ -14,9 +14,9 @@ interface GetAllTransactionReturn {
 }
 
 export async function getAllTransaction(
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<GetAllTransactionReturn> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {
 			headers: {
@@ -43,10 +43,10 @@ interface GetTransactionReturn {
 }
 
 export async function getTransaction(
-	client: MonimeClient,
+	config: ClientConfig,
 	transactionId: string,
 ): Promise<GetTransactionReturn> {
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	if (transactionId.trim() === "") {
 		return {
 			error: new Error("transactionId must not be empty"),

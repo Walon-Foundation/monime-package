@@ -1,11 +1,11 @@
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import { getPayment, listPayments, patchPayment } from "./payment";
 
-export function PaymentAPI(client: MonimeClient) {
+export function PaymentAPI(config: ClientConfig) {
 	return {
-		get: (paymentId: string) => getPayment(paymentId, client),
-		getAll: (params?: Record<string, any>) => listPayments(client, params),
+		get: (paymentId: string) => getPayment(paymentId, config),
+		getAll: (params?: Record<string, any>) => listPayments(config, params),
 		patch: (paymentId: string, body: Record<string, any>) =>
-			patchPayment(paymentId, body, client),
+			patchPayment(paymentId, body, config),
 	};
 }

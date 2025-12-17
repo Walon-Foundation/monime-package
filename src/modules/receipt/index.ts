@@ -1,10 +1,10 @@
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import { getReceipt, redeemReceipt } from "./receipt";
 
-export function ReceiptAPI(client: MonimeClient) {
+export function ReceiptAPI(config: ClientConfig) {
 	return {
-		get: (orderNumber: string) => getReceipt(orderNumber, client),
+		get: (orderNumber: string) => getReceipt(orderNumber, config),
 		redeem: (orderNumber: string, body: Record<string, any> = {}) =>
-			redeemReceipt(orderNumber, body, client),
+			redeemReceipt(orderNumber, body, config),
 	};
 }

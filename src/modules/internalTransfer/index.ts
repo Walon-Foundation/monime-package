@@ -1,4 +1,4 @@
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import {
 	createInternalTransfer,
 	deleteInternalTransfer,
@@ -11,7 +11,7 @@ import type {
 	InternalTransfer,
 } from "./internalTransferTypes";
 
-export function InternalTransferAPI(client: MonimeClient) {
+export function InternalTransferAPI(config: ClientConfig) {
 	return {
 		create: (
 			sourceAccount: string,
@@ -21,7 +21,7 @@ export function InternalTransferAPI(client: MonimeClient) {
 			createInternalTransfer(
 				sourceAccount,
 				destinationAccount,
-				client,
+				config,
 				amount,
 			) as Promise<{
 				success: boolean;
@@ -30,21 +30,21 @@ export function InternalTransferAPI(client: MonimeClient) {
 			}>,
 
 		get: (internalTransferId: string) =>
-			getInternalTransfer(client, internalTransferId) as Promise<{
+			getInternalTransfer(config, internalTransferId) as Promise<{
 				success: boolean;
 				data?: InternalTransfer;
 				error?: Error;
 			}>,
 
 		getAll: () =>
-			getAllInternalTransfers(client) as Promise<{
+			getAllInternalTransfers(config) as Promise<{
 				success: boolean;
 				error?: Error;
 				data?: AllInternalTransfers;
 			}>,
 
 		delete: (internalTransferId: string) =>
-			deleteInternalTransfer(client, internalTransferId) as Promise<{
+			deleteInternalTransfer(config, internalTransferId) as Promise<{
 				success: boolean;
 				error?: Error;
 			}>,

@@ -1,4 +1,4 @@
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import {
 	createCheckout,
 	deleteCheckout,
@@ -11,7 +11,7 @@ import type {
 	OneCheckout,
 } from "./checkoutSessionType";
 
-export function CheckoutSessionAPI(client: MonimeClient) {
+export function CheckoutSessionAPI(config: ClientConfig) {
 	return {
 		create: (
 			name: string,
@@ -25,7 +25,7 @@ export function CheckoutSessionAPI(client: MonimeClient) {
 			images?: string[],
 		) =>
 			createCheckout(
-				client,
+				config,
 				name,
 				amount,
 				quantity,
@@ -41,19 +41,19 @@ export function CheckoutSessionAPI(client: MonimeClient) {
 				data: CreateCheckout;
 			}>,
 		get: () =>
-			getAllCheckout(client) as Promise<{
+			getAllCheckout(config) as Promise<{
 				success: boolean;
 				error?: Error;
 				data: AllCheckout;
 			}>,
 		getOne: (checkoutId: string) =>
-			getOnecheckout(client, checkoutId) as Promise<{
+			getOnecheckout(config, checkoutId) as Promise<{
 				success: boolean;
 				error?: Error;
 				data: OneCheckout;
 			}>,
 		delete: (checkoutId: string) =>
-			deleteCheckout(client, checkoutId) as Promise<{
+			deleteCheckout(config, checkoutId) as Promise<{
 				success: boolean;
 				error?: Error;
 			}>,

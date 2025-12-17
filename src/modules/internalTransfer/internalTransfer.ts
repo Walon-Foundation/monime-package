@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import type {
 	AllInternalTransfers,
 	CreateInternalTransfer,
@@ -19,7 +19,7 @@ interface Return {
 export async function createInternalTransfer(
 	sourceAccount: string,
 	destinationAccount: string,
-	client: MonimeClient,
+	config: ClientConfig,
 	amount: number,
 ): Promise<Return> {
 	if (amount <= 0) {
@@ -50,7 +50,7 @@ export async function createInternalTransfer(
 		metadata: {},
 	};
 
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 
 	try {
 		const res = await axios.post(URL, body, {
@@ -82,9 +82,9 @@ interface AllInternalTransfersResult {
 }
 
 export async function getAllInternalTransfers(
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<AllInternalTransfersResult> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {
 			headers: {
@@ -113,10 +113,10 @@ interface InternalTransferResult {
 }
 
 export async function getInternalTransfer(
-	client: MonimeClient,
+	config: ClientConfig,
 	internalTransferId: string,
 ): Promise<InternalTransferResult> {
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 
 	try {
 		const res = await axios.get(`${URL}/${internalTransferId}`, {
@@ -145,10 +145,10 @@ interface DeleteTransferResult {
 }
 
 export async function deleteInternalTransfer(
-	client: MonimeClient,
+	config: ClientConfig,
 	internalTransferId: string,
 ): Promise<DeleteTransferResult> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
 		await axios.delete(`${URL}/${internalTransferId}`, {

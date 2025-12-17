@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import type {
 	GetPayment,
 	ListPayments,
@@ -11,13 +11,13 @@ const URL = "https://api.monime.io/v1/payments";
 
 export async function getPayment(
 	paymentId: string,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<{ success: boolean; data?: GetPayment; error?: Error }> {
 	if (!paymentId) {
 		return { success: false, error: new Error("paymentId is required") };
 	}
 
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
 		const res = await axios.get(`${URL}/${paymentId}`, {
@@ -37,10 +37,10 @@ export async function getPayment(
 }
 
 export async function listPayments(
-	client: MonimeClient,
+	config: ClientConfig,
 	params?: Record<string, any>,
 ): Promise<{ success: boolean; data?: ListPayments; error?: Error }> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
 		const res = await axios.get(URL, {
@@ -63,13 +63,13 @@ export async function listPayments(
 export async function patchPayment(
 	paymentId: string,
 	body: Record<string, any>,
-	client: MonimeClient,
+	config: ClientConfig,
 ): Promise<{ success: boolean; data?: PatchPayment; error?: Error }> {
 	if (!paymentId) {
 		return { success: false, error: new Error("paymentId is required") };
 	}
 
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	const idempotencyKey = randomBytes(20).toString("hex");
 
 	try {

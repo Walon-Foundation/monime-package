@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import type {
 	AllCheckout,
 	CreateCheckout,
@@ -17,7 +17,7 @@ interface CreateCheckoutReturn {
 }
 
 export async function createCheckout(
-	client: MonimeClient,
+	config: ClientConfig,
 	name: string,
 	amount: number,
 	quantity: number,
@@ -28,7 +28,7 @@ export async function createCheckout(
 	primaryColor?: string,
 	images?: string[],
 ): Promise<CreateCheckoutReturn> {
-	const { monimeSpaceId, accessToken, monimeVersion } = client._getConfig();
+	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	const body = {
 		name: name,
 		description: description,
@@ -98,14 +98,16 @@ export async function createCheckout(
 	}
 }
 
-interface AllReturn {
+interface GetAllCheckoutReturn {
 	success: boolean;
 	data?: AllCheckout;
 	error?: Error;
 }
 
-export async function getAllCheckout(client: MonimeClient): Promise<AllReturn> {
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+export async function getAllCheckout(
+	config: ClientConfig,
+): Promise<GetAllCheckoutReturn> {
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {
 			headers: {
@@ -127,17 +129,17 @@ export async function getAllCheckout(client: MonimeClient): Promise<AllReturn> {
 	}
 }
 
-interface OneReturn {
+interface GetOneCheckoutReturn {
 	success: boolean;
 	data?: OneCheckout;
 	error?: Error;
 }
 
 export async function getOnecheckout(
-	client: MonimeClient,
+	config: ClientConfig,
 	checkoutId: string,
-): Promise<OneReturn> {
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+): Promise<GetOneCheckoutReturn> {
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		const res = await axios.get(`${URL}/${checkoutId}`, {
 			headers: {
@@ -158,16 +160,16 @@ export async function getOnecheckout(
 	}
 }
 
-interface DeleteCheckout {
+interface DeleteCheckoutReturn {
 	success: boolean;
 	error?: Error;
 }
 
 export async function deleteCheckout(
-	client: MonimeClient,
+	config: ClientConfig,
 	checkoutId: string,
-): Promise<DeleteCheckout> {
-	const { accessToken, monimeSpaceId, monimeVersion } = client._getConfig();
+): Promise<DeleteCheckoutReturn> {
+	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		await axios.delete(`${URL}/${checkoutId}`, {
 			headers: {

@@ -1,4 +1,4 @@
-import type { MonimeClient } from "../../client";
+import type { ClientConfig } from "../../types";
 import {
 	createWebhook,
 	deleteWebhook,
@@ -8,13 +8,13 @@ import {
 } from "./webhook";
 import type { CreateWebhookRequest, UpdateWebhookRequest } from "./webhookTypes";
 
-export function WebhookAPI(client: MonimeClient) {
+export function WebhookAPI(config: ClientConfig) {
 	return {
-		create: (body: CreateWebhookRequest) => createWebhook(body, client),
-		get: (webhookId: string) => getWebhook(webhookId, client),
-		getAll: () => listWebhooks(client),
+		create: (body: CreateWebhookRequest) => createWebhook(body, config),
+		get: (webhookId: string) => getWebhook(webhookId, config),
+		getAll: () => listWebhooks(config),
 		update: (webhookId: string, body: UpdateWebhookRequest) =>
-			updateWebhook(webhookId, body, client),
-		delete: (webhookId: string) => deleteWebhook(webhookId, client),
+			updateWebhook(webhookId, body, config),
+		delete: (webhookId: string) => deleteWebhook(webhookId, config),
 	};
 }
