@@ -7,3 +7,5 @@ export * from "./providerKyc/providerKycTypes";
 export * from "./receipt/receiptTypes";
 export * from "./ussdOtp/ussdOtpTypes";
 export * from "./webhook/webhookTypes";
+export * from "./checkoutSession/checkoutSessionType"
+export * from "./financialTransaction/financialTransactionTypes"
