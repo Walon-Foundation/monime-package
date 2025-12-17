@@ -2,3 +2,8 @@ export * from "./financialAccount/financialAccountTypes";
 export * from "./internalTransfer/internalTransferTypes";
 export * from "./paymentCode/paymentCodeTypes";
 export * from "./payout/payoutTypes";
+export * from "./payment/paymentTypes";
+export * from "./webhook/webhookTypes";
+export * from "./receipt/receiptTypes";
+export * from "./ussdOtp/ussdOtpTypes";
+export * from "./providerKyc/providerKycTypes";

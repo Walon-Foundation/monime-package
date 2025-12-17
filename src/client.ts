@@ -1,34 +1,52 @@
-import { CheckoutSessionAPI } from "./modules/checkout session";
+import { CheckoutSessionAPI } from "./modules/checkoutSession";
 import { FinancialAccountAPI } from "./modules/financialAccount";
 import { FinancialTransactionAPI } from "./modules/financialTransaction";
 import { InternalTransferAPI } from "./modules/internalTransfer";
+import { PaymentAPI } from "./modules/payment";
 import { PaymentCodeAPI } from "./modules/paymentCode";
 import { PayoutAPI } from "./modules/payout";
+import { ProviderKycAPI } from "./modules/providerKyc";
+import { ReceiptAPI } from "./modules/receipt";
+import { UssdOtpAPI } from "./modules/ussdOtp";
+import { WebhookAPI } from "./modules/webhook";
 
 export interface ClientOptions {
 	monimeSpaceId: string;
 	accessToken: string;
+	monimeVersion?: "caph.2025-08-23" | "caph.2025-06-20";
 }
 
 export class MonimeClient {
 	private monimeSpaceId: string;
 	private accessToken: string;
+	private monimeVersion?: string | undefined;
 
 	public financialAccount: ReturnType<typeof FinancialAccountAPI>;
 	public internalTransfer: ReturnType<typeof InternalTransferAPI>;
 	public paymentCode: ReturnType<typeof PaymentCodeAPI>;
+	public payment: ReturnType<typeof PaymentAPI>;
 	public payout: ReturnType<typeof PayoutAPI>;
+	public providerKyc: ReturnType<typeof ProviderKycAPI>;
+	public receipt: ReturnType<typeof ReceiptAPI>;
+	public ussdOtp: ReturnType<typeof UssdOtpAPI>;
+	public webhook: ReturnType<typeof WebhookAPI>;
 	public financialTransaction: ReturnType<typeof FinancialTransactionAPI>;
 	public checkoutSession: ReturnType<typeof CheckoutSessionAPI>;
 
 	constructor(options: ClientOptions) {
 		this.accessToken = options.accessToken;
 		this.monimeSpaceId = options.monimeSpaceId;
+		this.monimeVersion = options.monimeVersion;
 
 		this.financialAccount = FinancialAccountAPI(this);
 		this.internalTransfer = InternalTransferAPI(this);
 		this.paymentCode = PaymentCodeAPI(this);
+		this.payment = PaymentAPI(this);
 		this.payout = PayoutAPI(this);
+		this.providerKyc = ProviderKycAPI(this);
+		this.receipt = ReceiptAPI(this);
+		this.ussdOtp = UssdOtpAPI(this);
+		this.webhook = WebhookAPI(this);
 		this.financialTransaction = FinancialTransactionAPI(this);
 		this.checkoutSession = CheckoutSessionAPI(this);
 	}
@@ -38,6 +56,7 @@ export class MonimeClient {
 		return {
 			monimeSpaceId: this.monimeSpaceId,
 			accessToken: this.accessToken,
+			monimeVersion: this.monimeVersion,
 		};
 	}
 }
