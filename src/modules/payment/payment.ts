@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, MonimeApiResponse } from "../../types";
 import type {
 	GetPayment,
 	ListPayments,
@@ -27,7 +27,8 @@ export async function getPayment(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		return { success: true, data: res.data };
+		const response = res.data as MonimeApiResponse<GetPayment>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error };
@@ -51,7 +52,11 @@ export async function listPayments(
 			},
 			params,
 		});
-		return { success: true, data: res.data };
+		const response = res.data as MonimeApiResponse<ListPayments["result"]>;
+		return {
+			success: true,
+			data: { result: response.result, pagination: response.pagination },
+		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error };
@@ -82,7 +87,8 @@ export async function patchPayment(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		return { success: true, data: res.data };
+		const response = res.data as MonimeApiResponse<PatchPayment>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error };

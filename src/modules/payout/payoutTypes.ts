@@ -16,12 +16,6 @@ export type DestinationOption =
 	  };
 
 export interface CreatePayout {
-	success: boolean;
-	messages: string[];
-	result: Result;
-}
-
-interface Result {
 	id: string;
 	status: string;
 	amount: Amount;
@@ -34,6 +28,8 @@ interface Result {
 	ownershipGraph: OwnershipGraph;
 	// metadata: Metadata;
 }
+
+
 
 interface OwnershipGraph {
 	owner: Owner2;
@@ -84,9 +80,7 @@ interface Amount {
 //---------------------------------------------------------------------------------------------
 
 export interface GetAll {
-	success: boolean;
-	messages: string[];
-	result: Result[];
+	result: Payout[];
 	pagination: Pagination;
 }
 
@@ -95,7 +89,7 @@ interface Pagination {
 	next: string;
 }
 
-interface Result {
+interface Payout {
 	id: string;
 	status: string;
 	amount: Amount;
@@ -158,12 +152,6 @@ interface Amount {
 //----------------------------------------------------------------------------------------------
 
 export interface GetOnePayout {
-	success: boolean;
-	messages: string[];
-	result: Result;
-}
-
-interface Result {
 	id: string;
 	status: string;
 	amount: Amount;
@@ -176,6 +164,8 @@ interface Result {
 	ownershipGraph: OwnershipGraph;
 	//   metadata: Metadata;
 }
+
+
 
 interface OwnershipGraph {
 	owner: Owner2;

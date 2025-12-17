@@ -30,21 +30,11 @@ export interface CreateWebhookRequest {
 	metadata?: Record<string, any>;
 }
 
-export interface CreateWebhookResponse {
-	success: boolean;
-	messages: string[];
-	result: Webhook;
-}
+export interface CreateWebhookResponse extends Webhook {}
 
-export interface GetWebhookResponse {
-	success: boolean;
-	messages: string[];
-	result: Webhook;
-}
+export interface GetWebhookResponse extends Webhook {}
 
 export interface ListWebhooksResponse {
-	success: boolean;
-	messages: string[];
 	result: Webhook[];
 	pagination?: {
 		next: string | null;
@@ -62,8 +52,4 @@ export interface UpdateWebhookRequest {
 	metadata?: Record<string, any>;
 }
 
-export interface UpdateWebhookResponse {
-	success: boolean;
-	messages: string[];
-	result: Webhook;
-}
+export interface UpdateWebhookResponse extends Webhook {}

@@ -1,7 +1,5 @@
 export interface AllCheckout {
-	success: boolean;
-	messages: string[];
-	result: Result[];
+	result: CheckoutSession[];
 	pagination: Pagination;
 }
 
@@ -10,7 +8,7 @@ interface Pagination {
 	next: string;
 }
 
-interface Result {
+interface CheckoutSession {
 	id: string;
 	status: string;
 	name: string;
@@ -74,12 +72,6 @@ interface Price {
 //---------------------------------------------------------------------------------------------
 
 export interface OneCheckout {
-	success: boolean;
-	messages: string[];
-	result: Result;
-}
-
-interface Result {
 	id: string;
 	status: string;
 	name: string;
@@ -97,6 +89,8 @@ interface Result {
 	ownershipGraph: OwnershipGraph;
 	//   metadata: Metadata;
 }
+
+
 
 interface OwnershipGraph {
 	owner: Owner2;
@@ -143,12 +137,6 @@ interface Price {
 //-------------------------------------------------------------------------------------------------
 
 export interface CreateCheckout {
-	success: boolean;
-	messages: string[];
-	result: Result;
-}
-
-interface Result {
 	id: string;
 	status: string;
 	name: string;
@@ -166,6 +154,8 @@ interface Result {
 	ownershipGraph: OwnershipGraph;
 	//   metadata: Metadata;
 }
+
+
 
 interface OwnershipGraph {
 	owner: Owner2;

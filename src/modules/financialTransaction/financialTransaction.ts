@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, MonimeApiResponse } from "../../types";
 import type {
 	AllTransaction,
 	GetTransaction,
@@ -25,8 +25,11 @@ export async function getAllTransaction(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const data = res.data as AllTransaction;
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<AllTransaction["result"]>;
+		return {
+			success: true,
+			data: { result: response.result, pagination: response.pagination },
+		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };
@@ -62,8 +65,8 @@ export async function getTransaction(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const data = res.data as GetTransaction;
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<GetTransaction>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };

@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, MonimeApiResponse } from "../../types";
 import type {
 	AllCheckout,
 	CreateCheckout,
@@ -87,8 +87,8 @@ export async function createCheckout(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const data = res.data as CreateCheckout;
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<CreateCheckout>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };
@@ -117,9 +117,11 @@ export async function getAllCheckout(
 			},
 		});
 
-		const data = res.data as AllCheckout;
-
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<AllCheckout["result"]>;
+		return {
+			success: true,
+			data: { result: response.result, pagination: response.pagination },
+		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };
@@ -149,8 +151,8 @@ export async function getOnecheckout(
 			},
 		});
 
-		const data = res.data as OneCheckout;
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<OneCheckout>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };

@@ -3,14 +3,6 @@ export interface Receipt {
 	[key: string]: any;
 }
 
-export interface GetReceiptResponse {
-	success: boolean;
-	messages: string[];
-	result: Receipt;
-}
+export interface GetReceiptResponse extends Receipt {}
 
-export interface RedeemReceiptResponse {
-	success: boolean;
-	messages: string[];
-	result: Receipt;
-}
+export interface RedeemReceiptResponse extends Receipt {}

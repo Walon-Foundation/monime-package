@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, MonimeApiResponse } from "../../types";
 import type {
 	AllFinancialAccount,
 	CreateFinancialAccount,
@@ -49,9 +49,8 @@ export async function createFinancialAccount(
 			},
 		});
 
-		const data = res.data as CreateFinancialAccount;
-
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<CreateFinancialAccount>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };
@@ -88,9 +87,8 @@ export async function getFinancialAccount(
 			},
 		});
 
-		const data = res.data as GetFinancialAccount;
-
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<GetFinancialAccount>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };
@@ -118,9 +116,11 @@ export async function getAllFinancialAccount(
 				Authorization: `Bearer ${accessToken}`,
 			},
 		});
-		const data = res.data as AllFinancialAccount;
-
-		return { success: true, data: data };
+		const response = res.data as MonimeApiResponse<AllFinancialAccount["result"]>;
+		return {
+			success: true,
+			data: { result: response.result, pagination: response.pagination },
+		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };

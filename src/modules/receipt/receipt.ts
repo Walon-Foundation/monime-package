@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, MonimeApiResponse } from "../../types";
 import type { GetReceiptResponse, RedeemReceiptResponse } from "./receiptTypes";
 
 const URL = "https://api.monime.io/v1/receipts";
@@ -19,7 +19,8 @@ export async function getReceipt(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		return { success: true, data: res.data };
+		const response = res.data as MonimeApiResponse<GetReceiptResponse>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error };
@@ -46,7 +47,8 @@ export async function redeemReceipt(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		return { success: true, data: res.data };
+		const response = res.data as MonimeApiResponse<RedeemReceiptResponse>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error };

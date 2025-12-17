@@ -1,10 +1,4 @@
 export interface CreateInternalTransfer {
-	success: boolean;
-	messages: string[];
-	result: Result;
-}
-
-interface Result {
 	id: string;
 	status: string;
 	amount: Amount;
@@ -18,6 +12,8 @@ interface Result {
 	updateTime: string;
 	// metadata: Metadata;
 }
+
+
 
 interface OwnershipGraph {
 	owner: Owner2;
@@ -54,9 +50,7 @@ interface Amount {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 export interface AllInternalTransfers {
-	success: boolean;
-	messages: string[];
-	result: Result[];
+	result: Transfer[];
 	pagination: Pagination;
 }
 
@@ -65,7 +59,7 @@ interface Pagination {
 	next: string;
 }
 
-interface Result {
+interface Transfer {
 	id: string;
 	status: string;
 	amount: Amount;
@@ -115,12 +109,6 @@ interface Amount {
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 export interface InternalTransfer {
-	success: boolean;
-	messages: string[];
-	result: Result;
-}
-
-interface Result {
 	id: string;
 	status: string;
 	amount: Amount;
@@ -134,6 +122,8 @@ interface Result {
 	updateTime: string;
 	//   metadata: Metadata;
 }
+
+
 
 interface OwnershipGraph {
 	owner: Owner2;

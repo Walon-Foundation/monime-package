@@ -3,8 +3,4 @@ export interface ProviderKyc {
 	[key: string]: any;
 }
 
-export interface GetProviderKycResponse {
-	success: boolean;
-	messages: string[];
-	result: ProviderKyc;
-}
+export interface GetProviderKycResponse extends ProviderKyc {}

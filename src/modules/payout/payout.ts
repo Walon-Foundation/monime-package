@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, MonimeApiResponse } from "../../types";
 import type {
 	CreatePayout,
 	DestinationOption,
@@ -62,9 +62,8 @@ export async function createPayout(
 			},
 		});
 
-		const data = res.data as CreatePayout;
-
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<CreatePayout>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error: error };
@@ -91,9 +90,11 @@ export async function getAllPayout(config: ClientConfig): Promise<GetAllReturn> 
 			},
 		});
 
-		const data = res.data as GetAll;
-
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<GetAll["result"]>;
+		return {
+			success: true,
+			data: { result: response.result, pagination: response.pagination },
+		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error: error };
@@ -123,9 +124,8 @@ export async function getPayout(
 			},
 		});
 
-		const data = res.data as GetOnePayout;
-
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<GetOnePayout>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error: error };

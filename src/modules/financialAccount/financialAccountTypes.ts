@@ -1,10 +1,4 @@
 export interface CreateFinancialAccount {
-	success: boolean;
-	messages: string[];
-	result: Result;
-}
-
-interface Result {
 	id: string;
 	uvan: string;
 	name: string;
@@ -16,6 +10,8 @@ interface Result {
 	updateTime: string;
 	// metadata: any;
 }
+
+
 
 interface Balance {
 	available: Available;
@@ -29,12 +25,6 @@ interface Available {
 //------------------------------------------------------------------------------------------------------
 
 export interface GetFinancialAccount {
-	success: boolean;
-	messages: string[];
-	result: Result;
-}
-
-interface Result {
 	id: string;
 	uvan: string;
 	name: string;
@@ -46,6 +36,8 @@ interface Result {
 	updateTime: string;
 	// metadata: Metadata;
 }
+
+
 
 interface Balance {
 	available: Available;
@@ -59,9 +51,7 @@ interface Available {
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 export interface AllFinancialAccount {
-	success: boolean;
-	messages: string[];
-	result: Result[];
+	result: FinancialAccount[];
 	pagination: Pagination;
 }
 
@@ -70,7 +60,7 @@ interface Pagination {
 	next: string;
 }
 
-interface Result {
+interface FinancialAccount {
 	id: string;
 	uvan: string;
 	name: string;

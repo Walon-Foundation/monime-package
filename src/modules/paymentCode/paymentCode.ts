@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, MonimeApiResponse } from "../../types";
 import type {
 	CreatePaymentCode,
 	GetAllPaymentCode,
@@ -86,8 +86,8 @@ export async function createPaymentCode(
 			},
 		});
 
-		const data = res.data as CreatePaymentCode;
-		return { data: data, success: true };
+		const response = res.data as MonimeApiResponse<CreatePaymentCode>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error.response?.data, success: false };
@@ -148,9 +148,11 @@ export async function getAllPaymentCode(config: ClientConfig): Promise<GetAll> {
 			},
 		});
 
-		const data = res.data as GetAllPaymentCode;
-
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<GetAllPaymentCode["result"]>;
+		return {
+			success: true,
+			data: { result: response.result, pagination: response.pagination },
+		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };
@@ -179,9 +181,8 @@ export async function getPaymentCode(
 			},
 		});
 
-		const data = res.data as GetOne;
-
-		return { success: true, data };
+		const response = res.data as MonimeApiResponse<GetOne>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };

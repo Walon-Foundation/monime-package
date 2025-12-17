@@ -1,10 +1,4 @@
 export interface CreatePaymentCode {
-	success: boolean;
-	messages: string[];
-	result: Result;
-}
-
-interface Result {
 	id: string;
 	mode: string;
 	status: string;
@@ -36,6 +30,8 @@ interface Result {
 	ownershipGraph: OwnershipGraph;
 	// metadata: {};
 }
+
+
 
 interface OwnershipGraph {
 	owner: {
@@ -70,9 +66,7 @@ interface ProcessedPaymentData {
 
 //-------------------------------------------------------------------------------------
 export interface GetAllPaymentCode {
-	success: boolean;
-	messages: string[];
-	result: Result[];
+	result: PaymentCode[];
 	pagination: Pagination;
 }
 
@@ -81,7 +75,7 @@ interface Pagination {
 	next: string;
 }
 
-interface Result {
+interface PaymentCode {
 	id: string;
 	mode: string;
 	status: string;
@@ -154,12 +148,6 @@ interface Amount {
 //-------------------------------------------------------------------------------------------------
 
 export interface GetOne {
-	success: boolean;
-	messages: string[];
-	result: Result;
-}
-
-interface Result {
 	id: string;
 	mode: string;
 	status: string;
@@ -180,6 +168,8 @@ interface Result {
 	ownershipGraph: OwnershipGraph;
 	//   metadata: Metadata;
 }
+
+
 
 interface OwnershipGraph {
 	owner: Owner2;

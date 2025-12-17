@@ -1,10 +1,4 @@
 export interface GetTransaction {
-	success: boolean;
-	messages: string[];
-	result: Result;
-}
-
-interface Result {
 	id: string;
 	type: string;
 	amount: Amount;
@@ -16,6 +10,8 @@ interface Result {
 	ownershipGraph: OwnershipGraph;
 	//   metadata: Metadata;
 }
+
+
 
 interface OwnershipGraph {
 	owner: Owner2;
@@ -60,9 +56,7 @@ interface Amount {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 export interface AllTransaction {
-	success: boolean;
-	messages: string[];
-	result: Result[];
+	result: Transaction[];
 	pagination: Pagination;
 }
 
@@ -71,7 +65,7 @@ interface Pagination {
 	next: string;
 }
 
-interface Result {
+interface Transaction {
 	id: string;
 	type: string;
 	amount: Amount;

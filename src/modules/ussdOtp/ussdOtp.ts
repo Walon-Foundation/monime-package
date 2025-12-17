@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, MonimeApiResponse } from "../../types";
 import type {
 	CreateUssdOtpRequest,
 	CreateUssdOtpResponse,
@@ -25,7 +25,8 @@ export async function createUssdOtp(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		return { success: true, data: res.data };
+		const response = res.data as MonimeApiResponse<CreateUssdOtpResponse>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error };

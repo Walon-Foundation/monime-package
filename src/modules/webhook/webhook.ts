@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, MonimeApiResponse } from "../../types";
 import type {
 	CreateWebhookRequest,
 	CreateWebhookResponse,
@@ -29,7 +29,8 @@ export async function createWebhook(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		return { success: true, data: res.data };
+		const response = res.data as MonimeApiResponse<CreateWebhookResponse>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error };
@@ -52,7 +53,8 @@ export async function getWebhook(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		return { success: true, data: res.data };
+		const response = res.data as MonimeApiResponse<GetWebhookResponse>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error };
@@ -74,7 +76,11 @@ export async function listWebhooks(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		return { success: true, data: res.data };
+		const response = res.data as MonimeApiResponse<ListWebhooksResponse["result"]>;
+		return {
+			success: true,
+			data: { result: response.result, pagination: response.pagination },
+		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error };
@@ -101,7 +107,8 @@ export async function updateWebhook(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		return { success: true, data: res.data };
+		const response = res.data as MonimeApiResponse<UpdateWebhookResponse>;
+		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { success: false, error };

@@ -11,8 +11,4 @@ export interface CreateUssdOtpRequest {
 	[key: string]: any;
 }
 
-export interface CreateUssdOtpResponse {
-	success: boolean;
-	messages: string[];
-	result: UssdOtp;
-}
+export interface CreateUssdOtpResponse extends UssdOtp {}

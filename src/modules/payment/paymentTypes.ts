@@ -32,23 +32,13 @@ export interface Payment {
 	metadata: Record<string, any> | null;
 }
 
-export interface GetPayment {
-	success: boolean;
-	messages: string[];
-	result: Payment;
-}
+export interface GetPayment extends Payment {}
 
 export interface ListPayments {
-	success: boolean;
-	messages: string[];
 	result: Payment[];
 	pagination: {
 		next: string | null;
 	};
 }
 
-export interface PatchPayment {
-	success: boolean;
-	messages: string[];
-	result: Payment;
-}
+export interface PatchPayment extends Payment {}
