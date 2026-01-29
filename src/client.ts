@@ -9,6 +9,8 @@ import { ProviderKycAPI } from "./modules/providerKyc";
 import { ReceiptAPI } from "./modules/receipt";
 import { UssdOtpAPI } from "./modules/ussdOtp";
 import { WebhookAPI } from "./modules/webhook";
+import { BankAPI } from "./modules/financialProvider/bank";
+import { MomoAPI } from "./modules/financialProvider/momo";
 
 export interface ClientOptions {
 	monimeSpaceId: string;
@@ -32,6 +34,8 @@ export class MonimeClient {
 	public webhook: ReturnType<typeof WebhookAPI>;
 	public financialTransaction: ReturnType<typeof FinancialTransactionAPI>;
 	public checkoutSession: ReturnType<typeof CheckoutSessionAPI>;
+	public bank: ReturnType<typeof BankAPI>;
+	public momo: ReturnType<typeof MomoAPI>;
 
 	constructor(options: ClientOptions) {
 		this.accessToken = options.accessToken;
@@ -55,5 +59,7 @@ export class MonimeClient {
 		this.webhook = WebhookAPI(config);
 		this.financialTransaction = FinancialTransactionAPI(config);
 		this.checkoutSession = CheckoutSessionAPI(config);
+		this.bank = BankAPI(config);
+		this.momo = MomoAPI(config);
 	}
 }
