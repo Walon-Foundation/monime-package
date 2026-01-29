@@ -34,8 +34,10 @@ export class MonimeClient {
 	public webhook: ReturnType<typeof WebhookAPI>;
 	public financialTransaction: ReturnType<typeof FinancialTransactionAPI>;
 	public checkoutSession: ReturnType<typeof CheckoutSessionAPI>;
-	public bank: ReturnType<typeof BankAPI>;
-	public momo: ReturnType<typeof MomoAPI>;
+	public financialProvider: {
+		bank: ReturnType<typeof BankAPI>;
+		momo: ReturnType<typeof MomoAPI>;
+	};
 
 	constructor(options: ClientOptions) {
 		this.accessToken = options.accessToken;
@@ -59,7 +61,9 @@ export class MonimeClient {
 		this.webhook = WebhookAPI(config);
 		this.financialTransaction = FinancialTransactionAPI(config);
 		this.checkoutSession = CheckoutSessionAPI(config);
-		this.bank = BankAPI(config);
-		this.momo = MomoAPI(config);
+		this.financialProvider = {
+			bank: BankAPI(config),
+			momo: MomoAPI(config),
+		};
 	}
 }
