@@ -1,4 +1,4 @@
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type {
 	AllFinancialAccount,
 	CreateFinancialAccount,
@@ -14,22 +14,14 @@ import {
 export function FinancialAccountAPI(config: ClientConfig) {
 	return {
 		create: (name: string, currency: Currency) =>
-			createFinancialAccount(name, currency, config) as Promise<{
-				success: boolean;
-				data?: CreateFinancialAccount;
-				error?: Error;
-			}>,
+			createFinancialAccount(name, currency, config) as Promise<
+				Result<CreateFinancialAccount>
+			>,
 		get: (financialAccountId: string) =>
-			getFinancialAccount(financialAccountId, config) as Promise<{
-				success: boolean;
-				data?: GetFinancialAccount;
-				error?: Error;
-			}>,
+			getFinancialAccount(financialAccountId, config) as Promise<
+				Result<GetFinancialAccount>
+			>,
 		getAll: () =>
-			getAllFinancialAccount(config) as Promise<{
-				success: boolean;
-				data?: AllFinancialAccount;
-				error?: Error;
-			}>,
+			getAllFinancialAccount(config) as Promise<Result<AllFinancialAccount>>,
 	};
 }

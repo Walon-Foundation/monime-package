@@ -1,39 +1,30 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig, MonimeApiResponse } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type {
 	AllInternalTransfers,
 	CreateInternalTransfer,
 	InternalTransfer,
 } from "./internalTransferTypes";
+import { createInternalTransferSchema } from "../../validators/internalTransfer.validator";
 
 const URL = "https://api.monime.io/v1/internal-transfers";
 const value = randomBytes(20).toString("hex");
-
-interface Return {
-	data?: CreateInternalTransfer;
-	error?: Error;
-	success: boolean;
-}
 
 export async function createInternalTransfer(
 	sourceAccount: string,
 	destinationAccount: string,
 	config: ClientConfig,
 	amount: number,
-): Promise<Return> {
-	if (amount <= 0) {
-		return {
-			success: false,
-			error: new Error("amount must be larger that zero"),
-		};
-	}
+): Promise<Result<CreateInternalTransfer>> {
+	const validation = createInternalTransferSchema.safeParse({
+		sourceAccount,
+		destinationAccount,
+		amount,
+	});
 
-	if (sourceAccount.trim() === "" || destinationAccount.trim() === "") {
-		return {
-			success: false,
-			error: new Error("sourceAccount or destinationAccount is missing"),
-		};
+	if (!validation.success) {
+		return { success: false, error: new Error(validation.error.message) };
 	}
 
 	const body = {
@@ -63,7 +54,7 @@ export async function createInternalTransfer(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<CreateInternalTransfer>;
+		const response = res.data as { result: CreateInternalTransfer };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -74,15 +65,9 @@ export async function createInternalTransfer(
 	}
 }
 
-interface AllInternalTransfersResult {
-	success: boolean;
-	error?: Error;
-	data?: AllInternalTransfers;
-}
-
 export async function getAllInternalTransfers(
 	config: ClientConfig,
-): Promise<AllInternalTransfersResult> {
+): Promise<Result<AllInternalTransfers>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {
@@ -93,15 +78,10 @@ export async function getAllInternalTransfers(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<
-			AllInternalTransfers["result"]
-		>;
+		const response = res.data as AllInternalTransfers;
 		return {
 			success: true,
-			data: {
-				result: response.result,
-				pagination: response.pagination ?? { next: null },
-			},
+			data: response,
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -112,16 +92,10 @@ export async function getAllInternalTransfers(
 	}
 }
 
-interface InternalTransferResult {
-	success: boolean;
-	error?: Error;
-	data?: InternalTransfer;
-}
-
 export async function getInternalTransfer(
 	config: ClientConfig,
 	internalTransferId: string,
-): Promise<InternalTransferResult> {
+): Promise<Result<InternalTransfer>> {
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
 
 	try {
@@ -133,7 +107,7 @@ export async function getInternalTransfer(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<InternalTransfer>;
+		const response = res.data as { result: InternalTransfer };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -144,15 +118,10 @@ export async function getInternalTransfer(
 	}
 }
 
-interface DeleteTransferResult {
-	success: boolean;
-	error?: Error;
-}
-
 export async function deleteInternalTransfer(
 	config: ClientConfig,
 	internalTransferId: string,
-): Promise<DeleteTransferResult> {
+): Promise<Result<void>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {

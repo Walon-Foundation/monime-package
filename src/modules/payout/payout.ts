@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig, MonimeApiResponse } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type {
 	CreatePayout,
 	DestinationOption,
@@ -11,30 +11,22 @@ import type {
 const URL = "https://api.monime.io/v1/payouts";
 const value = randomBytes(20).toString("hex");
 
-interface Return {
-	data?: CreatePayout;
-	error?: Error;
-	success: boolean;
-}
+import { createPayoutSchema } from "../../validators/payout.validator";
 
 export async function createPayout(
 	amount: number,
 	sourceAccount: string,
 	destination: DestinationOption,
 	config: ClientConfig,
-): Promise<Return> {
-	if (sourceAccount.trim() === "") {
-		return {
-			success: false,
-			error: new Error("sourceAccount cannot be empty"),
-		};
-	}
+): Promise<Result<CreatePayout>> {
+	const validation = createPayoutSchema.safeParse({
+		amount,
+		sourceAccount,
+		destination,
+	});
 
-	if (amount <= 0) {
-		return {
-			error: new Error("amount must be greater than 0"),
-			success: false,
-		};
+	if (!validation.success) {
+		return { success: false, error: new Error(validation.error.message) };
 	}
 
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
@@ -62,7 +54,7 @@ export async function createPayout(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<CreatePayout>;
+		const response = res.data as { result: CreatePayout };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -73,15 +65,9 @@ export async function createPayout(
 	}
 }
 
-interface GetAllReturn {
-	success: boolean;
-	data?: GetAll;
-	error?: Error;
-}
-
 export async function getAllPayout(
 	config: ClientConfig,
-): Promise<GetAllReturn> {
+): Promise<Result<GetAll>> {
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {
@@ -92,13 +78,10 @@ export async function getAllPayout(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<GetAll["result"]>;
+		const response = res.data as GetAll;
 		return {
 			success: true,
-			data: {
-				result: response.result,
-				pagination: response.pagination ?? { next: null },
-			},
+			data: response,
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -109,16 +92,10 @@ export async function getAllPayout(
 	}
 }
 
-interface GetOneReturn {
-	success: boolean;
-	data?: GetOnePayout;
-	error?: Error;
-}
-
 export async function getPayout(
 	payoutId: string,
 	config: ClientConfig,
-): Promise<GetOneReturn> {
+): Promise<Result<GetOnePayout>> {
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		const res = await axios.get(`${URL}/${payoutId}`, {
@@ -129,7 +106,7 @@ export async function getPayout(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<GetOnePayout>;
+		const response = res.data as { result: GetOnePayout };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -140,15 +117,10 @@ export async function getPayout(
 	}
 }
 
-interface DeleteReturn {
-	success: boolean;
-	error?: Error;
-}
-
 export async function deletePayout(
 	payoutId: string,
 	config: ClientConfig,
-): Promise<DeleteReturn> {
+): Promise<Result<void>> {
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		await axios.delete(`${URL}/${payoutId}`, {

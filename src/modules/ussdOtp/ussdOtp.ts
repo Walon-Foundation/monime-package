@@ -1,17 +1,24 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig, MonimeApiResponse } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type {
 	CreateUssdOtpRequest,
 	CreateUssdOtpResponse,
 } from "./ussdOtpTypes";
+import { createUssdOtpSchema } from "../../validators/ussdOtp.validator";
 
 const URL = "https://api.monime.io/v1/ussd-otps";
 
 export async function createUssdOtp(
 	body: CreateUssdOtpRequest,
 	config: ClientConfig,
-): Promise<{ success: boolean; data?: CreateUssdOtpResponse; error?: Error }> {
+): Promise<Result<CreateUssdOtpResponse>> {
+	const validation = createUssdOtpSchema.safeParse(body);
+
+	if (!validation.success) {
+		return { success: false, error: new Error(validation.error.message) };
+	}
+
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	const idempotencyKey = randomBytes(20).toString("hex");
 
@@ -25,7 +32,7 @@ export async function createUssdOtp(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<CreateUssdOtpResponse>;
+		const response = res.data as { result: CreateUssdOtpResponse };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { ClientConfig, MonimeApiResponse } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type {
 	AllTransaction,
 	GetTransaction,
@@ -7,15 +7,9 @@ import type {
 
 const URL = "https://api.monime.io/v1/financial-transactions";
 
-interface GetAllTransactionReturn {
-	success: boolean;
-	error?: Error;
-	data?: AllTransaction;
-}
-
 export async function getAllTransaction(
 	config: ClientConfig,
-): Promise<GetAllTransactionReturn> {
+): Promise<Result<AllTransaction>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {
@@ -25,13 +19,10 @@ export async function getAllTransaction(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<AllTransaction["result"]>;
+		const response = res.data as AllTransaction;
 		return {
 			success: true,
-			data: {
-				result: response.result,
-				pagination: response.pagination ?? { next: null },
-			},
+			data: response,
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -42,16 +33,10 @@ export async function getAllTransaction(
 	}
 }
 
-interface GetTransactionReturn {
-	success: boolean;
-	error?: Error;
-	data?: GetTransaction;
-}
-
 export async function getTransaction(
 	config: ClientConfig,
 	transactionId: string,
-): Promise<GetTransactionReturn> {
+): Promise<Result<GetTransaction>> {
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	if (transactionId.trim() === "") {
 		return {
@@ -68,7 +53,7 @@ export async function getTransaction(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<GetTransaction>;
+		const response = res.data as { result: GetTransaction };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig, MonimeApiResponse } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type {
 	CreateWebhookRequest,
 	CreateWebhookResponse,
@@ -9,13 +9,23 @@ import type {
 	UpdateWebhookRequest,
 	UpdateWebhookResponse,
 } from "./webhookTypes";
+import {
+	createWebhookSchema,
+	updateWebhookSchema,
+} from "../../validators/webhook.validator";
 
 const URL = "https://api.monime.io/v1/webhooks";
 
 export async function createWebhook(
 	body: CreateWebhookRequest,
 	config: ClientConfig,
-): Promise<{ success: boolean; data?: CreateWebhookResponse; error?: Error }> {
+): Promise<Result<CreateWebhookResponse>> {
+	const validation = createWebhookSchema.safeParse(body);
+
+	if (!validation.success) {
+		return { success: false, error: new Error(validation.error.message) };
+	}
+
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	const idempotencyKey = randomBytes(20).toString("hex");
 
@@ -29,7 +39,7 @@ export async function createWebhook(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<CreateWebhookResponse>;
+		const response = res.data as { result: CreateWebhookResponse };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -42,7 +52,7 @@ export async function createWebhook(
 export async function getWebhook(
 	webhookId: string,
 	config: ClientConfig,
-): Promise<{ success: boolean; data?: GetWebhookResponse; error?: Error }> {
+): Promise<Result<GetWebhookResponse>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
@@ -53,7 +63,7 @@ export async function getWebhook(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<GetWebhookResponse>;
+		const response = res.data as { result: GetWebhookResponse };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -65,7 +75,7 @@ export async function getWebhook(
 
 export async function listWebhooks(
 	config: ClientConfig,
-): Promise<{ success: boolean; data?: ListWebhooksResponse; error?: Error }> {
+): Promise<Result<ListWebhooksResponse>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
@@ -76,15 +86,10 @@ export async function listWebhooks(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<
-			ListWebhooksResponse["result"]
-		>;
+		const response = res.data as ListWebhooksResponse;
 		return {
 			success: true,
-			data: {
-				result: response.result,
-				pagination: response.pagination ?? { next: null },
-			},
+			data: response,
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -98,7 +103,13 @@ export async function updateWebhook(
 	webhookId: string,
 	body: UpdateWebhookRequest,
 	config: ClientConfig,
-): Promise<{ success: boolean; data?: UpdateWebhookResponse; error?: Error }> {
+): Promise<Result<UpdateWebhookResponse>> {
+	const validation = updateWebhookSchema.safeParse(body);
+
+	if (!validation.success) {
+		return { success: false, error: new Error(validation.error.message) };
+	}
+
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	const idempotencyKey = randomBytes(20).toString("hex");
 
@@ -112,7 +123,7 @@ export async function updateWebhook(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<UpdateWebhookResponse>;
+		const response = res.data as { result: UpdateWebhookResponse };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -125,7 +136,7 @@ export async function updateWebhook(
 export async function deleteWebhook(
 	webhookId: string,
 	config: ClientConfig,
-): Promise<{ success: boolean; error?: Error }> {
+): Promise<Result<void>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {

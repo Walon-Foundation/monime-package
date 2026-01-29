@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig, MonimeApiResponse } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type {
 	CreatePaymentCode,
 	GetAllPaymentCode,
@@ -10,11 +10,7 @@ import type {
 const value = randomBytes(20).toString("hex");
 const URL = "https://api.monime.io/v1/payment-codes";
 
-interface Return {
-	data?: CreatePaymentCode;
-	error?: Error;
-	success: boolean;
-}
+import { createPaymentCodeSchema } from "../../validators/paymentCode.validator";
 
 export async function createPaymentCode(
 	paymentName: string,
@@ -23,28 +19,22 @@ export async function createPaymentCode(
 	name: string,
 	phoneNumber: string,
 	config: ClientConfig,
-): Promise<Return> {
+): Promise<Result<CreatePaymentCode>> {
 	let financialAccount = null;
 	if (financialAccountId !== "") {
 		financialAccount = financialAccountId;
 	}
 
-	if (
-		paymentName.trim() === "" ||
-		name.trim() === "" ||
-		phoneNumber.trim() === ""
-	) {
-		return {
-			success: false,
-			error: new Error("paymentName, name, or phoneNumber is missing"),
-		};
-	}
+	const validation = createPaymentCodeSchema.safeParse({
+		paymentName,
+		amount,
+		financialAccountId,
+		name,
+		phoneNumber,
+	});
 
-	if (amount <= 0) {
-		return {
-			success: false,
-			error: new Error("amonut number be greater than zero"),
-		};
+	if (!validation.success) {
+		return { success: false, error: new Error(validation.error.message) };
 	}
 
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
@@ -86,7 +76,7 @@ export async function createPaymentCode(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<CreatePaymentCode>;
+		const response = res.data as { result: CreatePaymentCode };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -96,15 +86,10 @@ export async function createPaymentCode(
 	}
 }
 
-interface DeleteReturn {
-	success: boolean;
-	error?: Error;
-}
-
 export async function deletePaymentCode(
 	paymentCodeId: string,
 	config: ClientConfig,
-): Promise<DeleteReturn> {
+): Promise<Result<void>> {
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
 
 	if (paymentCodeId.trim() === "") {
@@ -131,13 +116,7 @@ export async function deletePaymentCode(
 	}
 }
 
-interface GetAll {
-	success: boolean;
-	error?: Error;
-	data?: GetAllPaymentCode;
-}
-
-export async function getAllPaymentCode(config: ClientConfig): Promise<GetAll> {
+export async function getAllPaymentCode(config: ClientConfig): Promise<Result<GetAllPaymentCode>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {
@@ -148,13 +127,10 @@ export async function getAllPaymentCode(config: ClientConfig): Promise<GetAll> {
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<GetAllPaymentCode["result"]>;
+		const response = res.data as GetAllPaymentCode;
 		return {
 			success: true,
-			data: {
-				result: response.result,
-				pagination: response.pagination ?? { next: null },
-			},
+			data: response,
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -164,16 +140,10 @@ export async function getAllPaymentCode(config: ClientConfig): Promise<GetAll> {
 	}
 }
 
-interface GetOneReturn {
-	success: boolean;
-	data?: GetOne;
-	error?: Error;
-}
-
 export async function getPaymentCode(
 	paymentCodeId: string,
 	config: ClientConfig,
-): Promise<GetOneReturn> {
+): Promise<Result<GetOne>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	try {
 		const res = await axios.get(`${URL}/${paymentCodeId}`, {
@@ -184,7 +154,7 @@ export async function getPaymentCode(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<GetOne>;
+		const response = res.data as { result: GetOne };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

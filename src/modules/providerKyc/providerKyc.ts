@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { ClientConfig, MonimeApiResponse } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type { GetProviderKycResponse } from "./providerKycTypes";
 
 const URL = "https://api.monime.io/v1/provider-kyc";
@@ -7,7 +7,7 @@ const URL = "https://api.monime.io/v1/provider-kyc";
 export async function getProviderKyc(
 	providerId: string,
 	config: ClientConfig,
-): Promise<{ success: boolean; data?: GetProviderKycResponse; error?: Error }> {
+): Promise<Result<GetProviderKycResponse>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
@@ -18,7 +18,7 @@ export async function getProviderKyc(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<GetProviderKycResponse>;
+		const response = res.data as { result: GetProviderKycResponse };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

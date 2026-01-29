@@ -1,4 +1,4 @@
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type { CreatePaymentCode, GetAllPaymentCode, GetOne } from "../types";
 import {
 	createPaymentCode,
@@ -23,30 +23,15 @@ export function PaymentCodeAPI(config: ClientConfig) {
 				username,
 				phoneNumber,
 				config,
-			) as Promise<{
-				success: boolean;
-				data?: CreatePaymentCode;
-				error?: Error;
-			}>,
+			) as Promise<Result<CreatePaymentCode>>,
 
 		delete: (paymentCodeId: string) =>
-			deletePaymentCode(paymentCodeId, config) as Promise<{
-				success: boolean;
-				error?: Error;
-			}>,
+			deletePaymentCode(paymentCodeId, config) as Promise<Result<void>>,
 
 		getAll: () =>
-			getAllPaymentCode(config) as Promise<{
-				success: boolean;
-				data?: GetAllPaymentCode;
-				error?: Error;
-			}>,
+			getAllPaymentCode(config) as Promise<Result<GetAllPaymentCode>>,
 
 		get: (paymentCodeId: string) =>
-			getPaymentCode(paymentCodeId, config) as Promise<{
-				success: boolean;
-				data?: GetOne;
-				error?: Error;
-			}>,
+			getPaymentCode(paymentCodeId, config) as Promise<Result<GetOne>>,
 	};
 }

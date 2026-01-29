@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig, MonimeApiResponse } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type {
 	AllFinancialAccount,
 	CreateFinancialAccount,
@@ -10,21 +10,22 @@ import type {
 const URL = "https://api.monime.io/v1/financial-accounts";
 const value = randomBytes(20).toString("hex");
 
-interface createFinancialAccountReturn {
-	data?: CreateFinancialAccount;
-	error?: Error;
-	success: boolean;
-}
-
 export type Currency = "USD" | "SLE";
+
+import { createFinancialAccountSchema } from "../../validators/financialAccount.validator";
 
 export async function createFinancialAccount(
 	accountName: string,
 	currency: Currency,
 	config: ClientConfig,
-): Promise<createFinancialAccountReturn> {
-	if (accountName.trim() === "") {
-		return { success: false, error: new Error("accountName is required") };
+): Promise<Result<CreateFinancialAccount>> {
+	const validation = createFinancialAccountSchema.safeParse({
+		accountName,
+		currency,
+	});
+
+	if (!validation.success) {
+		return { success: false, error: new Error(validation.error.message) };
 	}
 
 	const body = {
@@ -49,7 +50,7 @@ export async function createFinancialAccount(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<CreateFinancialAccount>;
+		const response = res.data as { result: CreateFinancialAccount };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -60,16 +61,10 @@ export async function createFinancialAccount(
 	}
 }
 
-interface GetFinancialAccountReturn {
-	data?: GetFinancialAccount;
-	error?: Error;
-	success: boolean;
-}
-
 export async function getFinancialAccount(
 	financialAccountId: string,
 	config: ClientConfig,
-): Promise<GetFinancialAccountReturn> {
+): Promise<Result<GetFinancialAccount>> {
 	if (financialAccountId.trim() === "") {
 		return {
 			success: false,
@@ -87,7 +82,7 @@ export async function getFinancialAccount(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<GetFinancialAccount>;
+		const response = res.data as { result: GetFinancialAccount };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -98,15 +93,9 @@ export async function getFinancialAccount(
 	}
 }
 
-interface GetAllFinancialAccount {
-	success: boolean;
-	error?: Error;
-	data?: AllFinancialAccount;
-}
-
 export async function getAllFinancialAccount(
 	config: ClientConfig,
-): Promise<GetAllFinancialAccount> {
+): Promise<Result<AllFinancialAccount>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
@@ -117,15 +106,10 @@ export async function getAllFinancialAccount(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<
-			AllFinancialAccount["result"]
-		>;
+		const response = res.data as AllFinancialAccount;
 		return {
 			success: true,
-			data: {
-				result: response.result,
-				pagination: response.pagination ?? { next: null },
-			},
+			data: response,
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

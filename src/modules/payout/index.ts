@@ -1,4 +1,4 @@
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type {
 	CreatePayout,
 	DestinationOption,
@@ -14,30 +14,16 @@ export function PayoutAPI(config: ClientConfig) {
 			destination: DestinationOption,
 			sourceAccount: string,
 		) =>
-			createPayout(amount, sourceAccount, destination, config) as Promise<{
-				success: boolean;
-				data?: CreatePayout;
-				error?: Error;
-			}>,
+			createPayout(amount, sourceAccount, destination, config) as Promise<
+				Result<CreatePayout>
+			>,
 
-		get: () =>
-			getAllPayout(config) as Promise<{
-				success: boolean;
-				data?: GetAll;
-				error?: Error;
-			}>,
+		get: () => getAllPayout(config) as Promise<Result<GetAll>>,
 
 		getOne: (payoutId: string) =>
-			getPayout(payoutId, config) as Promise<{
-				success: boolean;
-				data?: GetOnePayout;
-				error?: Error;
-			}>,
+			getPayout(payoutId, config) as Promise<Result<GetOnePayout>>,
 
 		delete: (payoutId: string) =>
-			deletePayout(payoutId, config) as Promise<{
-				success: boolean;
-				error?: Error;
-			}>,
+			deletePayout(payoutId, config) as Promise<Result<void>>,
 	};
 }

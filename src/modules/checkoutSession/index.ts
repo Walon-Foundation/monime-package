@@ -1,4 +1,4 @@
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import {
 	createCheckout,
 	deleteCheckout,
@@ -35,27 +35,12 @@ export function CheckoutSessionAPI(config: ClientConfig) {
 				financialAccountId,
 				primaryColor,
 				images,
-			) as Promise<{
-				success: boolean;
-				error?: Error;
-				data: CreateCheckout;
-			}>,
-		get: () =>
-			getAllCheckout(config) as Promise<{
-				success: boolean;
-				error?: Error;
-				data: AllCheckout;
-			}>,
-		getOne: (checkoutId: string) =>
-			getOnecheckout(config, checkoutId) as Promise<{
-				success: boolean;
-				error?: Error;
-				data: OneCheckout;
-			}>,
-		delete: (checkoutId: string) =>
-			deleteCheckout(config, checkoutId) as Promise<{
-				success: boolean;
-				error?: Error;
-			}>,
+			) as Promise<Result<CreateCheckout>>,
+			get: () => 
+				getAllCheckout(config) as Promise<Result<AllCheckout>>,
+			getOne: (checkoutId: string) =>
+				getOnecheckout(config, checkoutId) as Promise<Result<OneCheckout>>,
+			delete: (checkoutId: string) =>
+				deleteCheckout(config, checkoutId) as Promise<Result<OneCheckout>>,
 	};
 }

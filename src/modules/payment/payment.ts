@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig, MonimeApiResponse } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type { GetPayment, ListPayments, PatchPayment } from "./paymentTypes";
 
 const URL = "https://api.monime.io/v1/payments";
@@ -8,7 +8,7 @@ const URL = "https://api.monime.io/v1/payments";
 export async function getPayment(
 	paymentId: string,
 	config: ClientConfig,
-): Promise<{ success: boolean; data?: GetPayment; error?: Error }> {
+): Promise<Result<GetPayment>> {
 	if (!paymentId) {
 		return { success: false, error: new Error("paymentId is required") };
 	}
@@ -23,7 +23,7 @@ export async function getPayment(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<GetPayment>;
+		const response = res.data as { result: GetPayment };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -36,7 +36,7 @@ export async function getPayment(
 export async function listPayments(
 	config: ClientConfig,
 	params?: Record<string, unknown>,
-): Promise<{ success: boolean; data?: ListPayments; error?: Error }> {
+): Promise<Result<ListPayments>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
@@ -48,13 +48,10 @@ export async function listPayments(
 			},
 			params,
 		});
-		const response = res.data as MonimeApiResponse<ListPayments["result"]>;
+		const response = res.data as ListPayments;
 		return {
 			success: true,
-			data: {
-				result: response.result,
-				pagination: response.pagination ?? { next: null },
-			},
+			data: response,
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -64,13 +61,20 @@ export async function listPayments(
 	}
 }
 
+import { patchPaymentSchema } from "../../validators/payment.validator";
+
 export async function patchPayment(
 	paymentId: string,
 	body: Record<string, unknown>,
 	config: ClientConfig,
-): Promise<{ success: boolean; data?: PatchPayment; error?: Error }> {
+): Promise<Result<PatchPayment>> {
 	if (!paymentId) {
 		return { success: false, error: new Error("paymentId is required") };
+	}
+
+	const validation = patchPaymentSchema.safeParse(body);
+	if (!validation.success) {
+		return { success: false, error: new Error(validation.error.message) };
 	}
 
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
@@ -86,7 +90,7 @@ export async function patchPayment(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<PatchPayment>;
+		const response = res.data as { result: PatchPayment };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

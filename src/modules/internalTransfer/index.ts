@@ -1,4 +1,4 @@
-import type { ClientConfig } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import {
 	createInternalTransfer,
 	deleteInternalTransfer,
@@ -23,30 +23,17 @@ export function InternalTransferAPI(config: ClientConfig) {
 				destinationAccount,
 				config,
 				amount,
-			) as Promise<{
-				success: boolean;
-				data?: CreateInternalTransfer;
-				error?: Error;
-			}>,
+			) as Promise<Result<CreateInternalTransfer>>,
 
 		get: (internalTransferId: string) =>
-			getInternalTransfer(config, internalTransferId) as Promise<{
-				success: boolean;
-				data?: InternalTransfer;
-				error?: Error;
-			}>,
+			getInternalTransfer(config, internalTransferId) as Promise<
+				Result<InternalTransfer>
+			>,
 
 		getAll: () =>
-			getAllInternalTransfers(config) as Promise<{
-				success: boolean;
-				error?: Error;
-				data?: AllInternalTransfers;
-			}>,
+			getAllInternalTransfers(config) as Promise<Result<AllInternalTransfers>>,
 
 		delete: (internalTransferId: string) =>
-			deleteInternalTransfer(config, internalTransferId) as Promise<{
-				success: boolean;
-				error?: Error;
-			}>,
+			deleteInternalTransfer(config, internalTransferId) as Promise<Result<void>>,
 	};
 }

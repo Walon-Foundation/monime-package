@@ -1,20 +1,16 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig, MonimeApiResponse } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type {
 	AllCheckout,
 	CreateCheckout,
 	OneCheckout,
 } from "./checkoutSessionType";
+import { createCheckoutSchema } from "../../validators/checkoutSession.validator";
 
 const value = randomBytes(20).toString("hex");
 const URL = "https://api.monime.io/v1/checkout-sessions";
 
-interface CreateCheckoutReturn {
-	success: boolean;
-	data?: CreateCheckout;
-	error?: Error;
-}
 
 export async function createCheckout(
 	config: ClientConfig,
@@ -27,7 +23,22 @@ export async function createCheckout(
 	financialAccountId?: string,
 	primaryColor?: string,
 	images?: string[],
-): Promise<CreateCheckoutReturn> {
+): Promise<Result<CreateCheckout>> {
+	const validation = createCheckoutSchema.safeParse({
+		name,
+		amount,
+		quantity,
+		successUrl,
+		cancelUrl,
+		description,
+		financialAccountId,
+		primaryColor,
+		images,
+	});
+
+	if (!validation.success) {
+		return { success: false, error: new Error(validation.error.message) };
+	}
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	const body = {
 		name: name,
@@ -87,8 +98,8 @@ export async function createCheckout(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<CreateCheckout>;
-		return { success: true, data: response.result };
+		const response = res.data as CreateCheckout;
+		return { success: true, data: response };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };
@@ -98,15 +109,11 @@ export async function createCheckout(
 	}
 }
 
-interface GetAllCheckoutReturn {
-	success: boolean;
-	data?: AllCheckout;
-	error?: Error;
-}
+
 
 export async function getAllCheckout(
 	config: ClientConfig,
-): Promise<GetAllCheckoutReturn> {
+): Promise<Result<AllCheckout>> {
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {
@@ -117,13 +124,10 @@ export async function getAllCheckout(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<AllCheckout["result"]>;
+		const response = res.data as AllCheckout;
 		return {
 			success: true,
-			data: {
-				result: response.result,
-				pagination: response.pagination ?? { next: null },
-			},
+			data: response
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -134,16 +138,11 @@ export async function getAllCheckout(
 	}
 }
 
-interface GetOneCheckoutReturn {
-	success: boolean;
-	data?: OneCheckout;
-	error?: Error;
-}
 
 export async function getOnecheckout(
 	config: ClientConfig,
 	checkoutId: string,
-): Promise<GetOneCheckoutReturn> {
+): Promise<Result<OneCheckout>> {
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		const res = await axios.get(`${URL}/${checkoutId}`, {
@@ -154,8 +153,8 @@ export async function getOnecheckout(
 			},
 		});
 
-		const response = res.data as MonimeApiResponse<OneCheckout>;
-		return { success: true, data: response.result };
+		const response = res.data as OneCheckout
+		return { success: true, data: response };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
 			return { error: error, success: false };
@@ -165,15 +164,12 @@ export async function getOnecheckout(
 	}
 }
 
-interface DeleteCheckoutReturn {
-	success: boolean;
-	error?: Error;
-}
+
 
 export async function deleteCheckout(
 	config: ClientConfig,
 	checkoutId: string,
-): Promise<DeleteCheckoutReturn> {
+): Promise<Result<any>> {
 	const { accessToken, monimeSpaceId, monimeVersion } = config;
 	try {
 		await axios.delete(`${URL}/${checkoutId}`, {

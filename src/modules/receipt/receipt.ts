@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
-import type { ClientConfig, MonimeApiResponse } from "../../types";
+import type { ClientConfig, Result } from "../../types";
 import type { GetReceiptResponse, RedeemReceiptResponse } from "./receiptTypes";
 
 const URL = "https://api.monime.io/v1/receipts";
@@ -8,7 +8,7 @@ const URL = "https://api.monime.io/v1/receipts";
 export async function getReceipt(
 	orderNumber: string,
 	config: ClientConfig,
-): Promise<{ success: boolean; data?: GetReceiptResponse; error?: Error }> {
+): Promise<Result<GetReceiptResponse>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 
 	try {
@@ -19,7 +19,7 @@ export async function getReceipt(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<GetReceiptResponse>;
+		const response = res.data as { result: GetReceiptResponse };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -33,7 +33,7 @@ export async function redeemReceipt(
 	orderNumber: string,
 	body: Record<string, unknown>,
 	config: ClientConfig,
-): Promise<{ success: boolean; data?: RedeemReceiptResponse; error?: Error }> {
+): Promise<Result<RedeemReceiptResponse>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	const idempotencyKey = randomBytes(20).toString("hex");
 
@@ -47,7 +47,7 @@ export async function redeemReceipt(
 				...(monimeVersion ? { "Monime-Version": monimeVersion } : {}),
 			},
 		});
-		const response = res.data as MonimeApiResponse<RedeemReceiptResponse>;
+		const response = res.data as { result: RedeemReceiptResponse };
 		return { success: true, data: response.result };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {

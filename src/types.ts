@@ -5,12 +5,12 @@ export interface ClientConfig {
 }
 
 export interface Pagination {
-	count?: number;
-	next: string | null;
+  count: Number,
+  next: string
 }
 
-export interface MonimeApiResponse<T> {
-	result: T;
-	messages: string[];
-	pagination?: Pagination;
+export interface Result<T> {
+  data?: T,
+  success: boolean,
+  error?:Error
 }
