@@ -1,11 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { patchPaymentSchema } from "../../../src/validators/payment.validator";
 
 describe("patchPaymentSchema", () => {
 	it("should validate a correct patch request", () => {
 		const result = patchPaymentSchema.safeParse({
 			amount: 500,
-            status: "completed"
+			status: "completed",
 		});
 		expect(result.success).toBe(true);
 	});

@@ -1,11 +1,11 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
 import type { ClientConfig, Result } from "../../types";
+import { createUssdOtpSchema } from "../../validators/ussdOtp.validator";
 import type {
 	CreateUssdOtpRequest,
 	CreateUssdOtpResponse,
 } from "./ussdOtpTypes";
-import { createUssdOtpSchema } from "../../validators/ussdOtp.validator";
 
 const URL = "https://api.monime.io/v1/ussd-otps";
 

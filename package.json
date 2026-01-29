@@ -1,6 +1,6 @@
 {
 	"name": "monime-package",
-	"version": "1.1.2",
+	"version": "1.1.3",
 	"description": "A focused TypeScript helper library for interacting with Monime's common endpoints. It provides small, typed helpers that handle request composition, headers, and basic response/error plumbing so your application code stays clean.",
 	"main": "./dist/index.js",
 	"module": "./dist/index.mjs",

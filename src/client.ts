@@ -1,5 +1,7 @@
 import { CheckoutSessionAPI } from "./modules/checkoutSession";
 import { FinancialAccountAPI } from "./modules/financialAccount";
+import { BankAPI } from "./modules/financialProvider/bank";
+import { MomoAPI } from "./modules/financialProvider/momo";
 import { FinancialTransactionAPI } from "./modules/financialTransaction";
 import { InternalTransferAPI } from "./modules/internalTransfer";
 import { PaymentAPI } from "./modules/payment";
@@ -9,8 +11,6 @@ import { ProviderKycAPI } from "./modules/providerKyc";
 import { ReceiptAPI } from "./modules/receipt";
 import { UssdOtpAPI } from "./modules/ussdOtp";
 import { WebhookAPI } from "./modules/webhook";
-import { BankAPI } from "./modules/financialProvider/bank";
-import { MomoAPI } from "./modules/financialProvider/momo";
 
 export interface ClientOptions {
 	monimeSpaceId: string;

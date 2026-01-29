@@ -1,12 +1,12 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
 import type { ClientConfig, Result } from "../../types";
+import { createInternalTransferSchema } from "../../validators/internalTransfer.validator";
 import type {
 	AllInternalTransfers,
 	CreateInternalTransfer,
 	InternalTransfer,
 } from "./internalTransferTypes";
-import { createInternalTransferSchema } from "../../validators/internalTransfer.validator";
 
 const URL = "https://api.monime.io/v1/internal-transfers";
 const value = randomBytes(20).toString("hex");

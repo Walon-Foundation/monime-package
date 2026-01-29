@@ -116,7 +116,9 @@ export async function deletePaymentCode(
 	}
 }
 
-export async function getAllPaymentCode(config: ClientConfig): Promise<Result<GetAllPaymentCode>> {
+export async function getAllPaymentCode(
+	config: ClientConfig,
+): Promise<Result<GetAllPaymentCode>> {
 	const { monimeSpaceId, accessToken, monimeVersion } = config;
 	try {
 		const res = await axios.get(URL, {

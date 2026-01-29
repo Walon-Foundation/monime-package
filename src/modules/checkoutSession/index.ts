@@ -36,11 +36,10 @@ export function CheckoutSessionAPI(config: ClientConfig) {
 				primaryColor,
 				images,
 			) as Promise<Result<CreateCheckout>>,
-			get: () => 
-				getAllCheckout(config) as Promise<Result<AllCheckout>>,
-			getOne: (checkoutId: string) =>
-				getOnecheckout(config, checkoutId) as Promise<Result<OneCheckout>>,
-			delete: (checkoutId: string) =>
-				deleteCheckout(config, checkoutId) as Promise<Result<OneCheckout>>,
+		get: () => getAllCheckout(config) as Promise<Result<AllCheckout>>,
+		getOne: (checkoutId: string) =>
+			getOnecheckout(config, checkoutId) as Promise<Result<OneCheckout>>,
+		delete: (checkoutId: string) =>
+			deleteCheckout(config, checkoutId) as Promise<Result<OneCheckout>>,
 	};
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createFinancialAccountSchema } from "../../../src/validators/financialAccount.validator";
 
 describe("createFinancialAccountSchema", () => {
@@ -17,7 +17,9 @@ describe("createFinancialAccountSchema", () => {
 		});
 		expect(result.success).toBe(false);
 		if (!result.success) {
-			expect(result.error.issues[0].message).toContain("Account name is required");
+			expect(result.error.issues[0].message).toContain(
+				"Account name is required",
+			);
 		}
 	});
 

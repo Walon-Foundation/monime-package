@@ -10,7 +10,6 @@ export function FinancialTransactionAPI(config: ClientConfig) {
 		get: (transactionId: string) =>
 			getTransaction(config, transactionId) as Promise<Result<GetTransaction>>,
 
-		getAll: () =>
-			getAllTransaction(config) as Promise<Result<AllTransaction>>,
+		getAll: () => getAllTransaction(config) as Promise<Result<AllTransaction>>,
 	};
 }

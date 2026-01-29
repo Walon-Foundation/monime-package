@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createPaymentCodeSchema } from "../../../src/validators/paymentCode.validator";
 
 describe("createPaymentCodeSchema", () => {
@@ -13,7 +13,7 @@ describe("createPaymentCodeSchema", () => {
 		expect(result.success).toBe(true);
 	});
 
-    it("should validate a correct payment code request without financialAccountId", () => {
+	it("should validate a correct payment code request without financialAccountId", () => {
 		const result = createPaymentCodeSchema.safeParse({
 			paymentName: "Lunch",
 			amount: 100,
@@ -38,7 +38,7 @@ describe("createPaymentCodeSchema", () => {
 			paymentName: "",
 			amount: 100,
 			name: "",
-            phoneNumber: ""
+			phoneNumber: "",
 		});
 		expect(result.success).toBe(false);
 	});

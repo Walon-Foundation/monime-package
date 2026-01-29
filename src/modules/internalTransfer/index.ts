@@ -34,6 +34,8 @@ export function InternalTransferAPI(config: ClientConfig) {
 			getAllInternalTransfers(config) as Promise<Result<AllInternalTransfers>>,
 
 		delete: (internalTransferId: string) =>
-			deleteInternalTransfer(config, internalTransferId) as Promise<Result<void>>,
+			deleteInternalTransfer(config, internalTransferId) as Promise<
+				Result<void>
+			>,
 	};
 }

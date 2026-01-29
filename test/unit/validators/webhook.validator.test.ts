@@ -1,5 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { createWebhookSchema, updateWebhookSchema } from "../../../src/validators/webhook.validator";
+import { describe, expect, it } from "vitest";
+import {
+	createWebhookSchema,
+	updateWebhookSchema,
+} from "../../../src/validators/webhook.validator";
 
 describe("Webhook Validators", () => {
 	describe("createWebhookSchema", () => {
@@ -20,8 +23,8 @@ describe("Webhook Validators", () => {
 			});
 			expect(result.success).toBe(false);
 		});
-        
-        it("should fail when events array is empty", () => {
+
+		it("should fail when events array is empty", () => {
 			const result = createWebhookSchema.safeParse({
 				name: "My Webhook",
 				url: "https://example.com/webhook",
@@ -46,8 +49,8 @@ describe("Webhook Validators", () => {
 			});
 			expect(result.success).toBe(true);
 		});
-        
-        it("should fail if url is invalid in update", () => {
+
+		it("should fail if url is invalid in update", () => {
 			const result = updateWebhookSchema.safeParse({
 				url: "invalid-url",
 			});

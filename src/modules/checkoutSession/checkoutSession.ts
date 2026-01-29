@@ -1,16 +1,15 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
 import type { ClientConfig, Result } from "../../types";
+import { createCheckoutSchema } from "../../validators/checkoutSession.validator";
 import type {
 	AllCheckout,
 	CreateCheckout,
 	OneCheckout,
 } from "./checkoutSessionType";
-import { createCheckoutSchema } from "../../validators/checkoutSession.validator";
 
 const value = randomBytes(20).toString("hex");
 const URL = "https://api.monime.io/v1/checkout-sessions";
-
 
 export async function createCheckout(
 	config: ClientConfig,
@@ -109,8 +108,6 @@ export async function createCheckout(
 	}
 }
 
-
-
 export async function getAllCheckout(
 	config: ClientConfig,
 ): Promise<Result<AllCheckout>> {
@@ -127,7 +124,7 @@ export async function getAllCheckout(
 		const response = res.data as AllCheckout;
 		return {
 			success: true,
-			data: response
+			data: response,
 		};
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -137,7 +134,6 @@ export async function getAllCheckout(
 		return { error: new Error("unknown error"), success: false };
 	}
 }
-
 
 export async function getOnecheckout(
 	config: ClientConfig,
@@ -153,7 +149,7 @@ export async function getOnecheckout(
 			},
 		});
 
-		const response = res.data as OneCheckout
+		const response = res.data as OneCheckout;
 		return { success: true, data: response };
 	} catch (error) {
 		if (axios.isAxiosError(error)) {
@@ -163,8 +159,6 @@ export async function getOnecheckout(
 		return { error: new Error("unknown error"), success: false };
 	}
 }
-
-
 
 export async function deleteCheckout(
 	config: ClientConfig,

@@ -1,6 +1,10 @@
 import { randomBytes } from "node:crypto";
 import axios from "axios";
 import type { ClientConfig, Result } from "../../types";
+import {
+	createWebhookSchema,
+	updateWebhookSchema,
+} from "../../validators/webhook.validator";
 import type {
 	CreateWebhookRequest,
 	CreateWebhookResponse,
@@ -9,10 +13,6 @@ import type {
 	UpdateWebhookRequest,
 	UpdateWebhookResponse,
 } from "./webhookTypes";
-import {
-	createWebhookSchema,
-	updateWebhookSchema,
-} from "../../validators/webhook.validator";
 
 const URL = "https://api.monime.io/v1/webhooks";
 

@@ -5,12 +5,12 @@ export interface ClientConfig {
 }
 
 export interface Pagination {
-  count: Number,
-  next: string
+	count: number;
+	next: string;
 }
 
 export interface Result<T> {
-  data?: T,
-  success: boolean,
-  error?:Error
+	data?: T;
+	success: boolean;
+	error?: Error;
 }

@@ -1,8 +1,8 @@
-import { Pagination } from "../../types";
+import type { Pagination } from "../../types";
 
 export interface AllCheckout {
-  result: CheckoutSession[];
-	Pagination:Pagination
+	result: CheckoutSession[];
+	Pagination: Pagination;
 }
 
 interface CheckoutSession {
