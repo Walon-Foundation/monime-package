@@ -63,7 +63,12 @@ export class HttpClient {
 					throw new MonimeAuthenticationError(errorMessage);
 				}
 
-				throw new MonimeError(errorMessage, response.status, requestId, errorDetails);
+				throw new MonimeError(
+					errorMessage,
+					response.status,
+					requestId,
+					errorDetails,
+				);
 			}
 
 			if (response.status === 204) {
@@ -84,7 +89,8 @@ export class HttpClient {
 
 			return {
 				success: false,
-				error: error instanceof Error ? error : new Error("Unknown error occurred"),
+				error:
+					error instanceof Error ? error : new Error("Unknown error occurred"),
 			};
 		}
 	}

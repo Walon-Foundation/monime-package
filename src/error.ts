@@ -3,7 +3,12 @@ export class MonimeError extends Error {
 	public readonly requestId?: string;
 	public readonly details?: unknown;
 
-	constructor(message: string, status?: number, requestId?: string, details?: unknown) {
+	constructor(
+		message: string,
+		status?: number,
+		requestId?: string,
+		details?: unknown,
+	) {
 		super(message);
 		this.name = "MonimeError";
 		if (status !== undefined) this.status = status;

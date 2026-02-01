@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
 import type { Result } from "../types";
 import type {
@@ -6,7 +7,6 @@ import type {
 	RetrievePaymentCodeResponse,
 } from "../types/paymentCode";
 import { createPaymentCodeSchema } from "../validators/paymentCode.validator";
-import { randomBytes } from "node:crypto";
 
 export interface CreatePaymentCodeOptions {
 	paymentName: string;
@@ -22,7 +22,9 @@ export class PaymentCodeAPI extends HttpClient {
 	/**
 	 * Create a new USSD payment code.
 	 */
-	async create(options: CreatePaymentCodeOptions): Promise<Result<CreatePaymentCodeResponse>> {
+	async create(
+		options: CreatePaymentCodeOptions,
+	): Promise<Result<CreatePaymentCodeResponse>> {
 		const validation = createPaymentCodeSchema.safeParse(options);
 
 		if (!validation.success) {
@@ -68,7 +70,9 @@ export class PaymentCodeAPI extends HttpClient {
 	 * Retrieve a specific payment code by ID.
 	 * @param paymentCodeId - The unique identifier of the payment code.
 	 */
-	async retrieve(paymentCodeId: string): Promise<Result<RetrievePaymentCodeResponse>> {
+	async retrieve(
+		paymentCodeId: string,
+	): Promise<Result<RetrievePaymentCodeResponse>> {
 		return this.request<RetrievePaymentCodeResponse>({
 			method: "GET",
 			path: `${this.path}/${paymentCodeId}`,

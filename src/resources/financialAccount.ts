@@ -1,12 +1,12 @@
+import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
 import type { Result } from "../types";
 import type {
-	ListFinancialAccountsResponse,
 	CreateFinancialAccountResponse,
+	ListFinancialAccountsResponse,
 	RetrieveFinancialAccountResponse,
 } from "../types/financialAccount";
 import { createFinancialAccountSchema } from "../validators/financialAccount.validator";
-import { randomBytes } from "node:crypto";
 
 export type Currency = "USD" | "SLE";
 
@@ -23,7 +23,9 @@ export class FinancialAccountAPI extends HttpClient {
 	/**
 	 * Create a new financial account.
 	 */
-	async create(options: CreateFinancialAccountOptions): Promise<Result<CreateFinancialAccountResponse>> {
+	async create(
+		options: CreateFinancialAccountOptions,
+	): Promise<Result<CreateFinancialAccountResponse>> {
 		const validation = createFinancialAccountSchema.safeParse(options);
 
 		if (!validation.success) {
@@ -51,7 +53,9 @@ export class FinancialAccountAPI extends HttpClient {
 	 * Retrieve a specific financial account by ID.
 	 * @param financialAccountId - The unique identifier of the account.
 	 */
-	async retrieve(financialAccountId: string): Promise<Result<RetrieveFinancialAccountResponse>> {
+	async retrieve(
+		financialAccountId: string,
+	): Promise<Result<RetrieveFinancialAccountResponse>> {
 		if (!financialAccountId || financialAccountId.trim() === "") {
 			return {
 				success: false,

@@ -1,9 +1,6 @@
+import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
 import type { Result } from "../types";
-import {
-	createWebhookSchema,
-	updateWebhookSchema,
-} from "../validators/webhook.validator";
 import type {
 	CreateWebhookRequest,
 	CreateWebhookResponse,
@@ -12,7 +9,10 @@ import type {
 	UpdateWebhookRequest,
 	UpdateWebhookResponse,
 } from "../types/webhook";
-import { randomBytes } from "node:crypto";
+import {
+	createWebhookSchema,
+	updateWebhookSchema,
+} from "../validators/webhook.validator";
 
 export class WebhookAPI extends HttpClient {
 	private readonly path = "/webhooks";
@@ -20,7 +20,9 @@ export class WebhookAPI extends HttpClient {
 	/**
 	 * Create a new webhook.
 	 */
-	async create(options: CreateWebhookRequest): Promise<Result<CreateWebhookResponse>> {
+	async create(
+		options: CreateWebhookRequest,
+	): Promise<Result<CreateWebhookResponse>> {
 		const validation = createWebhookSchema.safeParse(options);
 
 		if (!validation.success) {

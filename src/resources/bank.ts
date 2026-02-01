@@ -1,6 +1,6 @@
 import { HttpClient } from "../http";
 import type { Result } from "../types";
-import type { RetrieveBankResponse, ListBanksResponse } from "../types/bank";
+import type { ListBanksResponse, RetrieveBankResponse } from "../types/bank";
 
 export class BankAPI extends HttpClient {
 	private readonly path = "/banks";

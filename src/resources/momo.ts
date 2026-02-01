@@ -1,6 +1,6 @@
 import { HttpClient } from "../http";
 import type { Result } from "../types";
-import type { RetrieveMomoResponse, ListMomosResponse } from "../types/momo";
+import type { ListMomosResponse, RetrieveMomoResponse } from "../types/momo";
 
 export class MomoAPI extends HttpClient {
 	private readonly path = "/momos";

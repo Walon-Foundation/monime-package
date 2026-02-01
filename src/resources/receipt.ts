@@ -1,7 +1,10 @@
+import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
 import type { Result } from "../types";
-import type { GetReceiptResponse, RedeemReceiptResponse } from "../types/receipt";
-import { randomBytes } from "node:crypto";
+import type {
+	GetReceiptResponse,
+	RedeemReceiptResponse,
+} from "../types/receipt";
 
 export class ReceiptAPI extends HttpClient {
 	private readonly path = "/receipts";

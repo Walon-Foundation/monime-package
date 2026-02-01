@@ -1,11 +1,11 @@
+import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
 import type { Result } from "../types";
-import { createUssdOtpSchema } from "../validators/ussdOtp.validator";
 import type {
 	CreateUssdOtpRequest,
 	CreateUssdOtpResponse,
 } from "../types/ussdOtp";
-import { randomBytes } from "node:crypto";
+import { createUssdOtpSchema } from "../validators/ussdOtp.validator";
 
 export class UssdOtpAPI extends HttpClient {
 	private readonly path = "/ussd-otps";
@@ -13,7 +13,9 @@ export class UssdOtpAPI extends HttpClient {
 	/**
 	 * Create a new USSD OTP.
 	 */
-	async create(options: CreateUssdOtpRequest): Promise<Result<CreateUssdOtpResponse>> {
+	async create(
+		options: CreateUssdOtpRequest,
+	): Promise<Result<CreateUssdOtpResponse>> {
 		const validation = createUssdOtpSchema.safeParse(options);
 
 		if (!validation.success) {

@@ -22,7 +22,9 @@ export class FinancialTransactionAPI extends HttpClient {
 	 * Retrieve a specific transaction by ID.
 	 * @param transactionId - The unique identifier of the transaction.
 	 */
-	async retrieve(transactionId: string): Promise<Result<RetrieveTransactionResponse>> {
+	async retrieve(
+		transactionId: string,
+	): Promise<Result<RetrieveTransactionResponse>> {
 		if (!transactionId || transactionId.trim() === "") {
 			return {
 				error: new Error("transactionId is required"),

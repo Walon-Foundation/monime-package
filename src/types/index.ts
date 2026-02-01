@@ -1,8 +1,10 @@
-export * from "./core";
+export * from "./bank";
 export * from "./checkoutSession";
+export * from "./core";
 export * from "./financialAccount";
 export * from "./financialTransaction";
 export * from "./internalTransfer";
+export * from "./momo";
 export * from "./payment";
 export * from "./paymentCode";
 export * from "./payout";
@@ -10,5 +12,3 @@ export * from "./providerKyc";
 export * from "./receipt";
 export * from "./ussdOtp";
 export * from "./webhook";
-export * from "./bank";
-export * from "./momo";

@@ -1,8 +1,12 @@
+import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
 import type { Result } from "../types";
-import type { RetrievePaymentResponse, ListPaymentsResponse, UpdatePaymentResponse } from "../types/payment";
+import type {
+	ListPaymentsResponse,
+	RetrievePaymentResponse,
+	UpdatePaymentResponse,
+} from "../types/payment";
 import { patchPaymentSchema } from "../validators/payment.validator";
-import { randomBytes } from "node:crypto";
 
 export class PaymentAPI extends HttpClient {
 	private readonly path = "/payments";

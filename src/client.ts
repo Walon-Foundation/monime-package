@@ -1,9 +1,9 @@
+import { BankAPI } from "./resources/bank";
 import { CheckoutSessionAPI } from "./resources/checkoutSession";
 import { FinancialAccountAPI } from "./resources/financialAccount";
-import { BankAPI } from "./resources/bank";
-import { MomoAPI } from "./resources/momo";
 import { FinancialTransactionAPI } from "./resources/financialTransaction";
 import { InternalTransferAPI } from "./resources/internalTransfer";
+import { MomoAPI } from "./resources/momo";
 import { PaymentAPI } from "./resources/payment";
 import { PaymentCodeAPI } from "./resources/paymentCode";
 import { PayoutAPI } from "./resources/payout";
@@ -47,7 +47,7 @@ export class MonimeClient {
 					"To fix this, either:\n" +
 					"  1. Pass it to the constructor: new MonimeClient({ monimeSpaceId: 'your-space-id' })\n" +
 					"  2. Set the environment variable: MONIME_SPACE_ID=your-space-id\n" +
-					"You can find your Space ID in the Monime Dashboard (https://monime.io).\n"
+					"You can find your Space ID in the Monime Dashboard (https://monime.io).\n",
 			);
 		}
 
@@ -57,7 +57,7 @@ export class MonimeClient {
 					"To fix this, either:\n" +
 					"  1. Pass it to the constructor: new MonimeClient({ accessToken: 'your-access-token' })\n" +
 					"  2. Set the environment variable: MONIME_ACCESS_TOKEN=your-access-token\n" +
-					"Generate your Access Token in the Monime Dashboard settings.\n"
+					"Generate your Access Token in the Monime Dashboard settings.\n",
 			);
 		}
 

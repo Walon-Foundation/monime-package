@@ -1,12 +1,12 @@
+import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
 import type { Result } from "../types";
-import { createCheckoutSchema } from "../validators/checkoutSession.validator";
 import type {
-	ListCheckoutsResponse,
 	CreateCheckoutResponse,
+	ListCheckoutsResponse,
 	RetrieveCheckoutResponse,
 } from "../types/checkoutSession";
-import { randomBytes } from "node:crypto";
+import { createCheckoutSchema } from "../validators/checkoutSession.validator";
 
 export interface CreateCheckoutOptions {
 	name: string;
@@ -26,14 +26,26 @@ export class CheckoutSessionAPI extends HttpClient {
 	/**
 	 * Create a new checkout session for hosted payment pages.
 	 */
-	async create(options: CreateCheckoutOptions): Promise<Result<CreateCheckoutResponse>> {
+	async create(
+		options: CreateCheckoutOptions,
+	): Promise<Result<CreateCheckoutResponse>> {
 		const validation = createCheckoutSchema.safeParse(options);
 
 		if (!validation.success) {
 			return { success: false, error: new Error(validation.error.message) };
 		}
 
-		const { name, description, cancelUrl, successUrl, financialAccountId, amount, quantity, images, primaryColor } = options;
+		const {
+			name,
+			description,
+			cancelUrl,
+			successUrl,
+			financialAccountId,
+			amount,
+			quantity,
+			images,
+			primaryColor,
+		} = options;
 
 		const body = {
 			name,
@@ -102,7 +114,9 @@ export class CheckoutSessionAPI extends HttpClient {
 	 * Retrieve a specific checkout session by ID.
 	 * @param checkoutId - The unique identifier of the checkout session.
 	 */
-	async retrieve(checkoutId: string): Promise<Result<RetrieveCheckoutResponse>> {
+	async retrieve(
+		checkoutId: string,
+	): Promise<Result<RetrieveCheckoutResponse>> {
 		return this.request<RetrieveCheckoutResponse>({
 			method: "GET",
 			path: `${this.path}/${checkoutId}`,

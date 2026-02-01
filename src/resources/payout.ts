@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
 import type { Result } from "../types";
 import type {
@@ -7,7 +8,6 @@ import type {
 	RetrievePayoutResponse,
 } from "../types/payout";
 import { createPayoutSchema } from "../validators/payout.validator";
-import { randomBytes } from "node:crypto";
 
 export interface CreatePayoutOptions {
 	amount: number;
@@ -22,7 +22,9 @@ export class PayoutAPI extends HttpClient {
 	/**
 	 * Create a new payout.
 	 */
-	async create(options: CreatePayoutOptions): Promise<Result<CreatePayoutResponse>> {
+	async create(
+		options: CreatePayoutOptions,
+	): Promise<Result<CreatePayoutResponse>> {
 		const validation = createPayoutSchema.safeParse(options);
 
 		if (!validation.success) {

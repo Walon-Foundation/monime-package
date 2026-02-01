@@ -1,12 +1,12 @@
+import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
 import type { Result } from "../types";
-import { createInternalTransferSchema } from "../validators/internalTransfer.validator";
 import type {
-	ListInternalTransfersResponse,
 	CreateInternalTransferResponse,
+	ListInternalTransfersResponse,
 	RetrieveInternalTransferResponse,
 } from "../types/internalTransfer";
-import { randomBytes } from "node:crypto";
+import { createInternalTransferSchema } from "../validators/internalTransfer.validator";
 
 export interface CreateInternalTransferOptions {
 	sourceAccount: string;
@@ -22,7 +22,9 @@ export class InternalTransferAPI extends HttpClient {
 	/**
 	 * Create a new internal transfer between financial accounts.
 	 */
-	async create(options: CreateInternalTransferOptions): Promise<Result<CreateInternalTransferResponse>> {
+	async create(
+		options: CreateInternalTransferOptions,
+	): Promise<Result<CreateInternalTransferResponse>> {
 		const validation = createInternalTransferSchema.safeParse(options);
 
 		if (!validation.success) {
@@ -68,7 +70,9 @@ export class InternalTransferAPI extends HttpClient {
 	 * Retrieve a specific internal transfer by ID.
 	 * @param internalTransferId - The unique identifier of the transfer.
 	 */
-	async retrieve(internalTransferId: string): Promise<Result<RetrieveInternalTransferResponse>> {
+	async retrieve(
+		internalTransferId: string,
+	): Promise<Result<RetrieveInternalTransferResponse>> {
 		return this.request<RetrieveInternalTransferResponse>({
 			method: "GET",
 			path: `${this.path}/${internalTransferId}`,
