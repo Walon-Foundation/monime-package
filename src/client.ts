@@ -41,12 +41,24 @@ export class MonimeClient {
 		const accessToken = options.accessToken || process.env.MONIME_ACCESS_TOKEN;
 		const monimeVersion = options.monimeVersion || process.env.MONIME_VERSION;
 
-		if (!monimeSpaceId) {
-			throw new Error("monimeSpaceId is required. Pass it in options or set MONIME_SPACE_ID env var.");
+		if (!monimeSpaceId || monimeSpaceId.trim() === "") {
+			throw new Error(
+				"\n[Monime SDK] Configuration Error: 'monimeSpaceId' is missing.\n" +
+					"To fix this, either:\n" +
+					"  1. Pass it to the constructor: new MonimeClient({ monimeSpaceId: 'your-space-id' })\n" +
+					"  2. Set the environment variable: MONIME_SPACE_ID=your-space-id\n" +
+					"You can find your Space ID in the Monime Dashboard (https://monime.io).\n"
+			);
 		}
 
-		if (!accessToken) {
-			throw new Error("accessToken is required. Pass it in options or set MONIME_ACCESS_TOKEN env var.");
+		if (!accessToken || accessToken.trim() === "") {
+			throw new Error(
+				"\n[Monime SDK] Configuration Error: 'accessToken' is missing.\n" +
+					"To fix this, either:\n" +
+					"  1. Pass it to the constructor: new MonimeClient({ accessToken: 'your-access-token' })\n" +
+					"  2. Set the environment variable: MONIME_ACCESS_TOKEN=your-access-token\n" +
+					"Generate your Access Token in the Monime Dashboard settings.\n"
+			);
 		}
 
 		const config: ClientConfig = {
