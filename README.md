@@ -206,7 +206,12 @@ Manage digital wallets and financial accounts.
 
 ```ts
 // Create a new financial account
-client.financialAccount.create(name: string, currency: "USD" | "SLE"): Promise<Result<CreateFinancialAccountResponse>>
+client.financialAccount.create({
+  accountName: string,
+  currency: "USD" | "SLE",
+  description?: string,
+  metadata?: Record<string, any>
+}): Promise<Result<CreateFinancialAccountResponse>>
 
 // Retrieve account details by ID
 client.financialAccount.retrieve(financialAccountId: string): Promise<Result<RetrieveFinancialAccountResponse>>
@@ -222,10 +227,12 @@ client.financialAccount.list(): Promise<Result<ListFinancialAccountsResponse>>
 **Example:**
 ```ts
 // Create account
-const account = await client.financialAccount.create("My Wallet", "SLE");
+const account = await client.financialAccount.create({
+  accountName: "My Wallet",
+  currency: "SLE"
+});
 if (account.success) {
   console.log("Account ID:", account.data.id);
-  console.log("Balance:", account.data.balance.available.value);
 }
 
 // Retrieve account details
@@ -238,11 +245,12 @@ Transfer funds between your financial accounts.
 
 ```ts
 // Create internal transfer
-client.internalTransfer.create(
+client.internalTransfer.create({
   sourceAccount: string,
   destinationAccount: string,
   amount: number,
-): Promise<Result<CreateInternalTransferResponse>>
+  description?: string
+}): Promise<Result<CreateInternalTransferResponse>>
 
 // Retrieve transfer details
 client.internalTransfer.retrieve(internalTransferId: string): Promise<Result<RetrieveInternalTransferResponse>>
@@ -263,7 +271,11 @@ client.internalTransfer.delete(internalTransferId: string): Promise<Result<void>
 **Example:**
 ```ts
 // Transfer 1000 SLE between accounts
-const transfer = await client.internalTransfer.create("fa-source", "fa-dest", 1000);
+const transfer = await client.internalTransfer.create({
+  sourceAccount: "fa-source",
+  destinationAccount: "fa-dest",
+  amount: 1000
+});
 if (transfer.success) {
   console.log("Transfer ID:", transfer.data.id);
   console.log("Status:", transfer.data.status);
@@ -276,13 +288,13 @@ Generate USSD payment codes for mobile money transactions.
 
 ```ts
 // Create payment code
-client.paymentCode.create(
+client.paymentCode.create({
   paymentName: string,
   amount: number,
   financialAccountId: string,
-  username: string,
+  name: string,
   phoneNumber: string,
-): Promise<Result<CreatePaymentCodeResponse>>
+}): Promise<Result<CreatePaymentCodeResponse>>
 
 // Retrieve payment code details
 client.paymentCode.retrieve(paymentCodeId: string): Promise<Result<RetrievePaymentCodeResponse>>
@@ -305,13 +317,13 @@ client.paymentCode.delete(paymentCodeId: string): Promise<Result<void>>
 **Example:**
 ```ts
 // Create USSD payment code
-const paymentCode = await client.paymentCode.create(
-  "Order #12345",
-  5000, // 50.00 SLE
-  "fa-123456",
-  "John Doe",
-  "0771234567"
-);
+const paymentCode = await client.paymentCode.create({
+  paymentName: "Order #12345",
+  amount: 5000, // 50.00 SLE
+  financialAccountId: "fa-123456",
+  name: "John Doe",
+  phoneNumber: "0771234567"
+});
 
 if (paymentCode.success) {
   console.log("USSD Code:", paymentCode.data.ussdCode);
@@ -325,11 +337,11 @@ Send money to mobile money providers, banks, or wallets.
 
 ```ts
 // Create payout
-client.payout.create(
+client.payout.create({
   amount: number,
   destination: DestinationOption,
   sourceAccount: string,
-): Promise<Result<CreatePayoutResponse>>
+}): Promise<Result<CreatePayoutResponse>>
 
 // List all payouts
 client.payout.list(): Promise<Result<ListPayoutsResponse>>
@@ -358,18 +370,18 @@ type DestinationOption =
 **Example:**
 ```ts
 // Mobile money payout
-const mobileMoneyPayout = await client.payout.create(
-  10000, // 100.00 SLE
-  { type: "momo", providerId: "m17", phoneNumber: "0771234567" },
-  "fa-123456"
-);
+const mobileMoneyPayout = await client.payout.create({
+  amount: 10000, // 100.00 SLE
+  destination: { type: "momo", providerId: "m17", phoneNumber: "0771234567" },
+  sourceAccount: "fa-123456"
+});
 
 // Bank transfer payout
-const bankPayout = await client.payout.create(
-  50000, // 500.00 SLE
-  { type: "bank", providerId: "b01", accountNumber: "1234567890" },
-  "fa-123456"
-);
+const bankPayout = await client.payout.create({
+  amount: 50000, // 500.00 SLE
+  destination: { type: "bank", providerId: "b01", accountNumber: "1234567890" },
+  sourceAccount: "fa-123456"
+});
 ```
 
 ### Financial Transactions
@@ -404,19 +416,17 @@ Create hosted payment pages for seamless customer payments.
 
 ```ts
 // Create checkout session
-client.checkoutSession.create(
+client.checkoutSession.create({
   name: string,
   amount: number,
   quantity: number,
   successUrl: string,
   cancelUrl: string,
-  options?: {
-    description?: string,
-    financialAccountId?: string,
-    primaryColor?: string,
-    images?: string[],
-  }
-): Promise<Result<CreateCheckoutResponse>>
+  description?: string,
+  financialAccountId?: string,
+  primaryColor?: string,
+  images?: string[],
+}): Promise<Result<CreateCheckoutResponse>>
 
 // List all checkout sessions
 client.checkoutSession.list(): Promise<Result<ListCheckoutsResponse>>
@@ -443,17 +453,17 @@ client.checkoutSession.delete(checkoutId: string): Promise<Result<void>>
 **Example:**
 ```ts
 // Create checkout for e-commerce
-const checkout = await client.checkoutSession.create(
-  "Premium Subscription",
-  2500, // 25.00 SLE per month
-  1,
-  "https://myapp.com/success",
-  "https://myapp.com/cancel",
-  "Monthly premium subscription",
-  "fa-123456",
-  "#3B82F6", // Blue color
-  ["https://myapp.com/images/premium.jpg"]
-);
+const checkout = await client.checkoutSession.create({
+  name: "Premium Subscription",
+  amount: 2500, // 25.00 SLE per month
+  quantity: 1,
+  successUrl: "https://myapp.com/success",
+  cancelUrl: "https://myapp.com/cancel",
+  description: "Monthly premium subscription",
+  financialAccountId: "fa-123456",
+  primaryColor: "#3B82F6", // Blue color
+  images: ["https://myapp.com/images/premium.jpg"]
+});
 
 if (checkout.success) {
   // Redirect customer to checkout page
@@ -1047,7 +1057,10 @@ interface Amount {
 ```ts
 // Type-safe account creation
 const createAccountTyped = async (name: string): Promise<CreateFinancialAccountResponse | null> => {
-  const result = await client.financialAccount.create(name, "SLE");
+  const result = await client.financialAccount.create({
+    accountName: name,
+    currency: "SLE"
+  });
   return result.success ? result.data! : null;
 };
 
@@ -1057,13 +1070,15 @@ const createMobileMoneyPayout = async (
   phoneNumber: string,
   sourceAccount: string
 ): Promise<CreatePayoutResponse | null> => {
-  const destination: DestinationOption = {
-    type: "momo",
-    providerId: "m17",
-    phoneNumber,
-  };
-  
-  const result = await client.payout.create(amount, destination, sourceAccount);
+  const result = await client.payout.create({
+    amount,
+    sourceAccount,
+    destination: {
+      type: "momo",
+      providerId: "m17",
+      phoneNumber,
+    }
+  });
   return result.success ? result.data! : null;
 };
 
