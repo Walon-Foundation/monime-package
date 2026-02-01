@@ -1,69 +1,74 @@
-import { CheckoutSessionAPI } from "./modules/checkoutSession";
-import { FinancialAccountAPI } from "./modules/financialAccount";
-import { BankAPI } from "./modules/financialProvider/bank";
-import { MomoAPI } from "./modules/financialProvider/momo";
-import { FinancialTransactionAPI } from "./modules/financialTransaction";
-import { InternalTransferAPI } from "./modules/internalTransfer";
-import { PaymentAPI } from "./modules/payment";
-import { PaymentCodeAPI } from "./modules/paymentCode";
-import { PayoutAPI } from "./modules/payout";
-import { ProviderKycAPI } from "./modules/providerKyc";
-import { ReceiptAPI } from "./modules/receipt";
-import { UssdOtpAPI } from "./modules/ussdOtp";
-import { WebhookAPI } from "./modules/webhook";
+import { CheckoutSessionAPI } from "./resources/checkoutSession";
+import { FinancialAccountAPI } from "./resources/financialAccount";
+import { BankAPI } from "./resources/bank";
+import { MomoAPI } from "./resources/momo";
+import { FinancialTransactionAPI } from "./resources/financialTransaction";
+import { InternalTransferAPI } from "./resources/internalTransfer";
+import { PaymentAPI } from "./resources/payment";
+import { PaymentCodeAPI } from "./resources/paymentCode";
+import { PayoutAPI } from "./resources/payout";
+import { ProviderKycAPI } from "./resources/providerKyc";
+import { ReceiptAPI } from "./resources/receipt";
+import { UssdOtpAPI } from "./resources/ussdOtp";
+import { WebhookAPI } from "./resources/webhook";
+import type { ClientConfig } from "./types";
 
 export interface ClientOptions {
-	monimeSpaceId: string;
-	accessToken: string;
+	monimeSpaceId?: string;
+	accessToken?: string;
 	monimeVersion?: "caph.2025-08-23" | "caph.2025-06-20";
 }
 
 export class MonimeClient {
-	private monimeSpaceId: string;
-	private accessToken: string;
-	private monimeVersion?: string | undefined;
-
-	public financialAccount: ReturnType<typeof FinancialAccountAPI>;
-	public internalTransfer: ReturnType<typeof InternalTransferAPI>;
-	public paymentCode: ReturnType<typeof PaymentCodeAPI>;
-	public payment: ReturnType<typeof PaymentAPI>;
-	public payout: ReturnType<typeof PayoutAPI>;
-	public providerKyc: ReturnType<typeof ProviderKycAPI>;
-	public receipt: ReturnType<typeof ReceiptAPI>;
-	public ussdOtp: ReturnType<typeof UssdOtpAPI>;
-	public webhook: ReturnType<typeof WebhookAPI>;
-	public financialTransaction: ReturnType<typeof FinancialTransactionAPI>;
-	public checkoutSession: ReturnType<typeof CheckoutSessionAPI>;
+	public financialAccount: FinancialAccountAPI;
+	public internalTransfer: InternalTransferAPI;
+	public paymentCode: PaymentCodeAPI;
+	public payment: PaymentAPI;
+	public payout: PayoutAPI;
+	public providerKyc: ProviderKycAPI;
+	public receipt: ReceiptAPI;
+	public ussdOtp: UssdOtpAPI;
+	public webhook: WebhookAPI;
+	public financialTransaction: FinancialTransactionAPI;
+	public checkoutSession: CheckoutSessionAPI;
 	public financialProvider: {
-		bank: ReturnType<typeof BankAPI>;
-		momo: ReturnType<typeof MomoAPI>;
+		bank: BankAPI;
+		momo: MomoAPI;
 	};
 
-	constructor(options: ClientOptions) {
-		this.accessToken = options.accessToken;
-		this.monimeSpaceId = options.monimeSpaceId;
-		this.monimeVersion = options.monimeVersion;
+	constructor(options: ClientOptions = {}) {
+		const monimeSpaceId = options.monimeSpaceId || process.env.MONIME_SPACE_ID;
+		const accessToken = options.accessToken || process.env.MONIME_ACCESS_TOKEN;
+		const monimeVersion = options.monimeVersion || process.env.MONIME_VERSION;
 
-		const config = {
-			monimeSpaceId: this.monimeSpaceId,
-			accessToken: this.accessToken,
-			monimeVersion: this.monimeVersion,
+		if (!monimeSpaceId) {
+			throw new Error("monimeSpaceId is required. Pass it in options or set MONIME_SPACE_ID env var.");
+		}
+
+		if (!accessToken) {
+			throw new Error("accessToken is required. Pass it in options or set MONIME_ACCESS_TOKEN env var.");
+		}
+
+		const config: ClientConfig = {
+			monimeSpaceId,
+			accessToken,
+			monimeVersion: monimeVersion as string | undefined,
 		};
 
-		this.financialAccount = FinancialAccountAPI(config);
-		this.internalTransfer = InternalTransferAPI(config);
-		this.paymentCode = PaymentCodeAPI(config);
-		this.payment = PaymentAPI(config);
-		this.payout = PayoutAPI(config);
-		this.providerKyc = ProviderKycAPI(config);
-		this.receipt = ReceiptAPI(config);
-		this.ussdOtp = UssdOtpAPI(config);
-		this.webhook = WebhookAPI(config);
-		this.financialTransaction = FinancialTransactionAPI(config);
-		this.checkoutSession = CheckoutSessionAPI(config);
+		this.financialAccount = new FinancialAccountAPI(config);
+		this.internalTransfer = new InternalTransferAPI(config);
+		this.paymentCode = new PaymentCodeAPI(config);
+		this.payment = new PaymentAPI(config);
+		this.payout = new PayoutAPI(config);
+		this.providerKyc = new ProviderKycAPI(config);
+		this.receipt = new ReceiptAPI(config);
+		this.ussdOtp = new UssdOtpAPI(config);
+		this.webhook = new WebhookAPI(config);
+		this.financialTransaction = new FinancialTransactionAPI(config);
+		this.checkoutSession = new CheckoutSessionAPI(config);
 		this.financialProvider = {
-			bank: BankAPI(config),
-			momo: MomoAPI(config),
+			bank: new BankAPI(config),
+			momo: new MomoAPI(config),
 		};
 	}
 }
