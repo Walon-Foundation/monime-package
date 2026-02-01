@@ -9,25 +9,21 @@ import type {
 import { createPayoutSchema } from "../validators/payout.validator";
 import { randomBytes } from "node:crypto";
 
+export interface CreatePayoutOptions {
+	amount: number;
+	sourceAccount: string;
+	destination: DestinationOption;
+	metadata?: Record<string, unknown>;
+}
+
 export class PayoutAPI extends HttpClient {
 	private readonly path = "/payouts";
 
 	/**
 	 * Create a new payout.
-	 * @param amount - The amount to pay out.
-	 * @param sourceAccount - The source financial account ID.
-	 * @param destination - The destination details (momo, bank, wallet).
 	 */
-	async create(
-		amount: number,
-		sourceAccount: string,
-		destination: DestinationOption,
-	): Promise<Result<CreatePayoutResponse>> {
-		const validation = createPayoutSchema.safeParse({
-			amount,
-			sourceAccount,
-			destination,
-		});
+	async create(options: CreatePayoutOptions): Promise<Result<CreatePayoutResponse>> {
+		const validation = createPayoutSchema.safeParse(options);
 
 		if (!validation.success) {
 			return { success: false, error: new Error(validation.error.message) };
@@ -36,13 +32,13 @@ export class PayoutAPI extends HttpClient {
 		const body = {
 			amount: {
 				currency: "SLE",
-				value: amount,
+				value: options.amount,
 			},
 			source: {
-				financialAccountId: sourceAccount,
+				financialAccountId: options.sourceAccount,
 			},
-			destination: destination,
-			metadata: {},
+			destination: options.destination,
+			metadata: options.metadata || {},
 		};
 
 		const idempotencyKey = randomBytes(20).toString("hex");

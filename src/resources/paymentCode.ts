@@ -8,53 +8,49 @@ import type {
 import { createPaymentCodeSchema } from "../validators/paymentCode.validator";
 import { randomBytes } from "node:crypto";
 
+export interface CreatePaymentCodeOptions {
+	paymentName: string;
+	amount: number;
+	financialAccountId: string | null;
+	name: string;
+	phoneNumber: string;
+}
+
 export class PaymentCodeAPI extends HttpClient {
 	private readonly path = "/payment-codes";
 
 	/**
 	 * Create a new USSD payment code.
 	 */
-	async create(
-		paymentName: string,
-		amount: number,
-		financialAccountId: string | null,
-		name: string,
-		phoneNumber: string,
-	): Promise<Result<CreatePaymentCodeResponse>> {
-		const validation = createPaymentCodeSchema.safeParse({
-			paymentName,
-			amount,
-			financialAccountId,
-			name,
-			phoneNumber,
-		});
+	async create(options: CreatePaymentCodeOptions): Promise<Result<CreatePaymentCodeResponse>> {
+		const validation = createPaymentCodeSchema.safeParse(options);
 
 		if (!validation.success) {
 			return { success: false, error: new Error(validation.error.message) };
 		}
 
 		const bodyData = {
-			name: paymentName,
+			name: options.paymentName,
 			mode: "recurrent",
 			enable: true,
 			amount: {
 				currency: "SLE",
-				value: amount * 100, // minor units
+				value: options.amount * 100, // minor units
 			},
 			duration: "1h30m",
 			customer: {
-				name: name,
+				name: options.name,
 			},
 			reference: "",
-			authorizedPhoneNumber: phoneNumber,
+			authorizedPhoneNumber: options.phoneNumber,
 			recurrentPaymentTarget: {
 				expectedPaymentCount: 1,
 				expectedPaymentTotal: {
 					currency: "SLE",
-					value: amount * 100,
+					value: options.amount * 100,
 				},
 			},
-			financialAccountId: financialAccountId || undefined,
+			financialAccountId: options.financialAccountId || undefined,
 			metadata: {},
 		};
 

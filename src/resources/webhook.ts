@@ -20,8 +20,8 @@ export class WebhookAPI extends HttpClient {
 	/**
 	 * Create a new webhook.
 	 */
-	async create(body: CreateWebhookRequest): Promise<Result<CreateWebhookResponse>> {
-		const validation = createWebhookSchema.safeParse(body);
+	async create(options: CreateWebhookRequest): Promise<Result<CreateWebhookResponse>> {
+		const validation = createWebhookSchema.safeParse(options);
 
 		if (!validation.success) {
 			return { success: false, error: new Error(validation.error.message) };
@@ -32,7 +32,7 @@ export class WebhookAPI extends HttpClient {
 		return this.request<CreateWebhookResponse>({
 			method: "POST",
 			path: this.path,
-			body,
+			body: options,
 			idempotencyKey,
 		});
 	}
@@ -61,13 +61,13 @@ export class WebhookAPI extends HttpClient {
 	/**
 	 * Update an existing webhook.
 	 * @param webhookId - The unique identifier of the webhook.
-	 * @param body - The updated webhook data.
+	 * @param options - The updated webhook data.
 	 */
 	async update(
 		webhookId: string,
-		body: UpdateWebhookRequest,
+		options: UpdateWebhookRequest,
 	): Promise<Result<UpdateWebhookResponse>> {
-		const validation = updateWebhookSchema.safeParse(body);
+		const validation = updateWebhookSchema.safeParse(options);
 
 		if (!validation.success) {
 			return { success: false, error: new Error(validation.error.message) };
@@ -78,7 +78,7 @@ export class WebhookAPI extends HttpClient {
 		return this.request<UpdateWebhookResponse>({
 			method: "PATCH",
 			path: `${this.path}/${webhookId}`,
-			body,
+			body: options,
 			idempotencyKey,
 		});
 	}

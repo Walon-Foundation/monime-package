@@ -8,25 +8,22 @@ import type {
 } from "../types/internalTransfer";
 import { randomBytes } from "node:crypto";
 
+export interface CreateInternalTransferOptions {
+	sourceAccount: string;
+	destinationAccount: string;
+	amount: number;
+	description?: string;
+	metadata?: Record<string, unknown>;
+}
+
 export class InternalTransferAPI extends HttpClient {
 	private readonly path = "/internal-transfers";
 
 	/**
 	 * Create a new internal transfer between financial accounts.
-	 * @param sourceAccount - The source account ID.
-	 * @param destinationAccount - The destination account ID.
-	 * @param amount - The amount to transfer in SLE.
 	 */
-	async create(
-		sourceAccount: string,
-		destinationAccount: string,
-		amount: number,
-	): Promise<Result<CreateInternalTransferResponse>> {
-		const validation = createInternalTransferSchema.safeParse({
-			sourceAccount,
-			destinationAccount,
-			amount,
-		});
+	async create(options: CreateInternalTransferOptions): Promise<Result<CreateInternalTransferResponse>> {
+		const validation = createInternalTransferSchema.safeParse(options);
 
 		if (!validation.success) {
 			return { success: false, error: new Error(validation.error.message) };
@@ -35,15 +32,16 @@ export class InternalTransferAPI extends HttpClient {
 		const body = {
 			amount: {
 				currency: "SLE",
-				value: amount,
+				value: options.amount,
 			},
 			sourceFinancialAccount: {
-				id: sourceAccount,
+				id: options.sourceAccount,
 			},
 			destinationFinancialAccount: {
-				id: destinationAccount,
+				id: options.destinationAccount,
 			},
-			metadata: {},
+			description: options.description || "",
+			metadata: options.metadata || {},
 		};
 
 		const idempotencyKey = randomBytes(20).toString("hex");

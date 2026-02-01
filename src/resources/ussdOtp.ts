@@ -13,8 +13,8 @@ export class UssdOtpAPI extends HttpClient {
 	/**
 	 * Create a new USSD OTP.
 	 */
-	async create(body: CreateUssdOtpRequest): Promise<Result<CreateUssdOtpResponse>> {
-		const validation = createUssdOtpSchema.safeParse(body);
+	async create(options: CreateUssdOtpRequest): Promise<Result<CreateUssdOtpResponse>> {
+		const validation = createUssdOtpSchema.safeParse(options);
 
 		if (!validation.success) {
 			return { success: false, error: new Error(validation.error.message) };
@@ -25,7 +25,7 @@ export class UssdOtpAPI extends HttpClient {
 		return this.request<CreateUssdOtpResponse>({
 			method: "POST",
 			path: this.path,
-			body,
+			body: options,
 			idempotencyKey,
 		});
 	}

@@ -10,32 +10,31 @@ import { randomBytes } from "node:crypto";
 
 export type Currency = "USD" | "SLE";
 
+export interface CreateFinancialAccountOptions {
+	accountName: string;
+	currency: Currency;
+	description?: string;
+	metadata?: Record<string, unknown>;
+}
+
 export class FinancialAccountAPI extends HttpClient {
 	private readonly path = "/financial-accounts";
 
 	/**
 	 * Create a new financial account.
-	 * @param accountName - The name of the account.
-	 * @param currency - The currency (USD or SLE).
 	 */
-	async create(
-		accountName: string,
-		currency: Currency,
-	): Promise<Result<CreateFinancialAccountResponse>> {
-		const validation = createFinancialAccountSchema.safeParse({
-			accountName,
-			currency,
-		});
+	async create(options: CreateFinancialAccountOptions): Promise<Result<CreateFinancialAccountResponse>> {
+		const validation = createFinancialAccountSchema.safeParse(options);
 
 		if (!validation.success) {
 			return { success: false, error: new Error(validation.error.message) };
 		}
 
 		const body = {
-			name: accountName,
-			currency: currency,
-			description: "",
-			metadata: {},
+			name: options.accountName,
+			currency: options.currency,
+			description: options.description || "",
+			metadata: options.metadata || {},
 		};
 
 		const idempotencyKey = randomBytes(20).toString("hex");

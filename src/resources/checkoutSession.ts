@@ -8,42 +8,32 @@ import type {
 } from "../types/checkoutSession";
 import { randomBytes } from "node:crypto";
 
+export interface CreateCheckoutOptions {
+	name: string;
+	amount: number;
+	quantity: number;
+	successUrl: string;
+	cancelUrl: string;
+	description?: string;
+	financialAccountId?: string;
+	primaryColor?: string;
+	images?: string[];
+}
+
 export class CheckoutSessionAPI extends HttpClient {
 	private readonly path = "/checkout-sessions";
 
 	/**
 	 * Create a new checkout session for hosted payment pages.
 	 */
-	async create(
-		name: string,
-		amount: number,
-		quantity: number,
-		successUrl: string,
-		cancelUrl: string,
-		options: {
-			description?: string;
-			financialAccountId?: string;
-			primaryColor?: string;
-			images?: string[];
-		} = {},
-	): Promise<Result<CreateCheckoutResponse>> {
-		const { description, financialAccountId, primaryColor, images } = options;
-
-		const validation = createCheckoutSchema.safeParse({
-			name,
-			amount,
-			quantity,
-			successUrl,
-			cancelUrl,
-			description,
-			financialAccountId,
-			primaryColor,
-			images,
-		});
+	async create(options: CreateCheckoutOptions): Promise<Result<CreateCheckoutResponse>> {
+		const validation = createCheckoutSchema.safeParse(options);
 
 		if (!validation.success) {
 			return { success: false, error: new Error(validation.error.message) };
 		}
+
+		const { name, description, cancelUrl, successUrl, financialAccountId, amount, quantity, images, primaryColor } = options;
 
 		const body = {
 			name,
