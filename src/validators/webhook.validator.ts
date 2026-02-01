@@ -23,7 +23,7 @@ export const updateWebhookSchema = z.object({
 	events: z.array(z.string()).min(1).optional(),
 	enabled: z.boolean().optional(),
 	headers: z.record(z.string(), z.string()).optional(),
-	alertEmails: z.array(z.email()).optional(),
+	alertEmails: z.array(z.string().email()).optional(),
 	verificationMethod: z
 		.object({
 			type: z.enum(["HS256", "ES256"]),
