@@ -88,7 +88,7 @@ MONIME_ACCESS_TOKEN=sk_live_xxx
 MONIME_VERSION=caph.2025-08-23 # Optional, defaults to latest
 ```
 
-You can also pass credentials directly when creating the client.
+The `MonimeClient` will automatically look for these variables if no options are passed to the constructor.
 
 ---
 
@@ -96,14 +96,28 @@ You can also pass credentials directly when creating the client.
 
 ### Create a client
 
+You can initialize the client by passing credentials directly:
+
 ```ts
 import { createClient } from "monime-package";
 
 const client = createClient({
-  monimeSpaceId: process.env.MONIME_SPACE_ID!,
-  accessToken: process.env.MONIME_ACCESS_TOKEN!,
+  monimeSpaceId: "your_space_id",
+  accessToken: "your_access_token",
   monimeVersion: "caph.2025-08-23", // Optional
 });
+```
+
+#### Using with Environment Variables (Recommended)
+
+If you have a `.env` file, you can initialize the client even more simply:
+
+```ts
+import "dotenv/config";
+import { createClient } from "monime-package";
+
+// Client will automatically use MONIME_SPACE_ID and MONIME_ACCESS_TOKEN from process.env
+const client = createClient({});
 ```
 
 Now all methods use the client’s credentials automatically.
