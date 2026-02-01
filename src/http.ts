@@ -45,7 +45,7 @@ export class HttpClient {
 				body: body ? JSON.stringify(body) : null,
 			});
 
-			const requestId = response.headers.get("x-request-id") || undefined;
+			const requestId = response.headers?.get("x-request-id") || undefined;
 
 			if (!response.ok) {
 				let errorMessage = `Request failed with status ${response.status}`;
