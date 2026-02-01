@@ -1,6 +1,6 @@
 import { type ClientOptions, MonimeClient } from "./client";
 
-export * from "./modules/types";
+export * from "./types";
 
 export function createClient(options: ClientOptions) {
 	return new MonimeClient(options);
@@ -8,3 +8,4 @@ export function createClient(options: ClientOptions) {
 
 export { MonimeClient };
 export type { ClientOptions };
+export * from "./error";
