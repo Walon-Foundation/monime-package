@@ -12,6 +12,22 @@ describe("FinancialAccount Resource E2E", () => {
 		vi.clearAllMocks();
 	});
 
+	it("should success: create financial account", async () => {
+		const mockData = { result: { id: "fa_123", name: "Test Account" } };
+		fetchMock.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: async () => mockData,
+		});
+
+		const result = await client.financialAccount.create({
+			accountName: "Test Account",
+			currency: "SLE"
+		});
+		expect(result.success).toBe(true);
+		expect(result.data).toEqual(mockData.result);
+	});
+
 	it("should success: retrieve financial account", async () => {
 		const mockData = { result: { id: "fa_123", balance: { available: { value: 100 } } } };
 		fetchMock.mockResolvedValueOnce({

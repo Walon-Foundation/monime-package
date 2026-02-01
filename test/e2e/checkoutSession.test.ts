@@ -20,25 +20,25 @@ describe("CheckoutSession Resource E2E", () => {
 			json: async () => mockData,
 		});
 
-		const result = await client.checkoutSession.create(
-			"Test Product",
-			100,
-			1,
-			"https://success.com",
-			"https://cancel.com"
-		);
+		const result = await client.checkoutSession.create({
+			name: "Test Product",
+			amount: 100,
+			quantity: 1,
+			successUrl: "https://success.com",
+			cancelUrl: "https://cancel.com"
+		});
 		expect(result.success).toBe(true);
 		expect(result.data).toEqual(mockData.result);
 	});
 
 	it("should fail: validation error (handled by SDK before fetch)", async () => {
-		const result = await client.checkoutSession.create(
-			"", // Invalid name
-			-10, // Invalid amount
-			0, // Invalid quantity
-			"not-a-url",
-			"not-a-url"
-		);
+		const result = await client.checkoutSession.create({
+			name: "", // Invalid name
+			amount: -10, // Invalid amount
+			quantity: 0, // Invalid quantity
+			successUrl: "not-a-url",
+			cancelUrl: "not-a-url"
+		});
 		expect(result.success).toBe(false);
 		expect(result.error?.message).toBeDefined();
 		expect(fetchMock).not.toHaveBeenCalled();

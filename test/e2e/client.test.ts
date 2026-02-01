@@ -26,11 +26,11 @@ describe("MonimeClient Initialization", () => {
 	});
 
 	it("should throw error if monimeSpaceId is missing", () => {
-		expect(() => new MonimeClient({ accessToken: "token" } as any)).toThrow("monimeSpaceId is required");
+		expect(() => new MonimeClient({ accessToken: "token" } as any)).toThrow("'monimeSpaceId' is missing");
 	});
 
 	it("should throw error if accessToken is missing", () => {
-		expect(() => new MonimeClient({ monimeSpaceId: "space" } as any)).toThrow("accessToken is required");
+		expect(() => new MonimeClient({ monimeSpaceId: "space" } as any)).toThrow("'accessToken' is missing");
 	});
 
 	it("should use environment variables if options are empty", () => {

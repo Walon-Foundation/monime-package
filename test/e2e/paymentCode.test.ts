@@ -20,19 +20,25 @@ describe("PaymentCode Resource E2E", () => {
 			json: async () => mockData,
 		});
 
-		const result = await client.paymentCode.create(
-			"Test Payment",
-			100,
-			"fa_1",
-			"John Doe",
-			"000000"
-		);
+		const result = await client.paymentCode.create({
+			paymentName: "Test Payment",
+			amount: 100,
+			financialAccountId: "fa_1",
+			name: "John Doe",
+			phoneNumber: "000000"
+		});
 		expect(result.success).toBe(true);
 		expect(result.data).toEqual(mockData.result);
 	});
 
 	it("should fail: validation error for empty name", async () => {
-		const result = await client.paymentCode.create("", 100, "fa_1", "John", "000");
+		const result = await client.paymentCode.create({
+			paymentName: "",
+			amount: 100,
+			financialAccountId: "fa_1",
+			name: "John",
+			phoneNumber: "000"
+		});
 		expect(result.success).toBe(false);
 		expect(result.error?.message).toContain("Payment name is required");
 	});

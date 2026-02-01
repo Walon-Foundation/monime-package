@@ -32,7 +32,11 @@ describe("Payout Resource E2E", () => {
 			json: async () => ({ message: "Insufficient funds" }),
 		});
 
-		const result = await client.payout.create(1000, "fa_1", { type: "momo", providerId: "m17", phoneNumber: "000" });
+		const result = await client.payout.create({
+			amount: 1000,
+			sourceAccount: "fa_1",
+			destination: { type: "momo", providerId: "m17", phoneNumber: "000" }
+		});
 		expect(result.success).toBe(false);
 		expect((result.error as MonimeError).status).toBe(400);
 	});

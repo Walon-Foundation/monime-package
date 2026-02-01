@@ -20,13 +20,21 @@ describe("InternalTransfer Resource E2E", () => {
 			json: async () => mockData,
 		});
 
-		const result = await client.internalTransfer.create("src_1", "dest_1", 500);
+		const result = await client.internalTransfer.create({
+			sourceAccount: "src_1",
+			destinationAccount: "dest_1",
+			amount: 500
+		});
 		expect(result.success).toBe(true);
 		expect(result.data).toEqual(mockData.result);
 	});
 
 	it("should fail: validation error for negative amount", async () => {
-		const result = await client.internalTransfer.create("src_1", "dest_1", -10);
+		const result = await client.internalTransfer.create({
+			sourceAccount: "src_1",
+			destinationAccount: "dest_1",
+			amount: -10
+		});
 		expect(result.success).toBe(false);
 		expect(result.error?.message).toContain("Amount must be greater than zero");
 	});
