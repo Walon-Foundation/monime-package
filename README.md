@@ -51,7 +51,7 @@ Package: `monime-package`
 - **Typed** request/response objects for safer integrations
 - **Predictable** return shape: `{ success, data?, error? }`
 - **Client-based** auth: set credentials once per instance
-- **Minimal deps** (`axios`) and small surface area
+- **Zero dependencies** (using native `fetch`) for maximum performance and portability
 - **Full API coverage** for all Monime endpoints
 - **Tree-shaking support** - only bundle what you use
 - **Dual module output** - works with both CommonJS and ES modules
@@ -139,14 +139,14 @@ The client exposes namespaced APIs under `client.<module>`. Below is the complet
 Manage all incoming payments (payins).
 
 ```ts
-// Get payment details
-client.payment.get(paymentId: string): Promise<Result<GetPayment>>
+// Retrieve payment details
+client.payment.retrieve(paymentId: string): Promise<Result<RetrievePaymentResponse>>
 
 // List payments
-client.payment.getAll(params?: any): Promise<Result<ListPayments>>
+client.payment.list(): Promise<Result<ListPaymentsResponse>>
 
-// Patch payment
-client.payment.patch(paymentId: string, body: any): Promise<Result<PatchPayment>>
+// Update payment
+client.payment.update(paymentId: string, body: any): Promise<Result<UpdatePaymentResponse>>
 ```
 
 ### Webhooks (New)
@@ -157,17 +157,17 @@ Manage webhooks for real-time notifications.
 // Create webhook
 client.webhook.create(body: CreateWebhookRequest): Promise<Result<CreateWebhookResponse>>
 
-// Get webhook
-client.webhook.get(webhookId: string): Promise<Result<GetWebhookResponse>>
+// Retrieve webhook
+client.webhook.retrieve(webhookId: string): Promise<Result<GetWebhookResponse>>
 
 // List webhooks
-client.webhook.getAll(): Promise<Result<ListWebhooksResponse>>
+client.webhook.list(): Promise<Result<ListWebhooksResponse>>
 
 // Update webhook
 client.webhook.update(webhookId: string, body: UpdateWebhookRequest): Promise<Result<UpdateWebhookResponse>>
 
 // Delete webhook
-client.webhook.delete(webhookId: string): Promise<{ success: boolean; error?: Error }>
+client.webhook.delete(webhookId: string): Promise<Result<void>>
 ```
 
 ### Receipts (New)
@@ -175,8 +175,8 @@ client.webhook.delete(webhookId: string): Promise<{ success: boolean; error?: Er
 Manage payment receipts.
 
 ```ts
-// Get receipt
-client.receipt.get(orderNumber: string): Promise<Result<GetReceiptResponse>>
+// Retrieve receipt
+client.receipt.retrieve(orderNumber: string): Promise<Result<GetReceiptResponse>>
 
 // Redeem receipt
 client.receipt.redeem(orderNumber: string, body: any): Promise<Result<RedeemReceiptResponse>>
@@ -196,8 +196,8 @@ client.ussdOtp.create(body: CreateUssdOtpRequest): Promise<Result<CreateUssdOtpR
 Get provider KYC details.
 
 ```ts
-// Get provider KYC
-client.providerKyc.get(providerId: string): Promise<Result<GetProviderKycResponse>>
+// Retrieve provider KYC
+client.providerKyc.retrieve(providerId: string): Promise<Result<GetProviderKycResponse>>
 ```
 
 ### Financial Accounts
@@ -206,13 +206,13 @@ Manage digital wallets and financial accounts.
 
 ```ts
 // Create a new financial account
-client.financialAccount.create(name: string): Promise<Result<CreateFinancialAccount>>
+client.financialAccount.create(name: string, currency: "USD" | "SLE"): Promise<Result<CreateFinancialAccountResponse>>
 
-// Get account details by ID
-client.financialAccount.get(financialAccountId: string): Promise<Result<GetFinancialAccount>>
+// Retrieve account details by ID
+client.financialAccount.retrieve(financialAccountId: string): Promise<Result<RetrieveFinancialAccountResponse>>
 
 // List all financial accounts
-client.financialAccount.getAll(): Promise<Result<AllFinancialAccount>>
+client.financialAccount.list(): Promise<Result<ListFinancialAccountsResponse>>
 ```
 
 **Parameters:**
@@ -222,14 +222,14 @@ client.financialAccount.getAll(): Promise<Result<AllFinancialAccount>>
 **Example:**
 ```ts
 // Create account
-const account = await client.financialAccount.create("My Wallet");
+const account = await client.financialAccount.create("My Wallet", "SLE");
 if (account.success) {
-  console.log("Account ID:", account.data.result.id);
-  console.log("Balance:", account.data.result.balance.available.value);
+  console.log("Account ID:", account.data.id);
+  console.log("Balance:", account.data.balance.available.value);
 }
 
-// Get account details
-const details = await client.financialAccount.get("fa-123456");
+// Retrieve account details
+const details = await client.financialAccount.retrieve("fa-123456");
 ```
 
 ### Internal Transfers
@@ -242,16 +242,16 @@ client.internalTransfer.create(
   sourceAccount: string,
   destinationAccount: string,
   amount: number,
-): Promise<Result<CreateInternalTransfer>>
+): Promise<Result<CreateInternalTransferResponse>>
 
-// Get transfer details
-client.internalTransfer.get(internalTransferId: string): Promise<Result<InternalTransfer>>
+// Retrieve transfer details
+client.internalTransfer.retrieve(internalTransferId: string): Promise<Result<RetrieveInternalTransferResponse>>
 
 // List all transfers
-client.internalTransfer.getAll(): Promise<Result<AllInternalTransfers>>
+client.internalTransfer.list(): Promise<Result<ListInternalTransfersResponse>>
 
 // Cancel/delete a transfer
-client.internalTransfer.delete(internalTransferId: string): Promise<{ success: boolean; error?: Error }>
+client.internalTransfer.delete(internalTransferId: string): Promise<Result<void>>
 ```
 
 **Parameters:**
@@ -265,8 +265,8 @@ client.internalTransfer.delete(internalTransferId: string): Promise<{ success: b
 // Transfer 1000 SLE between accounts
 const transfer = await client.internalTransfer.create("fa-source", "fa-dest", 1000);
 if (transfer.success) {
-  console.log("Transfer ID:", transfer.data.result.id);
-  console.log("Status:", transfer.data.result.status);
+  console.log("Transfer ID:", transfer.data.id);
+  console.log("Status:", transfer.data.status);
 }
 ```
 
@@ -279,19 +279,19 @@ Generate USSD payment codes for mobile money transactions.
 client.paymentCode.create(
   paymentName: string,
   amount: number,
-  financialAccount: string,
+  financialAccountId: string,
   username: string,
   phoneNumber: string,
-): Promise<Result<CreatePaymentCode>>
+): Promise<Result<CreatePaymentCodeResponse>>
 
-// Get payment code details
-client.paymentCode.get(paymentCodeId: string): Promise<Result<GetOne>>
+// Retrieve payment code details
+client.paymentCode.retrieve(paymentCodeId: string): Promise<Result<RetrievePaymentCodeResponse>>
 
 // List all payment codes
-client.paymentCode.getAll(): Promise<Result<GetAllPaymentCode>>
+client.paymentCode.list(): Promise<Result<ListPaymentCodesResponse>>
 
 // Delete payment code
-client.paymentCode.delete(paymentCodeId: string): Promise<{ success: boolean; error?: Error }>
+client.paymentCode.delete(paymentCodeId: string): Promise<Result<void>>
 ```
 
 **Parameters:**
@@ -314,8 +314,8 @@ const paymentCode = await client.paymentCode.create(
 );
 
 if (paymentCode.success) {
-  console.log("USSD Code:", paymentCode.data.result.ussdCode);
-  console.log("Expires at:", paymentCode.data.result.expireTime);
+  console.log("USSD Code:", paymentCode.data.ussdCode);
+  console.log("Expires at:", paymentCode.data.expireTime);
 }
 ```
 
@@ -329,16 +329,16 @@ client.payout.create(
   amount: number,
   destination: DestinationOption,
   sourceAccount: string,
-): Promise<Result<CreatePayout>>
+): Promise<Result<CreatePayoutResponse>>
 
 // List all payouts
-client.payout.get(): Promise<Result<GetAll>>
+client.payout.list(): Promise<Result<ListPayoutsResponse>>
 
-// Get specific payout
-client.payout.getOne(payoutId: string): Promise<Result<GetOnePayout>>
+// Retrieve specific payout
+client.payout.retrieve(payoutId: string): Promise<Result<RetrievePayoutResponse>>
 
 // Cancel payout
-client.payout.delete(payoutId: string): Promise<{ success: boolean; error?: Error }>
+client.payout.delete(payoutId: string): Promise<Result<void>>
 ```
 
 **Destination Types:**
@@ -377,11 +377,11 @@ const bankPayout = await client.payout.create(
 Query transaction history and details.
 
 ```ts
-// Get transaction details
-client.financialTransaction.get(transactionId: string): Promise<Result<GetTransaction>>
+// Retrieve transaction details
+client.financialTransaction.retrieve(transactionId: string): Promise<Result<RetrieveTransactionResponse>>
 
 // List all transactions
-client.financialTransaction.getAll(): Promise<Result<AllTransaction>>
+client.financialTransaction.list(): Promise<Result<ListTransactionsResponse>>
 ```
 
 **Parameters:**
@@ -389,10 +389,10 @@ client.financialTransaction.getAll(): Promise<Result<AllTransaction>>
 
 **Example:**
 ```ts
-// Get all transactions
-const transactions = await client.financialTransaction.getAll();
+// List all transactions
+const transactions = await client.financialTransaction.list();
 if (transactions.success) {
-  transactions.data.result.forEach(tx => {
+  transactions.data.forEach(tx => {
     console.log(`${tx.type}: ${tx.amount.value} ${tx.amount.currency}`);
   });
 }
@@ -410,20 +410,22 @@ client.checkoutSession.create(
   quantity: number,
   successUrl: string,
   cancelUrl: string,
-  description?: string,
-  financialAccountId?: string,
-  primaryColor?: string,
-  images?: string[],
-): Promise<Result<CreateCheckout>>
+  options?: {
+    description?: string,
+    financialAccountId?: string,
+    primaryColor?: string,
+    images?: string[],
+  }
+): Promise<Result<CreateCheckoutResponse>>
 
 // List all checkout sessions
-client.checkoutSession.get(): Promise<Result<AllCheckout>>
+client.checkoutSession.list(): Promise<Result<ListCheckoutsResponse>>
 
-// Get specific checkout session
-client.checkoutSession.getOne(checkoutId: string): Promise<Result<OneCheckout>>
+// Retrieve specific checkout session
+client.checkoutSession.retrieve(checkoutId: string): Promise<Result<RetrieveCheckoutResponse>>
 
 // Delete checkout session
-client.checkoutSession.delete(checkoutId: string): Promise<{ success: boolean; error?: Error }>
+client.checkoutSession.delete(checkoutId: string): Promise<Result<void>>
 ```
 
 **Parameters:**
@@ -455,8 +457,8 @@ const checkout = await client.checkoutSession.create(
 
 if (checkout.success) {
   // Redirect customer to checkout page
-  console.log("Checkout URL:", checkout.data.result.redirectUrl);
-  console.log("Order Number:", checkout.data.result.orderNumber);
+  console.log("Checkout URL:", checkout.data.redirectUrl);
+  console.log("Order Number:", checkout.data.orderNumber);
 }
 ```
 
@@ -500,11 +502,12 @@ pnpm test
 pnpm lint-format
 ```
 
-### Module Structure
-The package is organized into modules under `src/modules/`:
-- Each module has its own types, implementation, and index file
-- All types are exported from `src/modules/types.ts`
-- The main client (`MonimeClient`) exposes all modules as properties
+### Project Structure
+The package is organized for maximum simplicity:
+- **`src/resources/`**: All API resource implementations (e.g., `payment.ts`, `payout.ts`)
+- **`src/types/`**: Consolidated TypeScript interface definitions
+- **`src/client.ts`**: The main `MonimeClient` entry point
+- **`src/http.ts`**: Shared native `fetch` logic and telemetry
 
 ---
 
@@ -524,14 +527,14 @@ const client = createClient({
 });
 
 // Create business account
-const businessAccount = await client.financialAccount.create("E-commerce Store");
+const businessAccount = await client.financialAccount.create("E-commerce Store", "SLE");
 if (!businessAccount.success) {
   throw new Error(`Failed to create account: ${businessAccount.error?.message}`);
 }
 
-const accountId = businessAccount.data!.result.id;
+const accountId = businessAccount.data!.id;
 console.log(`Created account: ${accountId}`);
-console.log(`Balance: ${businessAccount.data!.result.balance.available.value} SLE`);
+console.log(`Balance: ${businessAccount.data!.balance.available.value} SLE`);
 
 // Create checkout session for customer
 const checkout = await client.checkoutSession.create(
@@ -540,16 +543,18 @@ const checkout = await client.checkoutSession.create(
   1,
   "https://store.com/success",
   "https://store.com/cancel",
-  "Professional DSLR Camera with lens kit",
-  accountId,
-  "#2563EB", // Brand blue
-  ["https://store.com/camera.jpg"]
+  {
+    description: "Professional DSLR Camera with lens kit",
+    financialAccountId: accountId,
+    primaryColor: "#2563EB", // Brand blue
+    images: ["https://store.com/camera.jpg"]
+  }
 );
 
 if (checkout.success) {
-  console.log(`Checkout created: ${checkout.data!.result.id}`);
-  console.log(`Payment URL: ${checkout.data!.result.redirectUrl}`);
-  console.log(`Order: ${checkout.data!.result.orderNumber}`);
+  console.log(`Checkout created: ${checkout.data!.id}`);
+  console.log(`Payment URL: ${checkout.data!.redirectUrl}`);
+  console.log(`Order: ${checkout.data!.orderNumber}`);
 }
 ```
 
@@ -566,19 +571,19 @@ const paymentCode = await client.paymentCode.create(
 );
 
 if (paymentCode.success) {
-  console.log(`USSD Code: ${paymentCode.data!.result.ussdCode}`);
-  console.log(`Expires: ${paymentCode.data!.result.expireTime}`);
+  console.log(`USSD Code: ${paymentCode.data!.ussdCode}`);
+  console.log(`Expires: ${paymentCode.data!.expireTime}`);
   
   // Send USSD code to customer via SMS/email
-  await sendToCustomer(paymentCode.data!.result.ussdCode);
+  await sendToCustomer(paymentCode.data!.ussdCode);
 }
 
 // 2. Monitor payment status
 const checkPaymentStatus = async (codeId: string) => {
-  const status = await client.paymentCode.get(codeId);
+  const status = await client.paymentCode.retrieve(codeId);
   if (status.success) {
-    console.log(`Payment Status: ${status.data!.result.status}`);
-    return status.data!.result.status === 'completed';
+    console.log(`Payment Status: ${status.data!.status}`);
+    return status.data!.status === 'completed';
   }
   return false;
 };
@@ -596,9 +601,9 @@ const paySupplier = async () => {
   );
   
   if (payout.success) {
-    console.log(`Payout ID: ${payout.data!.result.id}`);
-    console.log(`Status: ${payout.data!.result.status}`);
-    console.log(`Fees: ${payout.data!.result.fees.map(f => `${f.code}: ${f.amount.value}`)}`);
+    console.log(`Payout ID: ${payout.data!.id}`);
+    console.log(`Status: ${payout.data!.status}`);
+    console.log(`Fees: ${payout.data!.fees.map(f => `${f.code}: ${f.amount.value}`)}`);
   }
 };
 ```
@@ -608,14 +613,14 @@ const paySupplier = async () => {
 ```ts
 // Create multiple accounts for different purposes
 const accounts = await Promise.all([
-  client.financialAccount.create("Sales Revenue"),
-  client.financialAccount.create("Operating Expenses"),
-  client.financialAccount.create("Tax Reserve"),
+  client.financialAccount.create("Sales Revenue", "SLE"),
+  client.financialAccount.create("Operating Expenses", "SLE"),
+  client.financialAccount.create("Tax Reserve", "SLE"),
 ]);
 
 // Check if all accounts were created successfully
 if (accounts.every(acc => acc.success)) {
-  const [salesAccount, expensesAccount, taxAccount] = accounts.map(acc => acc.data!.result.id);
+  const [salesAccount, expensesAccount, taxAccount] = accounts.map(acc => acc.data!.id);
   
   // Distribute revenue: 70% operations, 30% tax reserve
   const revenue = 100000; // 1000.00 SLE
@@ -628,7 +633,7 @@ if (accounts.every(acc => acc.success)) {
   transfers.forEach((transfer, index) => {
     const purpose = index === 0 ? 'operations' : 'tax reserve';
     if (transfer.success) {
-      console.log(`${purpose} transfer: ${transfer.data!.result.id}`);
+      console.log(`${purpose} transfer: ${transfer.data!.id}`);
     }
   });
 }
@@ -637,8 +642,8 @@ if (accounts.every(acc => acc.success)) {
 ### Transaction Monitoring & Reporting
 
 ```ts
-// Get all transactions for reporting
-const transactions = await client.financialTransaction.getAll();
+// List all transactions for reporting
+const transactions = await client.financialTransaction.list();
 
 if (transactions.success) {
   const txs = transactions.data!.result;
@@ -659,9 +664,9 @@ if (transactions.success) {
   const accountIds = [...new Set(txs.map(tx => tx.financialAccount.id))];
   
   for (const accountId of accountIds) {
-    const account = await client.financialAccount.get(accountId);
+    const account = await client.financialAccount.retrieve(accountId);
     if (account.success) {
-      console.log(`Account ${accountId}: ${account.data!.result.balance.available.value} SLE`);
+      console.log(`Account ${accountId}: ${account.data!.balance.available.value} SLE`);
     }
   }
 }
@@ -704,7 +709,7 @@ const createTransferWithRetry = async (
 // Usage
 try {
   const transfer = await createTransferWithRetry("fa-source", "fa-dest", 10000);
-  console.log("Transfer successful:", transfer.data!.result.id);
+  console.log("Transfer successful:", transfer.data!.id);
 } catch (error) {
   console.error("Transfer failed permanently:", error.message);
 }
@@ -746,8 +751,11 @@ await client.financialAccount.create("name");
 ## Error Handling
 
 - **Standard envelope**: every call returns `{ success, data?, error? }`.
-- **Validation**: inputs are validated (e.g. non-empty IDs, positive amounts) and will short-circuit with `success: false` + `Error`.
-- **Axios errors**: when available, `axios` errors are propagated. You can check details with `axios.isAxiosError(error)`.
+- **Validation**: inputs are validated (e.g. non-empty IDs, positive amounts) and will short-circuit with `success: false` + `MonimeValidationError`.
+- **MonimeError**: remote errors are returned as `MonimeError` objects, which include:
+  - `status`: HTTP status code (e.g. 401, 404)
+  - `requestId`: The unique request ID from Monime's servers
+  - `details`: Rich error details from the API
 
 ---
 
@@ -779,9 +787,9 @@ import type {
   ClientOptions,
   
   // Payment types
-  GetPayment,
-  ListPayments,
-  PatchPayment,
+  RetrievePaymentResponse,
+  ListPaymentsResponse,
+  UpdatePaymentResponse,
   
   // Webhook types
   CreateWebhookRequest,
@@ -803,34 +811,34 @@ import type {
   GetProviderKycResponse,
   
   // Financial Account types
-  CreateFinancialAccount,
-  GetFinancialAccount,
-  AllFinancialAccount,
+  CreateFinancialAccountResponse,
+  RetrieveFinancialAccountResponse,
+  ListFinancialAccountsResponse,
 
   // Internal Transfer types
-  CreateInternalTransfer,
-  InternalTransfer,
-  AllInternalTransfers,
+  CreateInternalTransferResponse,
+  RetrieveInternalTransferResponse,
+  ListInternalTransfersResponse,
 
   // Payment Code types
-  CreatePaymentCode,
-  GetAllPaymentCode,
-  GetOne,
+  CreatePaymentCodeResponse,
+  ListPaymentCodesResponse,
+  RetrievePaymentCodeResponse,
 
   // Payout types
   DestinationOption,
-  CreatePayout,
-  GetAll,
-  GetOnePayout,
+  CreatePayoutResponse,
+  ListPayoutsResponse,
+  RetrievePayoutResponse,
 
   // Financial Transaction types
-  GetTransaction,
-  AllTransaction,
+  RetrieveTransactionResponse,
+  ListTransactionsResponse,
   
   // Checkout Session types
-  CreateCheckout,
-  AllCheckout,
-  OneCheckout,
+  CreateCheckoutResponse,
+  ListCheckoutsResponse,
+  RetrieveCheckoutResponse,
 } from "monime-package";
 ```
 
@@ -842,7 +850,7 @@ All API responses follow this consistent pattern:
 type Result<T> = {
   success: boolean;
   data?: T;
-  error?: Error;
+  error?: Error | MonimeError;
 };
 ```
 
@@ -880,146 +888,130 @@ type DestinationOption =
 ```ts
 // Account creation/retrieval response
 interface CreateFinancialAccount {
-  success: boolean;
-  messages: string[];
-  result: {
-    id: string;           // Unique account ID
-    uvan: string;         // Internal identifier
-    name: string;         // Account name
-    currency: string;     // Always "SLE" (Sierra Leone)
-    reference: string;    // Account reference
-    description: string;  // Account description
-    balance: {
-      available: {
-        currency: string;
-        value: number;    // Balance in cents (SLE)
-      };
+  id: string;           // Unique account ID
+  uvan: string;         // Internal identifier
+  name: string;         // Account name
+  currency: string;     // Always "SLE"
+  reference: string;    // Account reference
+  description: string;  // Account description
+  balance: {
+    available: {
+      currency: string;
+      value: number;    // Balance in cents (SLE)
     };
-    createTime: string;   // ISO timestamp
-    updateTime: string;   // ISO timestamp
   };
+  createTime: string;   // ISO timestamp
+  updateTime: string;   // ISO timestamp
 }
 ```
 
 #### Internal Transfer Types
 ```ts
-interface CreateInternalTransfer {
-  success: boolean;
-  messages: string[];
-  result: {
-    id: string;                    // Transfer ID
-    status: string;                // Transfer status
-    amount: {
-      currency: string;
-      value: number;               // Amount in cents
-    };
-    sourceFinancialAccount: { id: string };
-    destinationFinancialAccount: { id: string };
-    financialTransactionReference: string;
-    description: string;
-    failureDetail: {
-      code: string;
-      message: string;
-    };
-    ownershipGraph: {
+interface CreateInternalTransferResponse {
+  id: string;                    // Transfer ID
+  status: string;                // Transfer status
+  amount: {
+    currency: string;
+    value: number;               // Amount in cents
+  };
+  sourceFinancialAccount: { id: string };
+  destinationFinancialAccount: { id: string };
+  financialTransactionReference: string;
+  description: string;
+  failureDetail: {
+    code: string;
+    message: string;
+  };
+  ownershipGraph: {
+    owner: {
+      id: string;
+      type: string;
       owner: {
         id: string;
         type: string;
-        owner: {
-          id: string;
-          type: string;
-        };
       };
     };
-    createTime: string;
-    updateTime: string;
   };
+  createTime: string;
+  updateTime: string;
 }
 ```
 
 #### Payment Code Types
 ```ts
-interface CreatePaymentCode {
-  success: boolean;
-  messages: string[];
-  result: {
-    id: string;
-    mode: string;              // "recurrent"
-    status: string;            // Payment status
-    name: string;              // Payment name
-    amount: {
-      currency: string;
-      value: number;           // Amount in cents
-    };
-    enable: boolean;
-    expireTime: string;        // ISO timestamp
-    customer: { name: string };
-    ussdCode: string;          // USSD code for payment
-    reference: string;
-    authorizedProviders: string[];
-    authorizedPhoneNumber: string;
-    recurrentPaymentTarget: {
-      expectedPaymentCount: number;
-      expectedPaymentTotal: {
-        currency: string;
-        value: number;
-      };
-    };
-    financialAccountId: string;
-    processedPaymentData: {
-      amount: { currency: string; value: number };
-      orderId: string;
-      paymentId: string;
-      orderNumber: string;
-      channelData: {
-        providerId: string;
-        accountId: string;
-        reference: string;
-      };
-      financialTransactionReference: string;
-    };
-    createTime: string;
-    updateTime: string;
-    ownershipGraph: OwnershipGraph;
+interface CreatePaymentCodeResponse {
+  id: string;
+  mode: string;              // "recurrent"
+  status: string;            // Payment status
+  name: string;              // Payment name
+  amount: {
+    currency: string;
+    value: number;           // Amount in cents
   };
+  enable: boolean;
+  expireTime: string;        // ISO timestamp
+  customer: { name: string };
+  ussdCode: string;          // USSD code for payment
+  reference: string;
+  authorizedProviders: string[];
+  authorizedPhoneNumber: string;
+  recurrentPaymentTarget: {
+    expectedPaymentCount: number;
+    expectedPaymentTotal: {
+      currency: string;
+      value: number;
+    };
+  };
+  financialAccountId: string;
+  processedPaymentData: {
+    amount: { currency: string; value: number };
+    orderId: string;
+    paymentId: string;
+    orderNumber: string;
+    channelData: {
+      providerId: string;
+      accountId: string;
+      reference: string;
+    };
+    financialTransactionReference: string;
+  };
+  createTime: string;
+  updateTime: string;
+  ownershipGraph: OwnershipGraph;
 }
 ```
 
 #### Checkout Session Types
 ```ts
-interface CreateCheckout {
-  success: boolean;
-  messages: string[];
-  result: {
-    id: string;
-    status: string;
-    name: string;
-    orderNumber: string;       // Generated order number
-    reference: string;
-    description: string;
-    redirectUrl: string;       // Checkout page URL
-    cancelUrl: string;
-    successUrl: string;
-    lineItems: {
-      data: Array<{
-        type: string;
-        id: string;
-        name: string;
-        price: { currency: string; value: number };
-        quantity: number;
-        reference: string;
-        description: string;
-        images: string[];
-      }>;
-    };
-    financialAccountId: string;
-    brandingOptions: {
-      primaryColor: string;
-    };
-    expireTime: string;
-    createTime: string;
-    ownershipGraph: OwnershipGraph;
+interface CreateCheckoutResponse {
+  id: string;
+  status: string;
+  name: string;
+  orderNumber: string;       // Generated order number
+  reference: string;
+  description: string;
+  redirectUrl: string;       // Checkout page URL
+  cancelUrl: string;
+  successUrl: string;
+  lineItems: {
+    data: Array<{
+      type: string;
+      id: string;
+      name: string;
+      price: { currency: string; value: number };
+      quantity: number;
+      reference: string;
+      description: string;
+      images: string[];
+    }>;
   };
+  financialAccountId: string;
+  brandingOptions: {
+    primaryColor: string;
+  };
+  expireTime: string;
+  createTime: string;
+  ownershipGraph: OwnershipGraph;
 }
 ```
 
@@ -1054,8 +1046,8 @@ interface Amount {
 
 ```ts
 // Type-safe account creation
-const createAccountTyped = async (name: string): Promise<CreateFinancialAccount | null> => {
-  const result = await client.financialAccount.create(name);
+const createAccountTyped = async (name: string): Promise<CreateFinancialAccountResponse | null> => {
+  const result = await client.financialAccount.create(name, "SLE");
   return result.success ? result.data! : null;
 };
 
@@ -1064,7 +1056,7 @@ const createMobileMoneyPayout = async (
   amount: number,
   phoneNumber: string,
   sourceAccount: string
-): Promise<CreatePayout | null> => {
+): Promise<CreatePayoutResponse | null> => {
   const destination: DestinationOption = {
     type: "momo",
     providerId: "m17",
@@ -1077,12 +1069,12 @@ const createMobileMoneyPayout = async (
 
 // Type-safe transaction processing
 const processTransactions = async (): Promise<void> => {
-  const txResult = await client.financialTransaction.getAll();
+  const txResult = await client.financialTransaction.list();
   
   if (txResult.success && txResult.data) {
-    const transactions: AllTransaction = txResult.data;
+    const transactions: ListTransactionsResponse = txResult.data;
     
-    transactions.result.forEach((tx: GetTransaction['result']) => {
+    transactions.result.forEach((tx: RetrieveTransactionResponse) => {
       console.log(`Transaction ${tx.id}: ${tx.amount.value / 100} ${tx.amount.currency}`);
     });
   }
