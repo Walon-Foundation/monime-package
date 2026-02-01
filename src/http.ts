@@ -5,7 +5,6 @@ export interface RequestOptions {
 	path: string;
 	method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 	body?: unknown;
-	params?: Record<string, unknown> | undefined;
 	idempotencyKey?: string;
 }
 
@@ -22,7 +21,6 @@ export class HttpClient {
 			"Content-Type": "application/json",
 			Authorization: `Bearer ${this.config.accessToken}`,
 			"Monime-Space-Id": this.config.monimeSpaceId,
-			"User-Agent": "monime-js-sdk/1.1.3",
 		});
 
 		if (this.config.monimeVersion) {
@@ -37,21 +35,8 @@ export class HttpClient {
 	}
 
 	protected async request<T>(options: RequestOptions): Promise<Result<T>> {
-		const { path, method, body, params, idempotencyKey } = options;
-
-		let url = `${this.baseUrl}${path}`;
-		if (params) {
-			const searchParams = new URLSearchParams();
-			for (const [key, value] of Object.entries(params)) {
-				if (value !== undefined && value !== null) {
-					searchParams.append(key, String(value));
-				}
-			}
-			const queryString = searchParams.toString();
-			if (queryString) {
-				url += `?${queryString}`;
-			}
-		}
+		const { path, method, body, idempotencyKey } = options;
+		const url = `${this.baseUrl}${path}`;
 
 		try {
 			const response = await fetch(url, {
@@ -81,14 +66,11 @@ export class HttpClient {
 				throw new MonimeError(errorMessage, response.status, requestId, errorDetails);
 			}
 
-			// Some endpoints might return 204 No Content
 			if (response.status === 204) {
 				return { success: true } as Result<T>;
 			}
 
 			const data = (await response.json()) as { result?: unknown };
-			
-			// Monime API wrap results in a 'result' key often
 			const resultData = data.result !== undefined ? data.result : data;
 
 			return {
