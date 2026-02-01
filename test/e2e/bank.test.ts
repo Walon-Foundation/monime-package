@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MonimeClient } from "../../src/client";
 import { MonimeError } from "../../src/error";
 
@@ -6,7 +6,10 @@ const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
 
 describe("Bank Resource E2E", () => {
-	const client = new MonimeClient({ monimeSpaceId: "test", accessToken: "test" });
+	const client = new MonimeClient({
+		monimeSpaceId: "test",
+		accessToken: "test",
+	});
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -43,7 +46,9 @@ describe("Bank Resource E2E", () => {
 		fetchMock.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
-			json: async () => { throw new Error("Invalid JSON"); },
+			json: async () => {
+				throw new Error("Invalid JSON");
+			},
 		});
 
 		const result = await client.financialProvider.bank.list();

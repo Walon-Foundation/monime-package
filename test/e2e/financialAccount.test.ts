@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MonimeClient } from "../../src/client";
 import { MonimeError } from "../../src/error";
 
@@ -6,7 +6,10 @@ const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
 
 describe("FinancialAccount Resource E2E", () => {
-	const client = new MonimeClient({ monimeSpaceId: "test", accessToken: "test" });
+	const client = new MonimeClient({
+		monimeSpaceId: "test",
+		accessToken: "test",
+	});
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -22,14 +25,16 @@ describe("FinancialAccount Resource E2E", () => {
 
 		const result = await client.financialAccount.create({
 			accountName: "Test Account",
-			currency: "SLE"
+			currency: "SLE",
 		});
 		expect(result.success).toBe(true);
 		expect(result.data).toEqual(mockData.result);
 	});
 
 	it("should success: retrieve financial account", async () => {
-		const mockData = { result: { id: "fa_123", balance: { available: { value: 100 } } } };
+		const mockData = {
+			result: { id: "fa_123", balance: { available: { value: 100 } } },
+		};
 		fetchMock.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
@@ -59,7 +64,9 @@ describe("FinancialAccount Resource E2E", () => {
 			ok: false,
 			status: 500,
 			text: async () => "<html>Internal Server Error</html>",
-			json: async () => { throw new Error("Not JSON"); }
+			json: async () => {
+				throw new Error("Not JSON");
+			},
 		});
 
 		const result = await client.financialAccount.retrieve("fa_123");

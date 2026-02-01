@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, expect, it } from "vitest";
 import { MonimeClient } from "../../src/client";
 
 describe("MonimeClient Initialization", () => {
@@ -9,7 +9,7 @@ describe("MonimeClient Initialization", () => {
 
 	it("should initialize all resource namespaces correctly", () => {
 		const client = new MonimeClient(config);
-		
+
 		expect(client.payment).toBeDefined();
 		expect(client.payout).toBeDefined();
 		expect(client.financialAccount).toBeDefined();
@@ -26,20 +26,24 @@ describe("MonimeClient Initialization", () => {
 	});
 
 	it("should throw error if monimeSpaceId is missing", () => {
-		expect(() => new MonimeClient({ accessToken: "token" } as any)).toThrow("'monimeSpaceId' is missing");
+		expect(() => new MonimeClient({ accessToken: "token" } as any)).toThrow(
+			"'monimeSpaceId' is missing",
+		);
 	});
 
 	it("should throw error if accessToken is missing", () => {
-		expect(() => new MonimeClient({ monimeSpaceId: "space" } as any)).toThrow("'accessToken' is missing");
+		expect(() => new MonimeClient({ monimeSpaceId: "space" } as any)).toThrow(
+			"'accessToken' is missing",
+		);
 	});
 
 	it("should use environment variables if options are empty", () => {
 		process.env.MONIME_SPACE_ID = "env-space";
 		process.env.MONIME_ACCESS_TOKEN = "env-token";
-		
+
 		const client = new MonimeClient();
 		expect(client).toBeDefined();
-		
+
 		delete process.env.MONIME_SPACE_ID;
 		delete process.env.MONIME_ACCESS_TOKEN;
 	});

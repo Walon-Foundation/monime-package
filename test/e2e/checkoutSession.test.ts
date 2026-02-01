@@ -1,19 +1,23 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MonimeClient } from "../../src/client";
-import { MonimeError } from "../../src/error";
 
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
 
 describe("CheckoutSession Resource E2E", () => {
-	const client = new MonimeClient({ monimeSpaceId: "test", accessToken: "test" });
+	const client = new MonimeClient({
+		monimeSpaceId: "test",
+		accessToken: "test",
+	});
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	it("should success: create checkout session", async () => {
-		const mockData = { result: { id: "cs_123", redirectUrl: "https://checkout.com" } };
+		const mockData = {
+			result: { id: "cs_123", redirectUrl: "https://checkout.com" },
+		};
 		fetchMock.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
@@ -25,7 +29,7 @@ describe("CheckoutSession Resource E2E", () => {
 			amount: 100,
 			quantity: 1,
 			successUrl: "https://success.com",
-			cancelUrl: "https://cancel.com"
+			cancelUrl: "https://cancel.com",
 		});
 		expect(result.success).toBe(true);
 		expect(result.data).toEqual(mockData.result);
@@ -37,7 +41,7 @@ describe("CheckoutSession Resource E2E", () => {
 			amount: -10, // Invalid amount
 			quantity: 0, // Invalid quantity
 			successUrl: "not-a-url",
-			cancelUrl: "not-a-url"
+			cancelUrl: "not-a-url",
 		});
 		expect(result.success).toBe(false);
 		expect(result.error?.message).toBeDefined();

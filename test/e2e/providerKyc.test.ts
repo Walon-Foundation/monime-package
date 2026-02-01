@@ -1,12 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MonimeClient } from "../../src/client";
-import { MonimeError } from "../../src/error";
+import type { MonimeError } from "../../src/error";
 
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
 
 describe("ProviderKyc Resource E2E", () => {
-	const client = new MonimeClient({ monimeSpaceId: "test", accessToken: "test" });
+	const client = new MonimeClient({
+		monimeSpaceId: "test",
+		accessToken: "test",
+	});
 
 	beforeEach(() => {
 		vi.clearAllMocks();

@@ -1,12 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MonimeClient } from "../../src/client";
-import { MonimeError } from "../../src/error";
+import type { MonimeError } from "../../src/error";
 
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
 
 describe("Receipt Resource E2E", () => {
-	const client = new MonimeClient({ monimeSpaceId: "test", accessToken: "test" });
+	const client = new MonimeClient({
+		monimeSpaceId: "test",
+		accessToken: "test",
+	});
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -41,7 +44,9 @@ describe("Receipt Resource E2E", () => {
 		fetchMock.mockResolvedValueOnce({
 			ok: false,
 			status: 500,
-			json: async () => { throw new Error("Server error"); }
+			json: async () => {
+				throw new Error("Server error");
+			},
 		});
 
 		const result = await client.receipt.retrieve("ORD_1");

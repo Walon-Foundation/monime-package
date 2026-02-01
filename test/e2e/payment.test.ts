@@ -1,12 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MonimeClient } from "../../src/client";
-import { MonimeError } from "../../src/error";
+import type { MonimeError } from "../../src/error";
 
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
 
 describe("Payment Resource E2E", () => {
-	const client = new MonimeClient({ monimeSpaceId: "test", accessToken: "test" });
+	const client = new MonimeClient({
+		monimeSpaceId: "test",
+		accessToken: "test",
+	});
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -26,7 +29,9 @@ describe("Payment Resource E2E", () => {
 	});
 
 	it("should fail: update payment with invalid data", async () => {
-		const result = await client.payment.update("pay_1", { invalid_key: "value" });
+		const result = await client.payment.update("pay_1", {
+			invalid_key: "value",
+		});
 		expect(result.success).toBe(false);
 		expect(result.error?.message).toBeDefined();
 	});

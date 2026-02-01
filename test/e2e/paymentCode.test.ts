@@ -1,12 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MonimeClient } from "../../src/client";
-import { MonimeError } from "../../src/error";
 
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
 
 describe("PaymentCode Resource E2E", () => {
-	const client = new MonimeClient({ monimeSpaceId: "test", accessToken: "test" });
+	const client = new MonimeClient({
+		monimeSpaceId: "test",
+		accessToken: "test",
+	});
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -25,7 +27,7 @@ describe("PaymentCode Resource E2E", () => {
 			amount: 100,
 			financialAccountId: "fa_1",
 			name: "John Doe",
-			phoneNumber: "000000"
+			phoneNumber: "000000",
 		});
 		expect(result.success).toBe(true);
 		expect(result.data).toEqual(mockData.result);
@@ -37,7 +39,7 @@ describe("PaymentCode Resource E2E", () => {
 			amount: 100,
 			financialAccountId: "fa_1",
 			name: "John",
-			phoneNumber: "000"
+			phoneNumber: "000",
 		});
 		expect(result.success).toBe(false);
 		expect(result.error?.message).toContain("Payment name is required");

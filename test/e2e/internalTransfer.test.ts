@@ -1,12 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MonimeClient } from "../../src/client";
-import { MonimeError } from "../../src/error";
+import type { MonimeError } from "../../src/error";
 
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
 
 describe("InternalTransfer Resource E2E", () => {
-	const client = new MonimeClient({ monimeSpaceId: "test", accessToken: "test" });
+	const client = new MonimeClient({
+		monimeSpaceId: "test",
+		accessToken: "test",
+	});
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -23,7 +26,7 @@ describe("InternalTransfer Resource E2E", () => {
 		const result = await client.internalTransfer.create({
 			sourceAccount: "src_1",
 			destinationAccount: "dest_1",
-			amount: 500
+			amount: 500,
 		});
 		expect(result.success).toBe(true);
 		expect(result.data).toEqual(mockData.result);
@@ -33,7 +36,7 @@ describe("InternalTransfer Resource E2E", () => {
 		const result = await client.internalTransfer.create({
 			sourceAccount: "src_1",
 			destinationAccount: "dest_1",
-			amount: -10
+			amount: -10,
 		});
 		expect(result.success).toBe(false);
 		expect(result.error?.message).toContain("Amount must be greater than zero");
