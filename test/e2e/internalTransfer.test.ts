@@ -32,6 +32,31 @@ describe("InternalTransfer Resource E2E", () => {
 		expect(result.data).toEqual(mockData.result);
 	});
 
+	it("should success: update internal transfer", async () => {
+		const mockData = {
+			result: { id: "tr_123", description: "updated description" },
+		};
+		fetchMock.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: async () => mockData,
+		});
+
+		const result = await client.internalTransfer.update("tr_123", {
+			description: "updated description",
+		});
+		expect(result.success).toBe(true);
+		expect(result.data).toEqual(mockData.result);
+	});
+
+	it("should fail: update requires an internalTransferId", async () => {
+		const result = await client.internalTransfer.update("", {
+			description: "updated description",
+		});
+		expect(result.success).toBe(false);
+		expect(result.error?.message).toContain("internalTransferId is required");
+	});
+
 	it("should fail: validation error for negative amount", async () => {
 		const result = await client.internalTransfer.create({
 			sourceAccount: "src_1",

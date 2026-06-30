@@ -102,6 +102,9 @@ interface Amount {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+export interface UpdateInternalTransferResponse
+	extends RetrieveInternalTransferResponse {}
+
 export interface RetrieveInternalTransferResponse {
 	id: string;
 	status: string;
