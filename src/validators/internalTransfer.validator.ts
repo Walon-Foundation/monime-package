@@ -5,3 +5,5 @@ export const createInternalTransferSchema = z.object({
 	destinationAccount: z.string().min(1, "Destination account is required"),
 	amount: z.number().gt(0, "Amount must be greater than zero"),
 });
+
+export const patchInternalTransferSchema = z.record(z.string(), z.unknown());
