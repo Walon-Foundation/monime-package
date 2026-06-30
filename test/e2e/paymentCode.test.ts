@@ -45,6 +45,27 @@ describe("PaymentCode Resource E2E", () => {
 		expect(result.error?.message).toContain("Payment name is required");
 	});
 
+	it("should success: update payment code", async () => {
+		const mockData = { result: { id: "pc_1", name: "Updated Name" } };
+		fetchMock.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: async () => mockData,
+		});
+
+		const result = await client.paymentCode.update("pc_1", {
+			name: "Updated Name",
+		});
+		expect(result.success).toBe(true);
+		expect(result.data).toEqual(mockData.result);
+	});
+
+	it("should fail: update without payment code id", async () => {
+		const result = await client.paymentCode.update("", { name: "Updated" });
+		expect(result.success).toBe(false);
+		expect(result.error?.message).toBe("paymentCodeId is required");
+	});
+
 	it("should unknown: handle network timeout", async () => {
 		fetchMock.mockRejectedValueOnce(new Error("Timeout"));
 

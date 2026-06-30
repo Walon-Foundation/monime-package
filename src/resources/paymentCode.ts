@@ -5,8 +5,12 @@ import type {
 	CreatePaymentCodeResponse,
 	ListPaymentCodesResponse,
 	RetrievePaymentCodeResponse,
+	UpdatePaymentCodeResponse,
 } from "../types/paymentCode";
-import { createPaymentCodeSchema } from "../validators/paymentCode.validator";
+import {
+	createPaymentCodeSchema,
+	patchPaymentCodeSchema,
+} from "../validators/paymentCode.validator";
 
 export interface CreatePaymentCodeOptions {
 	paymentName: string;
@@ -86,6 +90,34 @@ export class PaymentCodeAPI extends HttpClient {
 		return this.request<ListPaymentCodesResponse>({
 			method: "GET",
 			path: this.path,
+		});
+	}
+
+	/**
+	 * Update an existing payment code.
+	 * @param paymentCodeId - The unique identifier of the payment code.
+	 * @param body - The partial payment code data to update.
+	 */
+	async update(
+		paymentCodeId: string,
+		body: Record<string, unknown>,
+	): Promise<Result<UpdatePaymentCodeResponse>> {
+		if (!paymentCodeId) {
+			return { success: false, error: new Error("paymentCodeId is required") };
+		}
+
+		const validation = patchPaymentCodeSchema.safeParse(body);
+		if (!validation.success) {
+			return { success: false, error: new Error(validation.error.message) };
+		}
+
+		const idempotencyKey = randomBytes(20).toString("hex");
+
+		return this.request<UpdatePaymentCodeResponse>({
+			method: "PATCH",
+			path: `${this.path}/${paymentCodeId}`,
+			body,
+			idempotencyKey,
 		});
 	}
 
