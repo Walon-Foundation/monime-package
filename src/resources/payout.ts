@@ -6,8 +6,12 @@ import type {
 	DestinationOption,
 	ListPayoutsResponse,
 	RetrievePayoutResponse,
+	UpdatePayoutResponse,
 } from "../types/payout";
-import { createPayoutSchema } from "../validators/payout.validator";
+import {
+	createPayoutSchema,
+	patchPayoutSchema,
+} from "../validators/payout.validator";
 
 export interface CreatePayoutOptions {
 	amount: number;
@@ -71,6 +75,34 @@ export class PayoutAPI extends HttpClient {
 		return this.request<RetrievePayoutResponse>({
 			method: "GET",
 			path: `${this.path}/${payoutId}`,
+		});
+	}
+
+	/**
+	 * Update an existing payout.
+	 * @param payoutId - The unique identifier of the payout.
+	 * @param body - The partial payout data to update.
+	 */
+	async update(
+		payoutId: string,
+		body: Record<string, unknown>,
+	): Promise<Result<UpdatePayoutResponse>> {
+		if (!payoutId) {
+			return { success: false, error: new Error("payoutId is required") };
+		}
+
+		const validation = patchPayoutSchema.safeParse(body);
+		if (!validation.success) {
+			return { success: false, error: new Error(validation.error.message) };
+		}
+
+		const idempotencyKey = randomBytes(20).toString("hex");
+
+		return this.request<UpdatePayoutResponse>({
+			method: "PATCH",
+			path: `${this.path}/${payoutId}`,
+			body,
+			idempotencyKey,
 		});
 	}
 

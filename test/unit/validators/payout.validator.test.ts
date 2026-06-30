@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createPayoutSchema } from "../../../src/validators/payout.validator";
+import {
+	createPayoutSchema,
+	patchPayoutSchema,
+} from "../../../src/validators/payout.validator";
 
 describe("createPayoutSchema", () => {
 	it("should validate a correct momo payout request", () => {
@@ -51,6 +54,26 @@ describe("createPayoutSchema", () => {
 				phoneNumber: "123456789",
 			},
 		});
+		expect(result.success).toBe(false);
+	});
+});
+
+describe("patchPayoutSchema", () => {
+	it("should validate an arbitrary record of update fields", () => {
+		const result = patchPayoutSchema.safeParse({
+			metadata: { note: "updated" },
+			status: "processing",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("should validate an empty object", () => {
+		const result = patchPayoutSchema.safeParse({});
+		expect(result.success).toBe(true);
+	});
+
+	it("should fail when the body is not an object", () => {
+		const result = patchPayoutSchema.safeParse("not-an-object");
 		expect(result.success).toBe(false);
 	});
 });
