@@ -5,8 +5,12 @@ import type {
 	CreateFinancialAccountResponse,
 	ListFinancialAccountsResponse,
 	RetrieveFinancialAccountResponse,
+	UpdateFinancialAccountResponse,
 } from "../types/financialAccount";
-import { createFinancialAccountSchema } from "../validators/financialAccount.validator";
+import {
+	createFinancialAccountSchema,
+	patchFinancialAccountSchema,
+} from "../validators/financialAccount.validator";
 
 export type Currency = "USD" | "SLE";
 
@@ -76,6 +80,37 @@ export class FinancialAccountAPI extends HttpClient {
 		return this.request<ListFinancialAccountsResponse>({
 			method: "GET",
 			path: this.path,
+		});
+	}
+
+	/**
+	 * Update an existing financial account.
+	 * @param financialAccountId - The unique identifier of the account.
+	 * @param body - The partial financial account data to update.
+	 */
+	async update(
+		financialAccountId: string,
+		body: Record<string, unknown>,
+	): Promise<Result<UpdateFinancialAccountResponse>> {
+		if (!financialAccountId) {
+			return {
+				success: false,
+				error: new Error("financialAccountId is required"),
+			};
+		}
+
+		const validation = patchFinancialAccountSchema.safeParse(body);
+		if (!validation.success) {
+			return { success: false, error: new Error(validation.error.message) };
+		}
+
+		const idempotencyKey = randomBytes(20).toString("hex");
+
+		return this.request<UpdateFinancialAccountResponse>({
+			method: "PATCH",
+			path: `${this.path}/${financialAccountId}`,
+			body,
+			idempotencyKey,
 		});
 	}
 }

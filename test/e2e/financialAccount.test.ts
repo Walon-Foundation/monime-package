@@ -46,6 +46,29 @@ describe("FinancialAccount Resource E2E", () => {
 		expect(result.data).toEqual(mockData.result);
 	});
 
+	it("should success: update financial account", async () => {
+		const mockData = { result: { id: "fa_123", name: "Updated Account" } };
+		fetchMock.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: async () => mockData,
+		});
+
+		const result = await client.financialAccount.update("fa_123", {
+			name: "Updated Account",
+		});
+		expect(result.success).toBe(true);
+		expect(result.data).toEqual(mockData.result);
+	});
+
+	it("should fail: update financial account without id", async () => {
+		const result = await client.financialAccount.update("", {
+			name: "Updated Account",
+		});
+		expect(result.success).toBe(false);
+		expect(result.error?.message).toContain("financialAccountId is required");
+	});
+
 	it("should fail: 403 Forbidden", async () => {
 		fetchMock.mockResolvedValueOnce({
 			ok: false,

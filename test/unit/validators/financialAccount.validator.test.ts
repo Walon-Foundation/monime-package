@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createFinancialAccountSchema } from "../../../src/validators/financialAccount.validator";
+import {
+	createFinancialAccountSchema,
+	patchFinancialAccountSchema,
+} from "../../../src/validators/financialAccount.validator";
 
 describe("createFinancialAccountSchema", () => {
 	it("should validate a correct financial account request", () => {
@@ -34,5 +37,20 @@ describe("createFinancialAccountSchema", () => {
 				"Currency must be either USD or SLE",
 			);
 		}
+	});
+});
+
+describe("patchFinancialAccountSchema", () => {
+	it("should validate a correct patch request", () => {
+		const result = patchFinancialAccountSchema.safeParse({
+			name: "Updated Account",
+			description: "new description",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("should fail when input is not an object", () => {
+		const result = patchFinancialAccountSchema.safeParse("invalid-string");
+		expect(result.success).toBe(false);
 	});
 });

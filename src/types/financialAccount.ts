@@ -47,6 +47,11 @@ interface Available {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+export interface UpdateFinancialAccountResponse
+	extends RetrieveFinancialAccountResponse {}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 export interface ListFinancialAccountsResponse {
 	result: FinancialAccount[];
 	pagination: Pagination;
