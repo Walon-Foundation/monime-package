@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createPaymentCodeSchema } from "../../../src/validators/paymentCode.validator";
+import {
+	createPaymentCodeSchema,
+	patchPaymentCodeSchema,
+} from "../../../src/validators/paymentCode.validator";
 
 describe("createPaymentCodeSchema", () => {
 	it("should validate a correct payment code request", () => {
@@ -40,6 +43,26 @@ describe("createPaymentCodeSchema", () => {
 			name: "",
 			phoneNumber: "",
 		});
+		expect(result.success).toBe(false);
+	});
+});
+
+describe("patchPaymentCodeSchema", () => {
+	it("should accept an object with partial update fields", () => {
+		const result = patchPaymentCodeSchema.safeParse({
+			name: "Updated Name",
+			enable: false,
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("should accept an empty object", () => {
+		const result = patchPaymentCodeSchema.safeParse({});
+		expect(result.success).toBe(true);
+	});
+
+	it("should fail when given a non-object value", () => {
+		const result = patchPaymentCodeSchema.safeParse("not-an-object");
 		expect(result.success).toBe(false);
 	});
 });
