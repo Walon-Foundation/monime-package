@@ -1,5 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { createPayoutSchema } from "../../../src/validators/payout.validator";
+import {
+	createPayoutSchema,
+	patchPayoutSchema,
+} from "../../../src/validators/payout.validator";
+
+describe("patchPayoutSchema", () => {
+	it("should accept a partial update object", () => {
+		const result = patchPayoutSchema.safeParse({ metadata: { note: "x" } });
+		expect(result.success).toBe(true);
+	});
+
+	it("should accept an empty object", () => {
+		const result = patchPayoutSchema.safeParse({});
+		expect(result.success).toBe(true);
+	});
+});
 
 describe("createPayoutSchema", () => {
 	it("should validate a correct momo payout request", () => {

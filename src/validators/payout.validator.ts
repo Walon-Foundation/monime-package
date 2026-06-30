@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const patchPayoutSchema = z.record(z.string(), z.unknown());
+
 export const createPayoutSchema = z.object({
 	amount: z.number().gt(0, "Amount must be greater than 0"),
 	sourceAccount: z.string().min(1, "Source account cannot be empty"),

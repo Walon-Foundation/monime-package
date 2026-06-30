@@ -55,4 +55,28 @@ describe("Payout Resource E2E", () => {
 		expect(result.success).toBe(false);
 		expect((result.error as MonimeError).status).toBe(503);
 	});
+
+	it("should success: update a payout", async () => {
+		const mockData = { result: { id: "po_1", status: "completed" } };
+		fetchMock.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: async () => mockData,
+		});
+
+		const result = await client.payout.update("po_1", {
+			metadata: { note: "reconciled" },
+		});
+		expect(result.success).toBe(true);
+		expect(result.data).toEqual(mockData.result);
+
+		const [, options] = fetchMock.mock.calls[0];
+		expect(options.method).toBe("PATCH");
+	});
+
+	it("should fail: update requires a payoutId", async () => {
+		const result = await client.payout.update("", { metadata: {} });
+		expect(result.success).toBe(false);
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
 });

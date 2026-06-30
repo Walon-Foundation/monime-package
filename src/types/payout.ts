@@ -145,6 +145,8 @@ interface Amount {
 
 //----------------------------------------------------------------------------------------------
 
+export interface UpdatePayoutResponse extends RetrievePayoutResponse {}
+
 export interface RetrievePayoutResponse {
 	id: string;
 	status: string;
