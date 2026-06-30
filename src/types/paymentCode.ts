@@ -210,3 +210,6 @@ interface Amount {
 	currency: string;
 	value: number;
 }
+
+export interface UpdatePaymentCodeResponse
+	extends RetrievePaymentCodeResponse {}
