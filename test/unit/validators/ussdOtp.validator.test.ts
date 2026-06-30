@@ -4,14 +4,14 @@ import { createUssdOtpSchema } from "../../../src/validators/ussdOtp.validator";
 describe("createUssdOtpSchema", () => {
 	it("should validate a correct USSD OTP request", () => {
 		const result = createUssdOtpSchema.safeParse({
-			phoneNumber: "+1234567890",
+			authorizedPhoneNumber: "+1234567890",
 		});
 		expect(result.success).toBe(true);
 	});
 
-	it("should fail when phoneNumber is empty", () => {
+	it("should fail when authorizedPhoneNumber is empty", () => {
 		const result = createUssdOtpSchema.safeParse({
-			phoneNumber: "",
+			authorizedPhoneNumber: "",
 		});
 		expect(result.success).toBe(false);
 	});
