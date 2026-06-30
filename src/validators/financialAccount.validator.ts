@@ -6,3 +6,5 @@ export const createFinancialAccountSchema = z.object({
 		message: "Currency must be either USD or SLE",
 	}),
 });
+
+export const patchFinancialAccountSchema = z.record(z.string(), z.unknown());
