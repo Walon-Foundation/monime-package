@@ -44,6 +44,27 @@ describe("Payout Resource E2E", () => {
 		expect((result.error as MonimeError).status).toBe(400);
 	});
 
+	it("should success: update payout", async () => {
+		const mockData = { result: { id: "po_1", status: "processing" } };
+		fetchMock.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: async () => mockData,
+		});
+
+		const result = await client.payout.update("po_1", {
+			metadata: { note: "updated" },
+		});
+		expect(result.success).toBe(true);
+		expect(result.data).toEqual(mockData.result);
+	});
+
+	it("should fail: update payout with missing id", async () => {
+		const result = await client.payout.update("", { metadata: {} });
+		expect(result.success).toBe(false);
+		expect(result.error?.message).toBeDefined();
+	});
+
 	it("should unknown: handle 503 Service Unavailable", async () => {
 		fetchMock.mockResolvedValueOnce({
 			ok: false,
