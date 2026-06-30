@@ -16,7 +16,7 @@ describe("UssdOtp Resource E2E", () => {
 	});
 
 	it("should success: create USSD OTP", async () => {
-		const mockData = { result: { id: "otp_1", code: "123456" } };
+		const mockData = { result: { id: "otp_1", status: "pending" } };
 		fetchMock.mockResolvedValueOnce({
 			ok: true,
 			status: 200,
@@ -24,20 +24,74 @@ describe("UssdOtp Resource E2E", () => {
 		});
 
 		const result = await client.ussdOtp.create({
-			phoneNumber: "000",
-			amount: 100,
+			authorizedPhoneNumber: "076000000",
 		});
 		expect(result.success).toBe(true);
 		expect(result.data).toEqual(mockData.result);
 	});
 
-	it("should fail: validation error for missing phone", async () => {
+	it("should fail: validation error for missing authorized phone", async () => {
 		const result = await client.ussdOtp.create({
-			phoneNumber: "",
-			amount: 100,
+			authorizedPhoneNumber: "",
 		});
 		expect(result.success).toBe(false);
-		expect(result.error?.message).toContain("Phone number is required");
+		expect(result.error?.message).toContain(
+			"Authorized phone number is required",
+		);
+	});
+
+	it("should success: retrieve USSD OTP", async () => {
+		const mockData = { result: { id: "otp_1", status: "pending" } };
+		fetchMock.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: async () => mockData,
+		});
+
+		const result = await client.ussdOtp.retrieve("otp_1");
+		expect(result.success).toBe(true);
+		expect(result.data).toEqual(mockData.result);
+	});
+
+	it("should fail: retrieve with empty id", async () => {
+		const result = await client.ussdOtp.retrieve("");
+		expect(result.success).toBe(false);
+		expect(result.error?.message).toContain("ussdOtpId is required");
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it("should success: list USSD OTPs", async () => {
+		const mockData = {
+			result: [{ id: "otp_1", status: "pending" }],
+			pagination: { count: 1, next: "" },
+		};
+		fetchMock.mockResolvedValueOnce({
+			ok: true,
+			status: 200,
+			json: async () => mockData,
+		});
+
+		const result = await client.ussdOtp.list();
+		expect(result.success).toBe(true);
+		expect(result.data).toEqual(mockData.result);
+	});
+
+	it("should success: delete USSD OTP", async () => {
+		fetchMock.mockResolvedValueOnce({
+			ok: true,
+			status: 204,
+			json: async () => ({}),
+		});
+
+		const result = await client.ussdOtp.delete("otp_1");
+		expect(result.success).toBe(true);
+	});
+
+	it("should fail: delete with empty id", async () => {
+		const result = await client.ussdOtp.delete("");
+		expect(result.success).toBe(false);
+		expect(result.error?.message).toContain("ussdOtpId is required");
+		expect(fetchMock).not.toHaveBeenCalled();
 	});
 
 	it("should unknown: handle 502 error", async () => {
@@ -48,8 +102,7 @@ describe("UssdOtp Resource E2E", () => {
 		});
 
 		const result = await client.ussdOtp.create({
-			phoneNumber: "000",
-			amount: 100,
+			authorizedPhoneNumber: "076000000",
 		});
 		expect(result.success).toBe(false);
 		expect((result.error as MonimeError).status).toBe(502);
