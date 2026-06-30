@@ -5,8 +5,12 @@ import type {
 	CreateInternalTransferResponse,
 	ListInternalTransfersResponse,
 	RetrieveInternalTransferResponse,
+	UpdateInternalTransferResponse,
 } from "../types/internalTransfer";
-import { createInternalTransferSchema } from "../validators/internalTransfer.validator";
+import {
+	createInternalTransferSchema,
+	patchInternalTransferSchema,
+} from "../validators/internalTransfer.validator";
 
 export interface CreateInternalTransferOptions {
 	sourceAccount: string;
@@ -76,6 +80,37 @@ export class InternalTransferAPI extends HttpClient {
 		return this.request<RetrieveInternalTransferResponse>({
 			method: "GET",
 			path: `${this.path}/${internalTransferId}`,
+		});
+	}
+
+	/**
+	 * Update an existing internal transfer.
+	 * @param internalTransferId - The unique identifier of the transfer.
+	 * @param body - The partial internal transfer data to update.
+	 */
+	async update(
+		internalTransferId: string,
+		body: Record<string, unknown>,
+	): Promise<Result<UpdateInternalTransferResponse>> {
+		if (!internalTransferId) {
+			return {
+				success: false,
+				error: new Error("internalTransferId is required"),
+			};
+		}
+
+		const validation = patchInternalTransferSchema.safeParse(body);
+		if (!validation.success) {
+			return { success: false, error: new Error(validation.error.message) };
+		}
+
+		const idempotencyKey = randomBytes(20).toString("hex");
+
+		return this.request<UpdateInternalTransferResponse>({
+			method: "PATCH",
+			path: `${this.path}/${internalTransferId}`,
+			body,
+			idempotencyKey,
 		});
 	}
 

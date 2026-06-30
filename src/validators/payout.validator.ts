@@ -21,3 +21,5 @@ export const createPayoutSchema = z.object({
 		}),
 	]),
 });
+
+export const patchPayoutSchema = z.record(z.string(), z.unknown());

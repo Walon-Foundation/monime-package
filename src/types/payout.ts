@@ -159,6 +159,8 @@ export interface RetrievePayoutResponse {
 	//   metadata: Metadata;
 }
 
+export interface UpdatePayoutResponse extends RetrievePayoutResponse {}
+
 interface OwnershipGraph {
 	owner: Owner2;
 }
