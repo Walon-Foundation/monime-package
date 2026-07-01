@@ -1,7 +1,13 @@
 
 # monime-package
 
-Official TypeScript SDK for Monime - a modern, type-safe client library for Sierra Leone's leading payment platform. Provides comprehensive API coverage with predictable response patterns and excellent developer experience.
+Unofficial TypeScript SDK for Monime - a modern, type-safe client library for Sierra Leone's leading payment platform. Provides comprehensive API coverage with predictable response patterns and excellent developer experience.
+
+> ### ⚠️ Disclaimer
+>
+> This is an **unofficial**, community-maintained SDK. It is **not affiliated with, endorsed by, or supported by Monime Ltd.** "Monime" and any related marks are the property of their respective owners and are used here only to describe the API this library talks to.
+>
+> The software is provided "as is", without warranty of any kind (see [License](#license)). Use it at your own risk. For official tooling and support, refer to Monime's own documentation at [monime.io](https://monime.io).
 
 ![npm version](https://img.shields.io/npm/v/monime-package.svg)
 ![npm downloads](https://img.shields.io/npm/dm/monime-package.svg)
@@ -16,6 +22,7 @@ Package: `monime-package`
 
 ## Table of Contents
 
+- **[Disclaimer](#️-disclaimer)**
 - **[Features](#features)**
 - **[Installation](#installation)**
 - **[Environment Variables](#environment-variables)**
@@ -537,7 +544,9 @@ The package is organized for maximum simplicity:
 
 ## Complete Examples
 
-Here are comprehensive examples showing real-world usage patterns:
+> 📁 **Runnable versions** of everything below live in the [`examples/`](./examples) directory. See [`examples/README.md`](./examples/README.md) for setup and how to run them.
+
+Here are comprehensive examples showing real-world usage patterns. All methods take a single **options object** — the older positional-argument style is no longer supported.
 
 ### Complete E-commerce Integration
 
@@ -551,7 +560,10 @@ const client = createClient({
 });
 
 // Create business account
-const businessAccount = await client.financialAccount.create("E-commerce Store", "SLE");
+const businessAccount = await client.financialAccount.create({
+  accountName: "E-commerce Store",
+  currency: "SLE",
+});
 if (!businessAccount.success) {
   throw new Error(`Failed to create account: ${businessAccount.error?.message}`);
 }
@@ -561,19 +573,17 @@ console.log(`Created account: ${accountId}`);
 console.log(`Balance: ${businessAccount.data!.balance.available.value} SLE`);
 
 // Create checkout session for customer
-const checkout = await client.checkoutSession.create(
-  "Digital Camera",
-  45000, // 450.00 SLE
-  1,
-  "https://store.com/success",
-  "https://store.com/cancel",
-  {
-    description: "Professional DSLR Camera with lens kit",
-    financialAccountId: accountId,
-    primaryColor: "#2563EB", // Brand blue
-    images: ["https://store.com/camera.jpg"]
-  }
-);
+const checkout = await client.checkoutSession.create({
+  name: "Digital Camera",
+  amount: 45000, // 450.00 SLE
+  quantity: 1,
+  successUrl: "https://store.com/success",
+  cancelUrl: "https://store.com/cancel",
+  description: "Professional DSLR Camera with lens kit",
+  financialAccountId: accountId,
+  primaryColor: "#2563EB", // Brand blue
+  images: ["https://store.com/camera.jpg"],
+});
 
 if (checkout.success) {
   console.log(`Checkout created: ${checkout.data!.id}`);
@@ -586,18 +596,18 @@ if (checkout.success) {
 
 ```ts
 // 1. Generate USSD payment code for customer
-const paymentCode = await client.paymentCode.create(
-  "Invoice #INV-2024-001",
-  15000, // 150.00 SLE
-  accountId,
-  "Customer Name",
-  "0771234567"
-);
+const paymentCode = await client.paymentCode.create({
+  paymentName: "Invoice #INV-2024-001",
+  amount: 15000, // 150.00 SLE
+  financialAccountId: accountId,
+  name: "Customer Name",
+  phoneNumber: "0771234567",
+});
 
 if (paymentCode.success) {
   console.log(`USSD Code: ${paymentCode.data!.ussdCode}`);
   console.log(`Expires: ${paymentCode.data!.expireTime}`);
-  
+
   // Send USSD code to customer via SMS/email
   await sendToCustomer(paymentCode.data!.ussdCode);
 }
@@ -607,23 +617,23 @@ const checkPaymentStatus = async (codeId: string) => {
   const status = await client.paymentCode.retrieve(codeId);
   if (status.success) {
     console.log(`Payment Status: ${status.data!.status}`);
-    return status.data!.status === 'completed';
+    return status.data!.status === "completed";
   }
   return false;
 };
 
 // 3. Process payout to supplier after payment received
 const paySupplier = async () => {
-  const payout = await client.payout.create(
-    8000, // 80.00 SLE to supplier
-    {
+  const payout = await client.payout.create({
+    amount: 8000, // 80.00 SLE to supplier
+    sourceAccount: accountId,
+    destination: {
       type: "momo",
       providerId: "m17",
-      phoneNumber: "0779876543"
+      phoneNumber: "0779876543",
     },
-    accountId
-  );
-  
+  });
+
   if (payout.success) {
     console.log(`Payout ID: ${payout.data!.id}`);
     console.log(`Status: ${payout.data!.status}`);
@@ -637,25 +647,33 @@ const paySupplier = async () => {
 ```ts
 // Create multiple accounts for different purposes
 const accounts = await Promise.all([
-  client.financialAccount.create("Sales Revenue", "SLE"),
-  client.financialAccount.create("Operating Expenses", "SLE"),
-  client.financialAccount.create("Tax Reserve", "SLE"),
+  client.financialAccount.create({ accountName: "Sales Revenue", currency: "SLE" }),
+  client.financialAccount.create({ accountName: "Operating Expenses", currency: "SLE" }),
+  client.financialAccount.create({ accountName: "Tax Reserve", currency: "SLE" }),
 ]);
 
 // Check if all accounts were created successfully
 if (accounts.every(acc => acc.success)) {
   const [salesAccount, expensesAccount, taxAccount] = accounts.map(acc => acc.data!.id);
-  
+
   // Distribute revenue: 70% operations, 30% tax reserve
   const revenue = 100000; // 1000.00 SLE
-  
+
   const transfers = await Promise.all([
-    client.internalTransfer.create(salesAccount, expensesAccount, revenue * 0.7),
-    client.internalTransfer.create(salesAccount, taxAccount, revenue * 0.3),
+    client.internalTransfer.create({
+      sourceAccount: salesAccount,
+      destinationAccount: expensesAccount,
+      amount: revenue * 0.7,
+    }),
+    client.internalTransfer.create({
+      sourceAccount: salesAccount,
+      destinationAccount: taxAccount,
+      amount: revenue * 0.3,
+    }),
   ]);
-  
+
   transfers.forEach((transfer, index) => {
-    const purpose = index === 0 ? 'operations' : 'tax reserve';
+    const purpose = index === 0 ? "operations" : "tax reserve";
     if (transfer.success) {
       console.log(`${purpose} transfer: ${transfer.data!.id}`);
     }
@@ -1135,5 +1153,7 @@ For detailed contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)
 ## License
 
 MIT — see [LICENSE](./LICENSE).
+
+This is an unofficial, independent project and is **not affiliated with or endorsed by Monime Ltd.** All product names, trademarks, and registered trademarks are the property of their respective owners.
 
 ---
