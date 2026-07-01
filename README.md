@@ -58,7 +58,7 @@ Package: `monime-package`
 - **Typed** request/response objects for safer integrations
 - **Predictable** return shape: `{ success, data?, error? }`
 - **Client-based** auth: set credentials once per instance
-- **Zero dependencies** (using native `fetch`) for maximum performance and portability
+- **Minimal dependencies** — native `fetch` for HTTP; [`zod`](https://zod.dev) for runtime input validation
 - **Full API coverage** for all Monime endpoints
 - **Tree-shaking support** - only bundle what you use
 - **Dual module output** - works with both CommonJS and ES modules
@@ -534,11 +534,29 @@ pnpm lint-format
 ```
 
 ### Project Structure
-The package is organized for maximum simplicity:
-- **`src/resources/`**: All API resource implementations (e.g., `payment.ts`, `payout.ts`)
-- **`src/types/`**: Consolidated TypeScript interface definitions
-- **`src/client.ts`**: The main `MonimeClient` entry point
-- **`src/http.ts`**: Shared native `fetch` logic and telemetry
+
+```
+monime-package/
+├── src/
+│   ├── index.ts            # Public entry point — exports createClient, types, errors
+│   ├── client.ts           # MonimeClient — wires every resource to your credentials
+│   ├── http.ts             # Shared native `fetch` logic, headers, and error plumbing
+│   ├── error.ts            # MonimeError / MonimeValidationError definitions
+│   ├── resources/          # One file per API resource (payment.ts, payout.ts, …)
+│   ├── types/              # TypeScript request/response interfaces per resource
+│   └── validators/         # Zod schemas used to validate inputs before a request
+├── test/
+│   ├── e2e/                # End-to-end tests per resource
+│   └── unit/validators/    # Unit tests for the Zod validators
+├── examples/               # Runnable usage examples (see examples/README.md)
+├── biome.json              # Biome linter/formatter config
+├── tsup.config.ts          # Build config (dual CJS/ESM output)
+└── tsconfig.json           # TypeScript compiler config
+```
+
+Each API resource is implemented as a trio: a class in `src/resources/`, its
+request/response types in `src/types/`, and (for endpoints that accept input) a
+Zod validator in `src/validators/`. When adding a resource, follow that pattern.
 
 ---
 

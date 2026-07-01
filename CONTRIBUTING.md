@@ -48,7 +48,45 @@ This guide outlines how you can contribute effectively.
 
 * Each Pull Request (PR) should focus on a **single feature or bug fix**.
 * Keep functions **small and maintainable**.
-* Modularize helpers and types in `src/modules` where appropriate.
+* Follow the existing layout: an API resource lives as a trio of files —
+  the class in `src/resources/`, its request/response types in `src/types/`,
+  and (for endpoints that take input) a Zod validator in `src/validators/`.
+
+### Project Layout
+
+```
+src/
+├── index.ts        # Public entry point (createClient, types, errors)
+├── client.ts       # MonimeClient — wires resources to credentials
+├── http.ts         # Shared fetch logic, headers, error handling
+├── error.ts        # MonimeError / MonimeValidationError
+├── resources/      # One class per API resource
+├── types/          # Request/response interfaces
+└── validators/     # Zod input schemas
+
+test/
+├── e2e/                 # End-to-end tests per resource
+└── unit/validators/     # Validator unit tests
+
+examples/           # Runnable usage examples
+```
+
+---
+
+## Testing & Quality
+
+Before opening a PR, make sure the checks below pass locally:
+
+```bash
+pnpm lint-format   # Biome — formats and lints (auto-fixes where possible)
+pnpm test          # Vitest — unit and e2e tests
+pnpm build         # tsup — verifies the package builds (dual CJS/ESM)
+```
+
+* Add or update tests under `test/` for any behavior you change.
+* New input-accepting endpoints should ship with a Zod validator **and** a
+  matching test in `test/unit/validators/`.
+* Formatting and linting are handled by **Biome** (`biome.json`) — don't hand-format.
 
 ---
 
