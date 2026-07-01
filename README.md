@@ -33,6 +33,7 @@ Package: `monime-package`
   - **[Receipts](#receipts)**
   - **[USSD OTPs](#ussd-otps)**
   - **[Provider KYC](#provider-kyc)**
+  - **[Financial Providers (Banks & MoMo)](#financial-providers-banks--momo)**
   - **[Financial Accounts](#financial-accounts)**
   - **[Internal Transfers](#internal-transfers)**
   - **[Payment Codes](#payment-codes)**
@@ -205,11 +206,20 @@ client.receipt.redeem(orderNumber: string, body: any): Promise<Result<RedeemRece
 
 ### USSD OTPs (New)
 
-Generate USSD OTPs.
+Generate and manage USSD OTP sessions.
 
 ```ts
 // Create USSD OTP
 client.ussdOtp.create(body: CreateUssdOtpRequest): Promise<Result<CreateUssdOtpResponse>>
+
+// Retrieve a USSD OTP session by ID
+client.ussdOtp.retrieve(ussdOtpId: string): Promise<Result<RetrieveUssdOtpResponse>>
+
+// List all USSD OTP sessions
+client.ussdOtp.list(): Promise<Result<ListUssdOtpsResponse>>
+
+// Delete a USSD OTP session
+client.ussdOtp.delete(ussdOtpId: string): Promise<Result<void>>
 ```
 
 ### Provider KYC (New)
@@ -219,6 +229,30 @@ Get provider KYC details.
 ```ts
 // Retrieve provider KYC
 client.providerKyc.retrieve(providerId: string): Promise<Result<GetProviderKycResponse>>
+```
+
+### Financial Providers (Banks & MoMo)
+
+Look up the banks and mobile money providers supported in your space. These are
+exposed under `client.financialProvider`.
+
+```ts
+// Banks
+client.financialProvider.bank.retrieve(providerId: string): Promise<Result<RetrieveBankResponse>>
+client.financialProvider.bank.list(): Promise<Result<ListBanksResponse>>
+
+// Mobile money providers
+client.financialProvider.momo.retrieve(providerId: string): Promise<Result<RetrieveMomoResponse>>
+client.financialProvider.momo.list(): Promise<Result<ListMomosResponse>>
+```
+
+**Example:**
+```ts
+// List every supported mobile money provider
+const providers = await client.financialProvider.momo.list();
+if (providers.success) {
+  providers.data!.result.forEach((p) => console.log(p.providerId, p.name));
+}
 ```
 
 ### Financial Accounts
@@ -239,6 +273,9 @@ client.financialAccount.retrieve(financialAccountId: string): Promise<Result<Ret
 
 // List all financial accounts
 client.financialAccount.list(): Promise<Result<ListFinancialAccountsResponse>>
+
+// Update an existing financial account (partial)
+client.financialAccount.update(financialAccountId: string, body: Record<string, unknown>): Promise<Result<UpdateFinancialAccountResponse>>
 ```
 
 **Parameters:**
@@ -278,6 +315,9 @@ client.internalTransfer.retrieve(internalTransferId: string): Promise<Result<Ret
 
 // List all transfers
 client.internalTransfer.list(): Promise<Result<ListInternalTransfersResponse>>
+
+// Update a transfer (description/metadata, pending only)
+client.internalTransfer.update(internalTransferId: string, body: Record<string, unknown>): Promise<Result<UpdateInternalTransferResponse>>
 
 // Cancel/delete a transfer
 client.internalTransfer.delete(internalTransferId: string): Promise<Result<void>>
@@ -322,6 +362,9 @@ client.paymentCode.retrieve(paymentCodeId: string): Promise<Result<RetrievePayme
 
 // List all payment codes
 client.paymentCode.list(): Promise<Result<ListPaymentCodesResponse>>
+
+// Update a payment code (partial)
+client.paymentCode.update(paymentCodeId: string, body: Record<string, unknown>): Promise<Result<UpdatePaymentCodeResponse>>
 
 // Delete payment code
 client.paymentCode.delete(paymentCodeId: string): Promise<Result<void>>
@@ -369,6 +412,9 @@ client.payout.list(): Promise<Result<ListPayoutsResponse>>
 
 // Retrieve specific payout
 client.payout.retrieve(payoutId: string): Promise<Result<RetrievePayoutResponse>>
+
+// Update a payout (pre-processing only)
+client.payout.update(payoutId: string, body: Record<string, unknown>): Promise<Result<UpdatePayoutResponse>>
 
 // Cancel payout
 client.payout.delete(payoutId: string): Promise<Result<void>>
