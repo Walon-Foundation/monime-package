@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, Result } from "../types";
 import type {
 	CreateFinancialAccountResponse,
 	ListFinancialAccountsResponse,
@@ -74,12 +74,15 @@ export class FinancialAccountAPI extends HttpClient {
 	}
 
 	/**
-	 * List all financial accounts.
+	 * List a page of financial accounts.
 	 */
-	async list(): Promise<Result<ListFinancialAccountsResponse>> {
+	async list(
+		options?: ListOptions,
+	): Promise<Result<ListFinancialAccountsResponse>> {
 		return this.request<ListFinancialAccountsResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 

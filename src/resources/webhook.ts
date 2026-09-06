@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, Result } from "../types";
 import type {
 	CreateWebhookRequest,
 	CreateWebhookResponse,
@@ -51,12 +51,13 @@ export class WebhookAPI extends HttpClient {
 	}
 
 	/**
-	 * List all webhooks.
+	 * List a page of webhooks.
 	 */
-	async list(): Promise<Result<ListWebhooksResponse>> {
+	async list(options?: ListOptions): Promise<Result<ListWebhooksResponse>> {
 		return this.request<ListWebhooksResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 

@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, Result } from "../types";
 import type {
 	CreateCheckoutResponse,
 	ListCheckoutsResponse,
@@ -101,12 +101,13 @@ export class CheckoutSessionAPI extends HttpClient {
 	}
 
 	/**
-	 * List all checkout sessions.
+	 * List a page of checkout sessions.
 	 */
-	async list(): Promise<Result<ListCheckoutsResponse>> {
+	async list(options?: ListOptions): Promise<Result<ListCheckoutsResponse>> {
 		return this.request<ListCheckoutsResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 

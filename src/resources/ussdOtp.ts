@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, Result } from "../types";
 import type {
 	CreateUssdOtpRequest,
 	CreateUssdOtpResponse,
@@ -50,12 +50,13 @@ export class UssdOtpAPI extends HttpClient {
 	}
 
 	/**
-	 * List all USSD OTPs.
+	 * List a page of USSD OTPs.
 	 */
-	async list(): Promise<Result<ListUssdOtpsResponse>> {
+	async list(options?: ListOptions): Promise<Result<ListUssdOtpsResponse>> {
 		return this.request<ListUssdOtpsResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 

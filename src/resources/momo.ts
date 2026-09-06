@@ -1,5 +1,5 @@
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, Result } from "../types";
 import type { ListMomosResponse, RetrieveMomoResponse } from "../types/momo";
 
 export class MomoAPI extends HttpClient {
@@ -17,12 +17,13 @@ export class MomoAPI extends HttpClient {
 	}
 
 	/**
-	 * List all mobile money providers.
+	 * List a page of mobile money providers.
 	 */
-	async list(): Promise<Result<ListMomosResponse>> {
+	async list(options?: ListOptions): Promise<Result<ListMomosResponse>> {
 		return this.request<ListMomosResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 }

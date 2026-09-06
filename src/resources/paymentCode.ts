@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, Result } from "../types";
 import type {
 	CreatePaymentCodeResponse,
 	ListPaymentCodesResponse,
@@ -84,12 +84,13 @@ export class PaymentCodeAPI extends HttpClient {
 	}
 
 	/**
-	 * List all payment codes.
+	 * List a page of payment codes.
 	 */
-	async list(): Promise<Result<ListPaymentCodesResponse>> {
+	async list(options?: ListOptions): Promise<Result<ListPaymentCodesResponse>> {
 		return this.request<ListPaymentCodesResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 

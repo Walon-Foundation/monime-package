@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, Result } from "../types";
 import type {
 	CreateInternalTransferResponse,
 	ListInternalTransfersResponse,
@@ -61,12 +61,15 @@ export class InternalTransferAPI extends HttpClient {
 	}
 
 	/**
-	 * List all internal transfers.
+	 * List a page of internal transfers.
 	 */
-	async list(): Promise<Result<ListInternalTransfersResponse>> {
+	async list(
+		options?: ListOptions,
+	): Promise<Result<ListInternalTransfersResponse>> {
 		return this.request<ListInternalTransfersResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 
