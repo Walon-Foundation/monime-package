@@ -52,6 +52,31 @@ node --env-file=examples/.env --loader ts-node/esm examples/01-financial-account
 | [`06-webhooks.ts`](./06-webhooks.ts) | Register, update, list, and delete webhooks |
 | [`07-ecommerce-flow.ts`](./07-ecommerce-flow.ts) | End-to-end flow tying several resources together |
 
+## Notes on listing
+
+Every `list()` takes optional cursor pagination — `{ limit, after }`, where
+`limit` is 1-50 (default 10) and `after` is the `pagination.next` cursor from the
+previous response:
+
+```ts
+const page = await client.financialAccount.list({ limit: 50 });
+const next = page.pagination?.next; // null on the last page
+```
+
+The examples call `list()` with no arguments, which returns the API's default
+first page.
+
+## Notes on idempotency
+
+Create and update calls accept a trailing `{ idempotencyKey }`. Pass the **same**
+key when retrying a failed call — the SDK otherwise generates a fresh key per
+call, which makes a retry look like a brand-new operation:
+
+```ts
+const idempotencyKey = randomUUID();
+await client.payout.create({ ... }, { idempotencyKey });
+```
+
 ## Notes on amounts
 
 Monime works in a currency's **minor units** (cents). Most methods take the raw
