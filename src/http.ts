@@ -4,12 +4,18 @@ import {
 	MonimeError,
 	MonimeRateLimitError,
 } from "./error";
-import type { ClientConfig, Result } from "./types";
+import type { ClientConfig, ListOptions, Pagination, Result } from "./types";
+
+export type QueryParams = Record<
+	string,
+	string | number | boolean | undefined | null
+>;
 
 export interface RequestOptions {
 	path: string;
 	method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 	body?: unknown;
+	query?: QueryParams;
 	idempotencyKey?: string;
 }
 
@@ -21,6 +27,7 @@ interface ResponseEnvelope {
 	success?: boolean;
 	messages?: unknown[];
 	result?: unknown;
+	pagination?: Pagination;
 	error?: {
 		code?: number;
 		reason?: string;
@@ -59,6 +66,29 @@ export class HttpClient {
 		}
 
 		return headers;
+	}
+
+	/** Normalize `list()` pagination into query parameters. */
+	protected listQuery(options?: ListOptions): QueryParams {
+		return {
+			limit: options?.limit,
+			after: options?.after,
+		};
+	}
+
+	private buildUrl(path: string, query?: QueryParams): string {
+		const url = `${this.baseUrl}${path}`;
+
+		if (!query) return url;
+
+		const search = new URLSearchParams();
+		for (const [key, value] of Object.entries(query)) {
+			if (value === undefined || value === null || value === "") continue;
+			search.set(key, String(value));
+		}
+
+		const queryString = search.toString();
+		return queryString ? `${url}?${queryString}` : url;
 	}
 
 	/**
@@ -132,8 +162,8 @@ export class HttpClient {
 	}
 
 	protected async request<T>(options: RequestOptions): Promise<Result<T>> {
-		const { path, method, body, idempotencyKey } = options;
-		const url = `${this.baseUrl}${path}`;
+		const { path, method, body, query, idempotencyKey } = options;
+		const url = this.buildUrl(path, query);
 
 		try {
 			const response = await fetch(url, {
@@ -162,10 +192,16 @@ export class HttpClient {
 			const data = (await response.json()) as ResponseEnvelope;
 			const resultData = data.result !== undefined ? data.result : data;
 
-			return {
+			const result: Result<T> = {
 				success: true,
 				data: resultData as T,
 			};
+
+			if (data.pagination) {
+				result.pagination = data.pagination;
+			}
+
+			return result;
 		} catch (error) {
 			if (error instanceof MonimeError) {
 				return { success: false, error };
