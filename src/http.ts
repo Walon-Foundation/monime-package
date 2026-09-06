@@ -1,4 +1,9 @@
-import { MonimeAuthenticationError, MonimeError } from "./error";
+import {
+	MonimeAuthenticationError,
+	MonimeConflictError,
+	MonimeError,
+	MonimeRateLimitError,
+} from "./error";
 import type { ClientConfig, Result } from "./types";
 
 export interface RequestOptions {
@@ -6,6 +11,28 @@ export interface RequestOptions {
 	method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 	body?: unknown;
 	idempotencyKey?: string;
+}
+
+/**
+ * The envelope every Monime response is wrapped in.
+ * @see https://docs.monime.io/developer-resources/api-basics
+ */
+interface ResponseEnvelope {
+	success?: boolean;
+	messages?: unknown[];
+	result?: unknown;
+	error?: {
+		code?: number;
+		reason?: string;
+		message?: string;
+		details?: unknown;
+	};
+}
+
+interface ParsedError {
+	message: string;
+	reason?: string;
+	details?: unknown;
 }
 
 export class HttpClient {
@@ -34,6 +61,76 @@ export class HttpClient {
 		return headers;
 	}
 
+	/**
+	 * Pull the human-readable message out of the error envelope:
+	 * `{ success: false, messages: [], error: { code, reason, message, details } }`
+	 */
+	private async parseErrorBody(response: Response): Promise<ParsedError> {
+		const fallback = `Request failed with status ${response.status}`;
+
+		try {
+			const body = (await response.json()) as ResponseEnvelope & {
+				message?: string;
+			};
+			const apiError = body?.error;
+
+			let message = apiError?.message || body?.message;
+			if (!message && Array.isArray(body?.messages)) {
+				const first = body.messages.find((m) => typeof m === "string");
+				if (typeof first === "string") message = first;
+			}
+
+			const parsed: ParsedError = { message: message || fallback };
+			if (apiError?.reason !== undefined) parsed.reason = apiError.reason;
+			parsed.details = body;
+			return parsed;
+		} catch {
+			// Response was not JSON — keep the status-based fallback.
+			return { message: fallback };
+		}
+	}
+
+	private toError(
+		response: Response,
+		parsed: ParsedError,
+		requestId?: string,
+	): MonimeError {
+		const { message, reason, details } = parsed;
+
+		switch (response.status) {
+			case 401:
+				return new MonimeAuthenticationError(message, {
+					requestId,
+					details,
+					reason,
+				});
+			case 409:
+				return new MonimeConflictError(message, { requestId, details, reason });
+			case 429: {
+				const retryAfter = Number.parseInt(
+					response.headers?.get("retry-after") ?? "",
+					10,
+				);
+
+				return new MonimeRateLimitError(message, {
+					requestId,
+					details,
+					reason,
+					retryAfter: Number.isNaN(retryAfter) ? undefined : retryAfter,
+					limit: response.headers?.get("monime-rate-limit") ?? undefined,
+				});
+			}
+			default:
+				return new MonimeError(
+					message,
+					response.status,
+					requestId,
+					details,
+					reason,
+				);
+		}
+	}
+
 	protected async request<T>(options: RequestOptions): Promise<Result<T>> {
 		const { path, method, body, idempotencyKey } = options;
 		const url = `${this.baseUrl}${path}`;
@@ -45,29 +142,16 @@ export class HttpClient {
 				body: body ? JSON.stringify(body) : null,
 			});
 
-			const requestId = response.headers?.get("x-request-id") || undefined;
+			const requestId =
+				response.headers?.get("monime-request-id") ||
+				response.headers?.get("x-request-id") ||
+				undefined;
 
 			if (!response.ok) {
-				let errorMessage = `Request failed with status ${response.status}`;
-				let errorDetails: unknown;
-
-				try {
-					const errorData = (await response.json()) as { message?: string };
-					errorMessage = errorData.message || errorMessage;
-					errorDetails = errorData;
-				} catch {
-					// Fallback if response is not JSON
-				}
-
-				if (response.status === 401) {
-					throw new MonimeAuthenticationError(errorMessage);
-				}
-
-				throw new MonimeError(
-					errorMessage,
-					response.status,
+				throw this.toError(
+					response,
+					await this.parseErrorBody(response),
 					requestId,
-					errorDetails,
 				);
 			}
 
@@ -75,7 +159,7 @@ export class HttpClient {
 				return { success: true } as Result<T>;
 			}
 
-			const data = (await response.json()) as { result?: unknown };
+			const data = (await response.json()) as ResponseEnvelope;
 			const resultData = data.result !== undefined ? data.result : data;
 
 			return {
