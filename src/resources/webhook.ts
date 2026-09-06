@@ -1,6 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { ListOptions, Result } from "../types";
+import type { ListOptions, MutationOptions, Result } from "../types";
 import type {
 	CreateWebhookRequest,
 	CreateWebhookResponse,
@@ -22,6 +21,7 @@ export class WebhookAPI extends HttpClient {
 	 */
 	async create(
 		options: CreateWebhookRequest,
+		requestOptions?: MutationOptions,
 	): Promise<Result<CreateWebhookResponse>> {
 		const validation = createWebhookSchema.safeParse(options);
 
@@ -29,7 +29,7 @@ export class WebhookAPI extends HttpClient {
 			return { success: false, error: new Error(validation.error.message) };
 		}
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<CreateWebhookResponse>({
 			method: "POST",
@@ -69,6 +69,7 @@ export class WebhookAPI extends HttpClient {
 	async update(
 		webhookId: string,
 		options: UpdateWebhookRequest,
+		requestOptions?: MutationOptions,
 	): Promise<Result<UpdateWebhookResponse>> {
 		const validation = updateWebhookSchema.safeParse(options);
 
@@ -76,7 +77,7 @@ export class WebhookAPI extends HttpClient {
 			return { success: false, error: new Error(validation.error.message) };
 		}
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<UpdateWebhookResponse>({
 			method: "PATCH",

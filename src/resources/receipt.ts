@@ -1,6 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { MutationOptions, Result } from "../types";
 import type {
 	GetReceiptResponse,
 	RedeemReceiptResponse,
@@ -28,8 +27,9 @@ export class ReceiptAPI extends HttpClient {
 	async redeem(
 		orderNumber: string,
 		body: Record<string, unknown>,
+		requestOptions?: MutationOptions,
 	): Promise<Result<RedeemReceiptResponse>> {
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<RedeemReceiptResponse>({
 			method: "POST",

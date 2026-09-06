@@ -1,6 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { ListOptions, Result } from "../types";
+import type { ListOptions, MutationOptions, Result } from "../types";
 import type {
 	CreateInternalTransferResponse,
 	ListInternalTransfersResponse,
@@ -28,6 +27,7 @@ export class InternalTransferAPI extends HttpClient {
 	 */
 	async create(
 		options: CreateInternalTransferOptions,
+		requestOptions?: MutationOptions,
 	): Promise<Result<CreateInternalTransferResponse>> {
 		const validation = createInternalTransferSchema.safeParse(options);
 
@@ -50,7 +50,7 @@ export class InternalTransferAPI extends HttpClient {
 			metadata: options.metadata || {},
 		};
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<CreateInternalTransferResponse>({
 			method: "POST",
@@ -94,6 +94,7 @@ export class InternalTransferAPI extends HttpClient {
 	async update(
 		internalTransferId: string,
 		body: Record<string, unknown>,
+		requestOptions?: MutationOptions,
 	): Promise<Result<UpdateInternalTransferResponse>> {
 		if (!internalTransferId) {
 			return {
@@ -107,7 +108,7 @@ export class InternalTransferAPI extends HttpClient {
 			return { success: false, error: new Error(validation.error.message) };
 		}
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<UpdateInternalTransferResponse>({
 			method: "PATCH",

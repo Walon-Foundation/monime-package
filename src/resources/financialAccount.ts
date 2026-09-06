@@ -1,6 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { ListOptions, Result } from "../types";
+import type { ListOptions, MutationOptions, Result } from "../types";
 import type {
 	CreateFinancialAccountResponse,
 	ListFinancialAccountsResponse,
@@ -29,6 +28,7 @@ export class FinancialAccountAPI extends HttpClient {
 	 */
 	async create(
 		options: CreateFinancialAccountOptions,
+		requestOptions?: MutationOptions,
 	): Promise<Result<CreateFinancialAccountResponse>> {
 		const validation = createFinancialAccountSchema.safeParse(options);
 
@@ -43,7 +43,7 @@ export class FinancialAccountAPI extends HttpClient {
 			metadata: options.metadata || {},
 		};
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<CreateFinancialAccountResponse>({
 			method: "POST",
@@ -94,6 +94,7 @@ export class FinancialAccountAPI extends HttpClient {
 	async update(
 		financialAccountId: string,
 		body: Record<string, unknown>,
+		requestOptions?: MutationOptions,
 	): Promise<Result<UpdateFinancialAccountResponse>> {
 		if (!financialAccountId) {
 			return {
@@ -107,7 +108,7 @@ export class FinancialAccountAPI extends HttpClient {
 			return { success: false, error: new Error(validation.error.message) };
 		}
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<UpdateFinancialAccountResponse>({
 			method: "PATCH",

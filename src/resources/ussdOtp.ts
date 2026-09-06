@@ -1,6 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { ListOptions, Result } from "../types";
+import type { ListOptions, MutationOptions, Result } from "../types";
 import type {
 	CreateUssdOtpRequest,
 	CreateUssdOtpResponse,
@@ -17,6 +16,7 @@ export class UssdOtpAPI extends HttpClient {
 	 */
 	async create(
 		options: CreateUssdOtpRequest,
+		requestOptions?: MutationOptions,
 	): Promise<Result<CreateUssdOtpResponse>> {
 		const validation = createUssdOtpSchema.safeParse(options);
 
@@ -24,7 +24,7 @@ export class UssdOtpAPI extends HttpClient {
 			return { success: false, error: new Error(validation.error.message) };
 		}
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<CreateUssdOtpResponse>({
 			method: "POST",
