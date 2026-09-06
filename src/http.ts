@@ -1,10 +1,17 @@
+import { randomBytes } from "node:crypto";
 import {
 	MonimeAuthenticationError,
 	MonimeConflictError,
 	MonimeError,
 	MonimeRateLimitError,
 } from "./error";
-import type { ClientConfig, ListOptions, Pagination, Result } from "./types";
+import type {
+	ClientConfig,
+	ListOptions,
+	MutationOptions,
+	Pagination,
+	Result,
+} from "./types";
 
 export type QueryParams = Record<
 	string,
@@ -66,6 +73,15 @@ export class HttpClient {
 		}
 
 		return headers;
+	}
+
+	/**
+	 * Use the caller's idempotency key when they supplied one, otherwise mint a
+	 * fresh one. A generated key only guards against a double-submit inside a
+	 * single call — pass your own to make retries across calls safe.
+	 */
+	protected idempotencyKey(options?: MutationOptions): string {
+		return options?.idempotencyKey || randomBytes(20).toString("hex");
 	}
 
 	/** Normalize `list()` pagination into query parameters. */
