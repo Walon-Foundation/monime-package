@@ -1,6 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, MutationOptions, Result } from "../types";
 import type {
 	CreateCheckoutResponse,
 	ListCheckoutsResponse,
@@ -28,6 +27,7 @@ export class CheckoutSessionAPI extends HttpClient {
 	 */
 	async create(
 		options: CreateCheckoutOptions,
+		requestOptions?: MutationOptions,
 	): Promise<Result<CreateCheckoutResponse>> {
 		const validation = createCheckoutSchema.safeParse(options);
 
@@ -90,7 +90,7 @@ export class CheckoutSessionAPI extends HttpClient {
 			metadata: {},
 		};
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<CreateCheckoutResponse>({
 			method: "POST",
@@ -101,12 +101,13 @@ export class CheckoutSessionAPI extends HttpClient {
 	}
 
 	/**
-	 * List all checkout sessions.
+	 * List a page of checkout sessions.
 	 */
-	async list(): Promise<Result<ListCheckoutsResponse>> {
+	async list(options?: ListOptions): Promise<Result<ListCheckoutsResponse>> {
 		return this.request<ListCheckoutsResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 

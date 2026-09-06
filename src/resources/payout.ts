@@ -1,6 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, MutationOptions, Result } from "../types";
 import type {
 	CreatePayoutResponse,
 	DestinationOption,
@@ -28,6 +27,7 @@ export class PayoutAPI extends HttpClient {
 	 */
 	async create(
 		options: CreatePayoutOptions,
+		requestOptions?: MutationOptions,
 	): Promise<Result<CreatePayoutResponse>> {
 		const validation = createPayoutSchema.safeParse(options);
 
@@ -47,7 +47,7 @@ export class PayoutAPI extends HttpClient {
 			metadata: options.metadata || {},
 		};
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<CreatePayoutResponse>({
 			method: "POST",
@@ -58,12 +58,13 @@ export class PayoutAPI extends HttpClient {
 	}
 
 	/**
-	 * List all payouts.
+	 * List a page of payouts.
 	 */
-	async list(): Promise<Result<ListPayoutsResponse>> {
+	async list(options?: ListOptions): Promise<Result<ListPayoutsResponse>> {
 		return this.request<ListPayoutsResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 
@@ -86,6 +87,7 @@ export class PayoutAPI extends HttpClient {
 	async update(
 		payoutId: string,
 		body: Record<string, unknown>,
+		requestOptions?: MutationOptions,
 	): Promise<Result<UpdatePayoutResponse>> {
 		if (!payoutId) {
 			return { success: false, error: new Error("payoutId is required") };
@@ -96,7 +98,7 @@ export class PayoutAPI extends HttpClient {
 			return { success: false, error: new Error(validation.error.message) };
 		}
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<UpdatePayoutResponse>({
 			method: "PATCH",

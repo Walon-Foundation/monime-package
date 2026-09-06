@@ -59,7 +59,7 @@ src/
 ├── index.ts        # Public entry point (createClient, types, errors)
 ├── client.ts       # MonimeClient — wires resources to credentials
 ├── http.ts         # Shared fetch logic, headers, error handling
-├── error.ts        # MonimeError / MonimeValidationError
+├── error.ts        # MonimeError and subclasses (auth, conflict, rate limit)
 ├── resources/      # One class per API resource
 ├── types/          # Request/response interfaces
 └── validators/     # Zod input schemas

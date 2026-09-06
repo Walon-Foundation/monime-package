@@ -1,6 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, MutationOptions, Result } from "../types";
 import type {
 	CreatePaymentCodeResponse,
 	ListPaymentCodesResponse,
@@ -28,6 +27,7 @@ export class PaymentCodeAPI extends HttpClient {
 	 */
 	async create(
 		options: CreatePaymentCodeOptions,
+		requestOptions?: MutationOptions,
 	): Promise<Result<CreatePaymentCodeResponse>> {
 		const validation = createPaymentCodeSchema.safeParse(options);
 
@@ -60,7 +60,7 @@ export class PaymentCodeAPI extends HttpClient {
 			metadata: {},
 		};
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<CreatePaymentCodeResponse>({
 			method: "POST",
@@ -84,12 +84,13 @@ export class PaymentCodeAPI extends HttpClient {
 	}
 
 	/**
-	 * List all payment codes.
+	 * List a page of payment codes.
 	 */
-	async list(): Promise<Result<ListPaymentCodesResponse>> {
+	async list(options?: ListOptions): Promise<Result<ListPaymentCodesResponse>> {
 		return this.request<ListPaymentCodesResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 
@@ -101,6 +102,7 @@ export class PaymentCodeAPI extends HttpClient {
 	async update(
 		paymentCodeId: string,
 		body: Record<string, unknown>,
+		requestOptions?: MutationOptions,
 	): Promise<Result<UpdatePaymentCodeResponse>> {
 		if (!paymentCodeId) {
 			return { success: false, error: new Error("paymentCodeId is required") };
@@ -111,7 +113,7 @@ export class PaymentCodeAPI extends HttpClient {
 			return { success: false, error: new Error(validation.error.message) };
 		}
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<UpdatePaymentCodeResponse>({
 			method: "PATCH",

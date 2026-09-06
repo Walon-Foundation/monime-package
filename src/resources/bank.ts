@@ -1,5 +1,5 @@
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, Result } from "../types";
 import type { ListBanksResponse, RetrieveBankResponse } from "../types/bank";
 
 export class BankAPI extends HttpClient {
@@ -17,12 +17,13 @@ export class BankAPI extends HttpClient {
 	}
 
 	/**
-	 * List all banks.
+	 * List a page of banks.
 	 */
-	async list(): Promise<Result<ListBanksResponse>> {
+	async list(options?: ListOptions): Promise<Result<ListBanksResponse>> {
 		return this.request<ListBanksResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 }

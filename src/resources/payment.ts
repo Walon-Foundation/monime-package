@@ -1,6 +1,5 @@
-import { randomBytes } from "node:crypto";
 import { HttpClient } from "../http";
-import type { Result } from "../types";
+import type { ListOptions, MutationOptions, Result } from "../types";
 import type {
 	ListPaymentsResponse,
 	RetrievePaymentResponse,
@@ -27,12 +26,13 @@ export class PaymentAPI extends HttpClient {
 	}
 
 	/**
-	 * List all payments.
+	 * List a page of payments.
 	 */
-	async list(): Promise<Result<ListPaymentsResponse>> {
+	async list(options?: ListOptions): Promise<Result<ListPaymentsResponse>> {
 		return this.request<ListPaymentsResponse>({
 			method: "GET",
 			path: this.path,
+			query: this.listQuery(options),
 		});
 	}
 
@@ -44,6 +44,7 @@ export class PaymentAPI extends HttpClient {
 	async update(
 		paymentId: string,
 		body: Record<string, unknown>,
+		requestOptions?: MutationOptions,
 	): Promise<Result<UpdatePaymentResponse>> {
 		if (!paymentId) {
 			return { success: false, error: new Error("paymentId is required") };
@@ -54,7 +55,7 @@ export class PaymentAPI extends HttpClient {
 			return { success: false, error: new Error(validation.error.message) };
 		}
 
-		const idempotencyKey = randomBytes(20).toString("hex");
+		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<UpdatePaymentResponse>({
 			method: "PATCH",
