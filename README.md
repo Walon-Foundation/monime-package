@@ -12,7 +12,7 @@ Unofficial TypeScript SDK for Monime - a modern, type-safe client library for Si
 ![npm version](https://img.shields.io/npm/v/monime-package.svg)
 ![npm downloads](https://img.shields.io/npm/dm/monime-package.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)
-![Node.js](https://img.shields.io/badge/Node.js-%3E=14-green.svg)
+![Node.js](https://img.shields.io/badge/Node.js-%3E=18-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)
 ![Package Size](https://img.shields.io/bundlephobia/minzip/monime-package.svg)
 
@@ -57,7 +57,7 @@ Package: `monime-package`
 ## Features
 
 - **Typed** request/response objects for safer integrations
-- **Predictable** return shape: `{ success, data?, error? }`
+- **Predictable** return shape: `{ success, data?, error?, pagination? }`
 - **Client-based** auth: set credentials once per instance
 - **Minimal dependencies** — native `fetch` for HTTP; [`zod`](https://zod.dev) for runtime input validation
 - **Full API coverage** for all Monime endpoints
@@ -66,6 +66,8 @@ Package: `monime-package`
 - **Mobile Money support** (Africell, Orange, etc.)
 - **Bank transfers** and digital wallet integrations
 - **Checkout sessions** for hosted payment pages
+- **Cursor pagination** on every list endpoint
+- **Typed errors** — rate limits, idempotency conflicts and auth failures each get their own class
 
 ---
 
@@ -80,7 +82,7 @@ yarn add monime-package
 ```
 
 **Requirements:**
-- Node.js >= 14
+- Node.js >= 18 — the SDK uses the global `fetch` and `node:crypto`
 - TypeScript >= 4.5 (for type safety)
 - Modern bundler that supports ES modules and tree-shaking
 
@@ -91,12 +93,16 @@ yarn add monime-package
 Recommended to store credentials in `.env`:
 
 ```bash
-MONIME_SPACE_ID=space_XXXXXXXX
-MONIME_ACCESS_TOKEN=sk_live_xxx
+MONIME_SPACE_ID=spc-XXXXXXXX
+MONIME_ACCESS_TOKEN=mon_XXXXXXXX
 MONIME_VERSION=caph.2025-08-23 # Optional, defaults to latest
 ```
 
 The `MonimeClient` will automatically look for these variables if no options are passed to the constructor.
+
+Space IDs are prefixed `spc-`. The **token decides the environment** — there is
+one base URL for both. Live tokens start with `mon_`; test tokens start with
+`mon_test_` and run against sandbox accounts and simulated payment rails.
 
 ---
 
@@ -150,9 +156,14 @@ All methods return the same envelope:
 type Result<T> = {
   success: boolean;
   data?: T;
-  error?: Error;
+  error?: Error | MonimeError;
+  pagination?: Pagination; // list endpoints only
 };
 ```
+
+Every `list()` takes optional [pagination](#pagination) (`{ limit?, after? }`),
+and every create/update takes an optional trailing
+[`MutationOptions`](#idempotency) so you can supply your own idempotency key.
 
 The client exposes namespaced APIs under `client.<module>`. Below is the complete API reference:
 
@@ -165,10 +176,10 @@ Manage all incoming payments (payins).
 client.payment.retrieve(paymentId: string): Promise<Result<RetrievePaymentResponse>>
 
 // List payments
-client.payment.list(): Promise<Result<ListPaymentsResponse>>
+client.payment.list(options?: ListOptions): Promise<Result<ListPaymentsResponse>>
 
 // Update payment
-client.payment.update(paymentId: string, body: any): Promise<Result<UpdatePaymentResponse>>
+client.payment.update(paymentId: string, body: any, requestOptions?: MutationOptions): Promise<Result<UpdatePaymentResponse>>
 ```
 
 ### Webhooks (New)
@@ -177,16 +188,16 @@ Manage webhooks for real-time notifications.
 
 ```ts
 // Create webhook
-client.webhook.create(body: CreateWebhookRequest): Promise<Result<CreateWebhookResponse>>
+client.webhook.create(body: CreateWebhookRequest, requestOptions?: MutationOptions): Promise<Result<CreateWebhookResponse>>
 
 // Retrieve webhook
 client.webhook.retrieve(webhookId: string): Promise<Result<GetWebhookResponse>>
 
 // List webhooks
-client.webhook.list(): Promise<Result<ListWebhooksResponse>>
+client.webhook.list(options?: ListOptions): Promise<Result<ListWebhooksResponse>>
 
 // Update webhook
-client.webhook.update(webhookId: string, body: UpdateWebhookRequest): Promise<Result<UpdateWebhookResponse>>
+client.webhook.update(webhookId: string, body: UpdateWebhookRequest, requestOptions?: MutationOptions): Promise<Result<UpdateWebhookResponse>>
 
 // Delete webhook
 client.webhook.delete(webhookId: string): Promise<Result<void>>
@@ -201,7 +212,7 @@ Manage payment receipts.
 client.receipt.retrieve(orderNumber: string): Promise<Result<GetReceiptResponse>>
 
 // Redeem receipt
-client.receipt.redeem(orderNumber: string, body: any): Promise<Result<RedeemReceiptResponse>>
+client.receipt.redeem(orderNumber: string, body: any, requestOptions?: MutationOptions): Promise<Result<RedeemReceiptResponse>>
 ```
 
 ### USSD OTPs (New)
@@ -210,13 +221,13 @@ Generate and manage USSD OTP sessions.
 
 ```ts
 // Create USSD OTP
-client.ussdOtp.create(body: CreateUssdOtpRequest): Promise<Result<CreateUssdOtpResponse>>
+client.ussdOtp.create(body: CreateUssdOtpRequest, requestOptions?: MutationOptions): Promise<Result<CreateUssdOtpResponse>>
 
 // Retrieve a USSD OTP session by ID
 client.ussdOtp.retrieve(ussdOtpId: string): Promise<Result<RetrieveUssdOtpResponse>>
 
-// List all USSD OTP sessions
-client.ussdOtp.list(): Promise<Result<ListUssdOtpsResponse>>
+// List a page of USSD OTP sessions
+client.ussdOtp.list(options?: ListOptions): Promise<Result<ListUssdOtpsResponse>>
 
 // Delete a USSD OTP session
 client.ussdOtp.delete(ussdOtpId: string): Promise<Result<void>>
@@ -239,11 +250,11 @@ exposed under `client.financialProvider`.
 ```ts
 // Banks
 client.financialProvider.bank.retrieve(providerId: string): Promise<Result<RetrieveBankResponse>>
-client.financialProvider.bank.list(): Promise<Result<ListBanksResponse>>
+client.financialProvider.bank.list(options?: ListOptions): Promise<Result<ListBanksResponse>>
 
 // Mobile money providers
 client.financialProvider.momo.retrieve(providerId: string): Promise<Result<RetrieveMomoResponse>>
-client.financialProvider.momo.list(): Promise<Result<ListMomosResponse>>
+client.financialProvider.momo.list(options?: ListOptions): Promise<Result<ListMomosResponse>>
 ```
 
 **Example:**
@@ -266,16 +277,16 @@ client.financialAccount.create({
   currency: "USD" | "SLE",
   description?: string,
   metadata?: Record<string, any>
-}): Promise<Result<CreateFinancialAccountResponse>>
+}, requestOptions?: MutationOptions): Promise<Result<CreateFinancialAccountResponse>>
 
 // Retrieve account details by ID
 client.financialAccount.retrieve(financialAccountId: string): Promise<Result<RetrieveFinancialAccountResponse>>
 
-// List all financial accounts
-client.financialAccount.list(): Promise<Result<ListFinancialAccountsResponse>>
+// List a page of financial accounts
+client.financialAccount.list(options?: ListOptions): Promise<Result<ListFinancialAccountsResponse>>
 
 // Update an existing financial account (partial)
-client.financialAccount.update(financialAccountId: string, body: Record<string, unknown>): Promise<Result<UpdateFinancialAccountResponse>>
+client.financialAccount.update(financialAccountId: string, body: Record<string, unknown>, requestOptions?: MutationOptions): Promise<Result<UpdateFinancialAccountResponse>>
 ```
 
 **Parameters:**
@@ -308,16 +319,16 @@ client.internalTransfer.create({
   destinationAccount: string,
   amount: number,
   description?: string
-}): Promise<Result<CreateInternalTransferResponse>>
+}, requestOptions?: MutationOptions): Promise<Result<CreateInternalTransferResponse>>
 
 // Retrieve transfer details
 client.internalTransfer.retrieve(internalTransferId: string): Promise<Result<RetrieveInternalTransferResponse>>
 
-// List all transfers
-client.internalTransfer.list(): Promise<Result<ListInternalTransfersResponse>>
+// List a page of transfers
+client.internalTransfer.list(options?: ListOptions): Promise<Result<ListInternalTransfersResponse>>
 
 // Update a transfer (description/metadata, pending only)
-client.internalTransfer.update(internalTransferId: string, body: Record<string, unknown>): Promise<Result<UpdateInternalTransferResponse>>
+client.internalTransfer.update(internalTransferId: string, body: Record<string, unknown>, requestOptions?: MutationOptions): Promise<Result<UpdateInternalTransferResponse>>
 
 // Cancel/delete a transfer
 client.internalTransfer.delete(internalTransferId: string): Promise<Result<void>>
@@ -355,16 +366,16 @@ client.paymentCode.create({
   financialAccountId: string,
   name: string,
   phoneNumber: string,
-}): Promise<Result<CreatePaymentCodeResponse>>
+}, requestOptions?: MutationOptions): Promise<Result<CreatePaymentCodeResponse>>
 
 // Retrieve payment code details
 client.paymentCode.retrieve(paymentCodeId: string): Promise<Result<RetrievePaymentCodeResponse>>
 
-// List all payment codes
-client.paymentCode.list(): Promise<Result<ListPaymentCodesResponse>>
+// List a page of payment codes
+client.paymentCode.list(options?: ListOptions): Promise<Result<ListPaymentCodesResponse>>
 
 // Update a payment code (partial)
-client.paymentCode.update(paymentCodeId: string, body: Record<string, unknown>): Promise<Result<UpdatePaymentCodeResponse>>
+client.paymentCode.update(paymentCodeId: string, body: Record<string, unknown>, requestOptions?: MutationOptions): Promise<Result<UpdatePaymentCodeResponse>>
 
 // Delete payment code
 client.paymentCode.delete(paymentCodeId: string): Promise<Result<void>>
@@ -405,16 +416,16 @@ client.payout.create({
   amount: number,
   destination: DestinationOption,
   sourceAccount: string,
-}): Promise<Result<CreatePayoutResponse>>
+}, requestOptions?: MutationOptions): Promise<Result<CreatePayoutResponse>>
 
-// List all payouts
-client.payout.list(): Promise<Result<ListPayoutsResponse>>
+// List a page of payouts
+client.payout.list(options?: ListOptions): Promise<Result<ListPayoutsResponse>>
 
 // Retrieve specific payout
 client.payout.retrieve(payoutId: string): Promise<Result<RetrievePayoutResponse>>
 
 // Update a payout (pre-processing only)
-client.payout.update(payoutId: string, body: Record<string, unknown>): Promise<Result<UpdatePayoutResponse>>
+client.payout.update(payoutId: string, body: Record<string, unknown>, requestOptions?: MutationOptions): Promise<Result<UpdatePayoutResponse>>
 
 // Cancel payout
 client.payout.delete(payoutId: string): Promise<Result<void>>
@@ -459,8 +470,8 @@ Query transaction history and details.
 // Retrieve transaction details
 client.financialTransaction.retrieve(transactionId: string): Promise<Result<RetrieveTransactionResponse>>
 
-// List all transactions
-client.financialTransaction.list(): Promise<Result<ListTransactionsResponse>>
+// List a page of transactions
+client.financialTransaction.list(options?: ListOptions): Promise<Result<ListTransactionsResponse>>
 ```
 
 **Parameters:**
@@ -468,12 +479,15 @@ client.financialTransaction.list(): Promise<Result<ListTransactionsResponse>>
 
 **Example:**
 ```ts
-// List all transactions
-const transactions = await client.financialTransaction.list();
+// One page of transactions (defaults to 10; ask for more with `limit`)
+const transactions = await client.financialTransaction.list({ limit: 50 });
 if (transactions.success) {
   transactions.data.forEach(tx => {
     console.log(`${tx.type}: ${tx.amount.value} ${tx.amount.currency}`);
   });
+
+  // Keep going while the API hands back a cursor.
+  console.log("More pages?", transactions.pagination?.next != null);
 }
 ```
 
@@ -493,10 +507,10 @@ client.checkoutSession.create({
   financialAccountId?: string,
   primaryColor?: string,
   images?: string[],
-}): Promise<Result<CreateCheckoutResponse>>
+}, requestOptions?: MutationOptions): Promise<Result<CreateCheckoutResponse>>
 
-// List all checkout sessions
-client.checkoutSession.list(): Promise<Result<ListCheckoutsResponse>>
+// List a page of checkout sessions
+client.checkoutSession.list(options?: ListOptions): Promise<Result<ListCheckoutsResponse>>
 
 // Retrieve specific checkout session
 client.checkoutSession.retrieve(checkoutId: string): Promise<Result<RetrieveCheckoutResponse>>
@@ -547,14 +561,14 @@ The client accepts the following options (see `src/client.ts`):
 
 ```ts
 type ClientOptions = {
-  monimeSpaceId: string; // Your Monime Space ID
-  accessToken: string;   // Your Monime API token
-  monimeVersion?: "caph.2025-08-23" | "caph.2025-06-20"; // API Version
+  monimeSpaceId?: string; // Your Monime Space ID; falls back to MONIME_SPACE_ID
+  accessToken?: string;   // Your Monime API token; falls back to MONIME_ACCESS_TOKEN
+  monimeVersion?: "caph.2025-08-23" | "caph.2025-06-20"; // falls back to MONIME_VERSION
 };
 ```
 
-- **Authentication**: Both values are required. Prefer environment variables.
-- **Headers**: SDK automatically sets `Authorization` and `Monime-Space-Id` for each call.
+- **Authentication**: Space ID and token are both required — pass them here or set the environment variables. The constructor throws if either is missing.
+- **Headers**: SDK automatically sets `Authorization`, `Monime-Space-Id`, `Monime-Version` (when configured) and `Idempotency-Key` (on create/update) for each call.
 
 ---
 
@@ -587,7 +601,7 @@ monime-package/
 │   ├── index.ts            # Public entry point — exports createClient, types, errors
 │   ├── client.ts           # MonimeClient — wires every resource to your credentials
 │   ├── http.ts             # Shared native `fetch` logic, headers, and error plumbing
-│   ├── error.ts            # MonimeError / MonimeValidationError definitions
+│   ├── error.ts            # MonimeError and its subclasses (auth, conflict, rate limit)
 │   ├── resources/          # One file per API resource (payment.ts, payout.ts, …)
 │   ├── types/              # TypeScript request/response interfaces per resource
 │   └── validators/         # Zod schemas used to validate inputs before a request
@@ -748,8 +762,9 @@ if (accounts.every(acc => acc.success)) {
 ### Transaction Monitoring & Reporting
 
 ```ts
-// List all transactions for reporting
-const transactions = await client.financialTransaction.list();
+// Transactions for reporting. `list()` is paginated — page through it with
+// `pagination.next` when a report needs the full history.
+const transactions = await client.financialTransaction.list({ limit: 50 });
 
 if (transactions.success) {
   const txs = transactions.data!.result;
@@ -781,6 +796,12 @@ if (transactions.success) {
 ### Error Handling Best Practices
 
 ```ts
+import { randomUUID } from "node:crypto";
+import {
+  MonimeRateLimitError,
+  MonimeValidationError,
+} from "monime-package";
+
 // Robust error handling with retries
 const createTransferWithRetry = async (
   sourceAccount: string,
@@ -788,36 +809,47 @@ const createTransferWithRetry = async (
   amount: number,
   maxRetries = 3
 ) => {
+  // One key for the whole operation, so a retry is never a second transfer.
+  const idempotencyKey = randomUUID();
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    const transfer = await client.internalTransfer.create(sourceAccount, destinationAccount, amount);
-    
+    const transfer = await client.internalTransfer.create(
+      { sourceAccount, destinationAccount, amount },
+      { idempotencyKey }
+    );
+
     if (transfer.success) {
       return transfer;
     }
-    
-    // Log the error
-    console.error(`Transfer attempt ${attempt} failed:`, transfer.error?.message);
-    
-    // Don't retry on validation errors
-    if (transfer.error?.message?.includes('validation')) {
-      throw transfer.error;
+
+    const error = transfer.error;
+    console.error(`Transfer attempt ${attempt} failed:`, error?.message);
+
+    // Bad input will fail the same way every time — don't burn retries on it.
+    if (error instanceof MonimeValidationError) {
+      throw error;
     }
-    
-    // Wait before retrying (exponential backoff)
-    if (attempt < maxRetries) {
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
-    }
+
+    if (attempt === maxRetries) break;
+
+    // Honour Retry-After when we're being throttled, else exponential backoff.
+    const delay =
+      error instanceof MonimeRateLimitError && error.retryAfter
+        ? error.retryAfter * 1000
+        : 2 ** attempt * 1000;
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
-  
+
   throw new Error(`Transfer failed after ${maxRetries} attempts`);
 };
 
 // Usage
 try {
-  const transfer = await createTransferWithRetry("fa-source", "fa-dest", 10000);
+  const transfer = await createTransferWithRetry("fac-source", "fac-dest", 10000);
   console.log("Transfer successful:", transfer.data!.id);
 } catch (error) {
-  console.error("Transfer failed permanently:", error.message);
+  console.error("Transfer failed permanently:", (error as Error).message);
 }
 ```
 
@@ -825,13 +857,72 @@ try {
 
 ## Idempotency
 
-For POST endpoints, the SDK automatically attaches an `Idempotency-Key` header. This helps prevent duplicate requests if you retry the same call. Keys are generated per module instance.
+Every create/update call attaches an `Idempotency-Key` header. If you don't supply one, the SDK generates a random key for that single call.
+
+A generated key only guards against an accidental double-submit *inside* one call. To make **retries** safe you must pass the same key on every attempt — otherwise each retry looks like a brand-new operation to Monime:
+
+```ts
+import { randomUUID } from "node:crypto";
+
+// One key per logical operation, reused across retries.
+const idempotencyKey = randomUUID();
+
+async function payoutWithRetry(attempts = 3) {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    const result = await client.payout.create(
+      {
+        amount: 100_00,
+        sourceAccount: "fac-...",
+        destination: { type: "momo", providerId: "m17", phoneNumber: "078000111" },
+      },
+      { idempotencyKey }, // same key each time
+    );
+
+    if (result.success) return result;
+    if (attempt === attempts) return result;
+  }
+}
+```
+
+Keys are **Space-scoped**, so the same key used in two different Spaces never collides. Monime caches a successful result for 24 hours and de-duplicates at the transaction layer beyond that. Failed requests are *not* cached, so you can retry after a transient error with the same key.
+
+Reusing a key with a *different* body or URL returns `409` with reason `idempotency_key_in_use`, surfaced as a `MonimeConflictError`. Keys are capped at 64 characters.
 
 ---
 
 ## Pagination
 
-List endpoints return a `pagination` object in `data?.pagination` when available, including a `next` cursor/URL. The SDK currently returns this information as-is; use the `next` value to fetch subsequent pages if needed.
+List endpoints use forward cursor pagination. Every `list()` accepts `{ limit?, after? }` and returns the cursor alongside the data:
+
+```ts
+const page = await client.payout.list({ limit: 30 });
+
+page.data;       // the items
+page.pagination; // { count: 30, next: "pyt-k6GMRZsCr61zfwCQtVemY2RrvQH" }
+```
+
+- **`limit`** — items per page. The API accepts 1–50 and defaults to 10.
+- **`after`** — the cursor from the previous response's `pagination.next`.
+
+`pagination.next` is `null` (or absent) on the final page. Cursors are opaque and query-specific — pass them back verbatim, never construct or edit one.
+
+```ts
+// Walk every page.
+async function allPayouts() {
+  const items = [];
+  let after: string | undefined;
+
+  do {
+    const page = await client.payout.list({ limit: 50, ...(after && { after }) });
+    if (!page.success) throw page.error;
+
+    items.push(...(page.data ?? []));
+    after = page.pagination?.next ?? undefined;
+  } while (after);
+
+  return items;
+}
+```
 
 ---
 
@@ -848,7 +939,7 @@ Now, instantiate a client once and use namespaced methods. Credentials are store
 
 ```ts
 const client = createClient({ monimeSpaceId, accessToken });
-await client.financialAccount.create("name");
+await client.financialAccount.create({ accountName: "name", currency: "SLE" });
 ```
 
 ---
@@ -856,12 +947,33 @@ await client.financialAccount.create("name");
 
 ## Error Handling
 
-- **Standard envelope**: every call returns `{ success, data?, error? }`.
+- **Standard envelope**: every call returns `{ success, data?, error? }`, plus `pagination` on list endpoints.
 - **Validation**: inputs are validated (e.g. non-empty IDs, positive amounts) and will short-circuit with `success: false` + `MonimeValidationError`.
 - **MonimeError**: remote errors are returned as `MonimeError` objects, which include:
   - `status`: HTTP status code (e.g. 401, 404)
-  - `requestId`: The unique request ID from Monime's servers
-  - `details`: Rich error details from the API
+  - `reason`: machine-readable cause from the API, e.g. `too_many_requests`
+  - `requestId`: the `Monime-Request-Id` of the failed attempt — quote it in support tickets
+  - `details`: the full error envelope from the API
+
+### Error subclasses
+
+| Class | Status | Notes |
+|---|---|---|
+| `MonimeValidationError` | 400 | Raised locally when input fails its Zod schema |
+| `MonimeAuthenticationError` | 401 | Invalid or missing access token |
+| `MonimeConflictError` | 409 | Usually `idempotency_key_in_use` — same key, different request |
+| `MonimeRateLimitError` | 429 | Adds `retryAfter` (seconds) and `limit` (`token-limit`, `space-limit` or `endpoint-limit`) |
+| `MonimeError` | any other | Base class for everything else |
+
+```ts
+import { MonimeRateLimitError } from "monime-package";
+
+const result = await client.payout.list();
+
+if (!result.success && result.error instanceof MonimeRateLimitError) {
+  await new Promise((r) => setTimeout(r, (result.error.retryAfter ?? 1) * 1000));
+}
+```
 
 ---
 
@@ -957,14 +1069,30 @@ type Result<T> = {
   success: boolean;
   data?: T;
   error?: Error | MonimeError;
+  pagination?: Pagination; // list endpoints only
+};
+
+type Pagination = {
+  count: number;       // items in this page
+  next: string | null; // cursor for the next page, null on the last one
+};
+
+type ListOptions = {
+  limit?: number; // 1-50, defaults to 10
+  after?: string; // cursor from a previous pagination.next
+};
+
+type MutationOptions = {
+  idempotencyKey?: string; // reuse across retries; generated when omitted
 };
 ```
 
 #### Client Configuration
 ```ts
 type ClientOptions = {
-  monimeSpaceId: string; // Your Monime Space ID
-  accessToken: string;   // Your API access token
+  monimeSpaceId?: string; // falls back to MONIME_SPACE_ID
+  accessToken?: string;   // falls back to MONIME_ACCESS_TOKEN
+  monimeVersion?: "caph.2025-08-23" | "caph.2025-06-20"; // falls back to MONIME_VERSION
 };
 ```
 
@@ -1125,8 +1253,8 @@ interface CreateCheckoutResponse {
 ```ts
 // Pagination for list responses
 interface Pagination {
-  count: number;  // Total count
-  next: string;   // Next page URL/cursor
+  count: number;       // Number of items in this page (not a grand total)
+  next: string | null; // Cursor for the next page; null on the last page
 }
 
 // Ownership information
