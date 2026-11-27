@@ -29,9 +29,10 @@ describe("Payment Resource E2E", () => {
 	});
 
 	it("should fail: update payment with invalid data", async () => {
+		// Typed callers cannot write this; plain JavaScript callers can.
 		const result = await client.payment.update("pay_1", {
 			invalid_key: "value",
-		});
+		} as never);
 		expect(result.success).toBe(false);
 		expect(result.error?.message).toBeDefined();
 	});
