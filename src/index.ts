@@ -10,3 +10,4 @@ export { MonimeClient };
 export type { ClientOptions };
 export * from "./error";
 export { IDEMPOTENCY_NAMESPACE, idempotencyKeyFor } from "./idempotency";
+export { parseWebhookEvent, verifyWebhookSignature } from "./webhookSignature";
