@@ -20,9 +20,7 @@ export class UssdOtpAPI extends HttpClient {
 	): Promise<Result<CreateUssdOtpResponse>> {
 		const validation = createUssdOtpSchema.safeParse(options);
 
-		if (!validation.success) {
-			return { success: false, error: new Error(validation.error.message) };
-		}
+		if (!validation.success) return this.invalid(validation.error);
 
 		const idempotencyKey = this.idempotencyKey(requestOptions);
 
@@ -40,7 +38,7 @@ export class UssdOtpAPI extends HttpClient {
 	 */
 	async retrieve(ussdOtpId: string): Promise<Result<RetrieveUssdOtpResponse>> {
 		if (!ussdOtpId || ussdOtpId.trim() === "") {
-			return { success: false, error: new Error("ussdOtpId is required") };
+			return this.invalid("ussdOtpId is required");
 		}
 
 		return this.request<RetrieveUssdOtpResponse>({
@@ -66,7 +64,7 @@ export class UssdOtpAPI extends HttpClient {
 	 */
 	async delete(ussdOtpId: string): Promise<Result<void>> {
 		if (!ussdOtpId || ussdOtpId.trim() === "") {
-			return { success: false, error: new Error("ussdOtpId is required") };
+			return this.invalid("ussdOtpId is required");
 		}
 
 		return this.request<void>({
