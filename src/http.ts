@@ -1,17 +1,21 @@
 import { randomBytes } from "node:crypto";
+import type { ZodError } from "zod";
 import {
 	MonimeAuthenticationError,
 	MonimeConflictError,
 	MonimeError,
 	MonimeRateLimitError,
+	MonimeValidationError,
 } from "./error";
-import type {
-	ClientConfig,
-	ListOptions,
-	MutationOptions,
-	Pagination,
-	Result,
+import {
+	type ClientConfig,
+	DEFAULT_MONIME_VERSION,
+	type ListOptions,
+	type MutationOptions,
+	type Pagination,
+	type Result,
 } from "./types";
+import { validationMessage } from "./validators/common";
 
 export type QueryParams = Record<
 	string,
@@ -64,9 +68,11 @@ export class HttpClient {
 			"Monime-Space-Id": this.config.monimeSpaceId,
 		});
 
-		if (this.config.monimeVersion) {
-			headers.set("Monime-Version", this.config.monimeVersion);
-		}
+		// Monime asks clients to always send the release they were built for.
+		headers.set(
+			"Monime-Version",
+			this.config.monimeVersion || DEFAULT_MONIME_VERSION,
+		);
 
 		if (idempotencyKey) {
 			headers.set("Idempotency-Key", idempotencyKey);
@@ -81,14 +87,31 @@ export class HttpClient {
 	 * single call — pass your own to make retries across calls safe.
 	 */
 	protected idempotencyKey(options?: MutationOptions): string {
-		return options?.idempotencyKey || randomBytes(20).toString("hex");
+		return options?.idempotencyKey ?? randomBytes(20).toString("hex");
 	}
 
-	/** Normalize `list()` pagination into query parameters. */
-	protected listQuery(options?: ListOptions): QueryParams {
+	/**
+	 * Normalize `list()` pagination, plus any resource-specific filters, into
+	 * query parameters. Unset values are dropped when the URL is built.
+	 */
+	protected listQuery(
+		options?: ListOptions,
+		filters: QueryParams = {},
+	): QueryParams {
 		return {
+			...filters,
 			limit: options?.limit,
 			after: options?.after,
+		};
+	}
+
+	/** A validation failure, returned before any request is sent. */
+	protected invalid<T>(error: ZodError | string): Result<T> {
+		const message =
+			typeof error === "string" ? error : validationMessage(error);
+		return {
+			success: false,
+			error: new MonimeValidationError(message, error),
 		};
 	}
 
@@ -179,6 +202,16 @@ export class HttpClient {
 
 	protected async request<T>(options: RequestOptions): Promise<Result<T>> {
 		const { path, method, body, query, idempotencyKey } = options;
+
+		// The API caps Idempotency-Key at 64 characters; an empty key would be
+		// dropped and silently replaced, so both are refused up front.
+		if (
+			idempotencyKey !== undefined &&
+			(idempotencyKey.length === 0 || idempotencyKey.length > 64)
+		) {
+			return this.invalid("idempotencyKey must be 1 to 64 characters");
+		}
+
 		const url = this.buildUrl(path, query);
 
 		try {
