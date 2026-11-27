@@ -59,12 +59,16 @@ describe("createPayoutSchema", () => {
 });
 
 describe("patchPayoutSchema", () => {
-	it("should validate an arbitrary record of update fields", () => {
+	it("should validate a metadata update", () => {
 		const result = patchPayoutSchema.safeParse({
-			metadata: { note: "updated" },
-			status: "processing",
+			metadata: { note: "updated", old: null },
 		});
 		expect(result.success).toBe(true);
+	});
+
+	it("should fail on any field but metadata", () => {
+		const result = patchPayoutSchema.safeParse({ status: "processing" });
+		expect(result.success).toBe(false);
 	});
 
 	it("should validate an empty object", () => {
