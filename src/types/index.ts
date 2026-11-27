@@ -12,3 +12,4 @@ export * from "./providerKyc";
 export * from "./receipt";
 export * from "./ussdOtp";
 export * from "./webhook";
+export * from "./webhookEvent";

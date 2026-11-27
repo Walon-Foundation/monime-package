@@ -1,5 +1,3 @@
-import type { Pagination } from "./core";
-
 export interface MomoFeature {
 	canPayTo?: boolean;
 	canPayFrom?: boolean;
@@ -23,12 +21,10 @@ export interface Momo {
 	};
 	featureSet: MomoFeatureSet;
 	createTime: string;
-	updateTime: string;
+	updateTime: string | null;
 }
 
-export interface ListMomosResponse {
-	result: Momo[];
-	pagination: Pagination;
-}
+/** `data` of a list call is the page of providers; the cursor is in `pagination`. */
+export type ListMomosResponse = Momo[];
 
 export interface RetrieveMomoResponse extends Momo {}

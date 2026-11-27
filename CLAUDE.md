@@ -80,22 +80,48 @@ machine-readable cause — prefer it over string-matching messages.
 a fallback).
 
 **Idempotency keys** go through `HttpClient.idempotencyKey(requestOptions)`,
-which prefers a caller-supplied key and otherwise mints
-`randomBytes(20).toString("hex")` from `node:crypto`. (This means Node, not
-edge/browser, is the supported runtime.) Every mutating method takes a trailing
-`requestOptions?: MutationOptions` for this — a generated key only covers a
-double-submit within one call, so retry-safety requires the caller to pass a
-stable key. Read-only methods omit the header. The API caps it at 64 chars and
-scopes it per Space.
+which prefers a caller-supplied key (`??`, so an explicit `""` is kept and then
+refused) and otherwise mints `randomBytes(20).toString("hex")` from
+`node:crypto`. (This means Node, not edge/browser, is the supported runtime.)
+`request()` refuses a key that is empty or over 64 characters before sending.
+Every mutating method takes a trailing `requestOptions?: MutationOptions` — a
+generated key only covers a double-submit within one call, so retry-safety
+requires the caller to pass a stable key; `idempotencyKeyFor(reference)` in
+`src/idempotency.ts` derives one as a UUIDv5 (namespace
+`324f9f23-0e7a-54ba-9149-8240b1833dc1`, shared with the Go SDK; the test
+vectors in `test/unit/idempotency.test.ts` must match Go's). Read-only methods
+omit the header. The API requires it on every POST and scopes it per Space.
 
-**Pagination** is forward-cursor: every `list()` takes `options?: ListOptions`
-(`limit` 1-50, default 10; `after` an opaque cursor) and passes
-`query: this.listQuery(options)`. Undefined/empty query values are dropped in
-`buildUrl`, so `list()` with no args sends no query string. Read the next cursor
-off `result.pagination.next` — it is `null` on the final page.
+**Monime-Version** is always sent: the configured version, or
+`DEFAULT_MONIME_VERSION` (`caph.2025-08-23`).
 
-**Money is in minor units.** Callers pass major units and resources multiply by
-100 with currency `"SLE"` (see `paymentCode.ts`). Keep that boundary consistent.
+**Pagination** is forward-cursor: every `list()` takes its options (`limit`
+1-50, default 10; `after` an opaque cursor; plus the endpoint's filters) and
+passes `query: this.listQuery(options, { ...filters })`. Undefined/empty query
+values are dropped in `buildUrl`, so `list()` with no args sends no query
+string. A list call's `data` is the page itself (the unwrapped `result` array),
+so `List*Response` types are arrays; read the next cursor off
+`result.pagination.next` — it is `null` on the final page. `bank.list` and
+`momo.list` take the required `country` as their first argument.
+
+**Money is in minor units everywhere**, never scaled by the SDK. Request amounts
+are `AmountInput` (`{ currency?: "SLE" | "USD"; value }`, currency defaulting to
+`SLE`) or, for payouts and transfers, `amount` plus an optional `currency`.
+`amountInputSchema` refuses fractions and non-positive values.
+
+**Request bodies send only what was set.** Many API schemas set
+`additionalProperties: false`, so resources build bodies with `compact()` from
+`validators/common.ts` and validators use `.strict()`. Metadata goes through
+`metadataSchema` (create) or `metadataUpdateSchema` (update, where `null`
+deletes a key). Validation failures return `this.invalid(zodError | message)`,
+a `MonimeValidationError`.
+
+**Webhook deliveries** are verified by `src/webhookSignature.ts`
+(`verifyWebhookSignature`, `parseWebhookEvent`): `Monime-Signature:
+t=<unix>,v1=<base64>` over `t + "_" + rawBody`, HS256 (HMAC-SHA256, base64) or
+ES256 (P-256, DER signature), 300 s / 60 s freshness. They return `Result` and
+never throw. The HS256 vector in `test/unit/webhookSignature.test.ts` is shared
+with the Go SDK.
 
 **Credentials** come from constructor options first, then `MONIME_SPACE_ID`,
 `MONIME_ACCESS_TOKEN`, `MONIME_VERSION` env vars.
@@ -121,5 +147,14 @@ Test names follow `should success: …` / `should fail: …`.
 ## Docs to keep in sync
 
 `README.md` documents every method against a pinned API version
-(`caph.2025-08-23`), and `examples/` holds runnable scripts. A change to the
-public API means updating both.
+(`caph.2025-08-23`), `examples/` holds runnable scripts, and `CHANGELOG.md`
+records each change (breaking ones with a migration line) under
+`## [Unreleased]` until a release is cut. A change to the public API means
+updating all three.
+
+The authority for the API is the published OpenAPI spec,
+`https://docs.monime.io/apis/openapi.json`, with the prose docs at
+`https://docs.monime.io` (append `.md` to any page for Markdown). Check field
+names, required fields, limits and `additionalProperties` there, not against
+the rendered reference alone. The Go SDK (`monime-package-go`) mirrors this
+one; behaviour that differs between them is a bug in one of them.

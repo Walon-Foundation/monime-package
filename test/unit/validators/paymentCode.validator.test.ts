@@ -7,62 +7,88 @@ import {
 describe("createPaymentCodeSchema", () => {
 	it("should validate a correct payment code request", () => {
 		const result = createPaymentCodeSchema.safeParse({
-			paymentName: "Lunch",
-			amount: 100,
-			financialAccountId: "acc_123",
-			name: "John Doe",
-			phoneNumber: "+1234567890",
+			name: "Lunch",
+			amount: { currency: "SLE", value: 10000 },
+			financialAccountId: "fac-123",
+			customer: { name: "John Doe" },
+			authorizedPhoneNumber: "+23276123456",
 		});
 		expect(result.success).toBe(true);
 	});
 
-	it("should validate a correct payment code request without financialAccountId", () => {
-		const result = createPaymentCodeSchema.safeParse({
-			paymentName: "Lunch",
-			amount: 100,
-			name: "John Doe",
-			phoneNumber: "+1234567890",
-		});
-		expect(result.success).toBe(true);
+	it("should validate with only a name, as the API allows", () => {
+		expect(createPaymentCodeSchema.safeParse({ name: "Lunch" }).success).toBe(
+			true,
+		);
 	});
 
-	it("should fail when amount is zero or negative", () => {
-		const result = createPaymentCodeSchema.safeParse({
-			paymentName: "Lunch",
-			amount: 0,
-			name: "John Doe",
-			phoneNumber: "+1234567890",
-		});
-		expect(result.success).toBe(false);
+	it("should fail when the amount is zero, fractional or a bare number", () => {
+		for (const amount of [{ value: 0 }, { value: 10.5 }, 100]) {
+			const result = createPaymentCodeSchema.safeParse({
+				name: "Lunch",
+				amount,
+			});
+			expect(result.success).toBe(false);
+		}
 	});
 
-	it("should fail when required fields are missing", () => {
+	it("should fail when the name is under 3 or over 64 characters", () => {
+		expect(createPaymentCodeSchema.safeParse({ name: "ab" }).success).toBe(
+			false,
+		);
+		expect(
+			createPaymentCodeSchema.safeParse({ name: "x".repeat(65) }).success,
+		).toBe(false);
+	});
+
+	it("should fail on an unknown provider or a bad account id", () => {
+		expect(
+			createPaymentCodeSchema.safeParse({
+				name: "Lunch",
+				authorizedProviders: ["m99"],
+			}).success,
+		).toBe(false);
+		expect(
+			createPaymentCodeSchema.safeParse({
+				name: "Lunch",
+				financialAccountId: "acc_123",
+			}).success,
+		).toBe(false);
+	});
+
+	it("should fail on the 1.x field names", () => {
 		const result = createPaymentCodeSchema.safeParse({
-			paymentName: "",
-			amount: 100,
-			name: "",
-			phoneNumber: "",
+			paymentName: "Lunch",
+			name: "John Doe",
+			phoneNumber: "+23276123456",
 		});
 		expect(result.success).toBe(false);
 	});
 });
 
 describe("patchPaymentCodeSchema", () => {
-	it("should accept an object with partial update fields", () => {
+	it("should accept partial update fields", () => {
 		const result = patchPaymentCodeSchema.safeParse({
 			name: "Updated Name",
 			enable: false,
+			reference: null,
 		});
 		expect(result.success).toBe(true);
 	});
 
 	it("should accept an empty object", () => {
-		const result = patchPaymentCodeSchema.safeParse({});
-		expect(result.success).toBe(true);
+		expect(patchPaymentCodeSchema.safeParse({}).success).toBe(true);
+	});
+
+	it("should fail on a field the API does not accept", () => {
+		expect(
+			patchPaymentCodeSchema.safeParse({ status: "expired" }).success,
+		).toBe(false);
 	});
 
 	it("should fail when given a non-object value", () => {
-		const result = patchPaymentCodeSchema.safeParse("not-an-object");
-		expect(result.success).toBe(false);
+		expect(patchPaymentCodeSchema.safeParse("not-an-object").success).toBe(
+			false,
+		);
 	});
 });

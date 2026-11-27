@@ -85,3 +85,28 @@ export class MonimeRateLimitError extends MonimeError {
 		if (options.limit !== undefined) this.limit = options.limit;
 	}
 }
+
+/** Why a webhook delivery failed verification. */
+export type WebhookSignatureErrorReason =
+	| "missing_header"
+	| "malformed_header"
+	| "timestamp_out_of_tolerance"
+	| "signature_mismatch"
+	| "invalid_public_key"
+	| "missing_verification_key"
+	| "malformed_payload";
+
+/**
+ * Returned by `verifyWebhookSignature` and `parseWebhookEvent` when a
+ * delivery cannot be trusted. Answer such a request with 401 and do not act
+ * on it. `reason` says what failed.
+ */
+export class MonimeWebhookSignatureError extends MonimeError {
+	public override readonly reason: WebhookSignatureErrorReason;
+
+	constructor(message: string, reason: WebhookSignatureErrorReason) {
+		super(message, 401, undefined, undefined, reason);
+		this.name = "MonimeWebhookSignatureError";
+		this.reason = reason;
+	}
+}

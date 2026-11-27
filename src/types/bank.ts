@@ -1,5 +1,3 @@
-import type { Pagination } from "./core";
-
 export interface BankFeature {
 	canPayTo?: boolean;
 	canPayFrom?: boolean;
@@ -23,12 +21,10 @@ export interface Bank {
 	};
 	featureSet: BankFeatureSet;
 	createTime: string;
-	updateTime: string;
+	updateTime: string | null;
 }
 
-export interface ListBanksResponse {
-	result: Bank[];
-	pagination: Pagination;
-}
+/** `data` of a list call is the page of providers; the cursor is in `pagination`. */
+export type ListBanksResponse = Bank[];
 
 export interface RetrieveBankResponse extends Bank {}

@@ -34,12 +34,13 @@ async function main() {
 
   console.log("Payout ID:", payout.data!.id);
   console.log("Status:   ", payout.data!.status);
-  for (const fee of payout.data!.fees) {
+  // Fees are applied on top of the amount and stay empty until processed.
+  for (const fee of payout.data!.fees ?? []) {
     console.log(`Fee ${fee.code}: ${fee.amount.value} ${fee.amount.currency}`);
   }
 
   // A bank payout would look like this:
-  // destination: { type: "bank", providerId: "b01", accountNumber: "1234567890" }
+  // destination: { type: "bank", providerId: "slb001", accountNumber: "1234567890" }
 }
 
 main().catch((err) => {

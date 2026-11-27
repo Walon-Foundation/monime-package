@@ -1,23 +1,22 @@
 import { HttpClient } from "../http";
-import type { ListOptions, MutationOptions, Result } from "../types";
+import type { MutationOptions, Result } from "../types";
 import type {
+	CreateInternalTransferOptions,
 	CreateInternalTransferResponse,
+	ListInternalTransfersOptions,
 	ListInternalTransfersResponse,
 	RetrieveInternalTransferResponse,
+	UpdateInternalTransferOptions,
 	UpdateInternalTransferResponse,
 } from "../types/internalTransfer";
+import { compact } from "../validators/common";
 import {
 	createInternalTransferSchema,
+	listInternalTransfersSchema,
 	patchInternalTransferSchema,
 } from "../validators/internalTransfer.validator";
 
-export interface CreateInternalTransferOptions {
-	sourceAccount: string;
-	destinationAccount: string;
-	amount: number;
-	description?: string;
-	metadata?: Record<string, unknown>;
-}
+export type { CreateInternalTransferOptions } from "../types/internalTransfer";
 
 export class InternalTransferAPI extends HttpClient {
 	private readonly path = "/internal-transfers";
@@ -30,25 +29,18 @@ export class InternalTransferAPI extends HttpClient {
 		requestOptions?: MutationOptions,
 	): Promise<Result<CreateInternalTransferResponse>> {
 		const validation = createInternalTransferSchema.safeParse(options);
+		if (!validation.success) return this.invalid(validation.error);
 
-		if (!validation.success) {
-			return { success: false, error: new Error(validation.error.message) };
-		}
-
-		const body = {
+		const body = compact({
 			amount: {
-				currency: "SLE",
+				currency: options.currency ?? "SLE",
 				value: options.amount,
 			},
-			sourceFinancialAccount: {
-				id: options.sourceAccount,
-			},
-			destinationFinancialAccount: {
-				id: options.destinationAccount,
-			},
-			description: options.description || "",
-			metadata: options.metadata || {},
-		};
+			sourceFinancialAccount: { id: options.sourceAccount },
+			destinationFinancialAccount: { id: options.destinationAccount },
+			description: options.description || undefined,
+			metadata: options.metadata,
+		});
 
 		const idempotencyKey = this.idempotencyKey(requestOptions);
 
@@ -61,15 +53,23 @@ export class InternalTransferAPI extends HttpClient {
 	}
 
 	/**
-	 * List a page of internal transfers.
+	 * List a page of internal transfers, optionally filtered.
 	 */
 	async list(
-		options?: ListOptions,
+		options: ListInternalTransfersOptions = {},
 	): Promise<Result<ListInternalTransfersResponse>> {
+		const validation = listInternalTransfersSchema.safeParse(options);
+		if (!validation.success) return this.invalid(validation.error);
+
 		return this.request<ListInternalTransfersResponse>({
 			method: "GET",
 			path: this.path,
-			query: this.listQuery(options),
+			query: this.listQuery(options, {
+				status: options.status,
+				sourceFinancialAccountId: options.sourceFinancialAccountId,
+				destinationFinancialAccountId: options.destinationFinancialAccountId,
+				financialTransactionReference: options.financialTransactionReference,
+			}),
 		});
 	}
 
@@ -80,6 +80,10 @@ export class InternalTransferAPI extends HttpClient {
 	async retrieve(
 		internalTransferId: string,
 	): Promise<Result<RetrieveInternalTransferResponse>> {
+		if (!internalTransferId) {
+			return this.invalid("internalTransferId is required");
+		}
+
 		return this.request<RetrieveInternalTransferResponse>({
 			method: "GET",
 			path: `${this.path}/${internalTransferId}`,
@@ -89,24 +93,19 @@ export class InternalTransferAPI extends HttpClient {
 	/**
 	 * Update an existing internal transfer.
 	 * @param internalTransferId - The unique identifier of the transfer.
-	 * @param body - The partial internal transfer data to update.
+	 * @param body - `{ description?, metadata? }`; `null` clears a field.
 	 */
 	async update(
 		internalTransferId: string,
-		body: Record<string, unknown>,
+		body: UpdateInternalTransferOptions,
 		requestOptions?: MutationOptions,
 	): Promise<Result<UpdateInternalTransferResponse>> {
 		if (!internalTransferId) {
-			return {
-				success: false,
-				error: new Error("internalTransferId is required"),
-			};
+			return this.invalid("internalTransferId is required");
 		}
 
 		const validation = patchInternalTransferSchema.safeParse(body);
-		if (!validation.success) {
-			return { success: false, error: new Error(validation.error.message) };
-		}
+		if (!validation.success) return this.invalid(validation.error);
 
 		const idempotencyKey = this.idempotencyKey(requestOptions);
 
@@ -123,6 +122,10 @@ export class InternalTransferAPI extends HttpClient {
 	 * @param internalTransferId - The unique identifier of the transfer.
 	 */
 	async delete(internalTransferId: string): Promise<Result<void>> {
+		if (!internalTransferId) {
+			return this.invalid("internalTransferId is required");
+		}
+
 		return this.request<void>({
 			method: "DELETE",
 			path: `${this.path}/${internalTransferId}`,

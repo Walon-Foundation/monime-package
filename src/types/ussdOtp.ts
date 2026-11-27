@@ -1,26 +1,28 @@
-import type { Pagination } from "./core";
+import type { Metadata, MetadataInput } from "./core";
 
 export interface UssdOtp {
 	id: string;
-	status: string;
+	status: "pending" | "verified" | "expired";
+	/** The USSD code the person dials to verify. */
 	dialCode: string;
 	authorizedPhoneNumber: string;
-	verificationMessage: string;
+	verificationMessage: string | null;
 	createTime: string;
 	expireTime: string;
-	[key: string]: unknown;
+	metadata: Metadata | null;
 }
 
 export interface CreateUssdOtpRequest {
+	/** The only number allowed to dial the code. */
 	authorizedPhoneNumber: string;
-	[key: string]: unknown;
+	/** Shown after verification; at most 255 characters. */
+	verificationMessage?: string;
+	/** How long the code lives, e.g. `"5m"` (the default). */
+	duration?: string;
+	metadata?: MetadataInput;
 }
 
-export interface CreateUssdOtpResponse extends UssdOtp {}
-
+export type CreateUssdOtpResponse = UssdOtp;
 export type RetrieveUssdOtpResponse = UssdOtp;
-
-export interface ListUssdOtpsResponse {
-	result: UssdOtp[];
-	pagination: Pagination;
-}
+/** `data` of a list call is the page of OTPs; the cursor is in `pagination`. */
+export type ListUssdOtpsResponse = UssdOtp[];

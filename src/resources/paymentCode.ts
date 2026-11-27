@@ -1,72 +1,64 @@
 import { HttpClient } from "../http";
-import type { ListOptions, MutationOptions, Result } from "../types";
+import type { AmountInput, MutationOptions, Result } from "../types";
 import type {
+	CreatePaymentCodeOptions,
 	CreatePaymentCodeResponse,
+	ListPaymentCodesOptions,
 	ListPaymentCodesResponse,
+	PaymentCodeRecurrentTargetInput,
 	RetrievePaymentCodeResponse,
+	UpdatePaymentCodeOptions,
 	UpdatePaymentCodeResponse,
 } from "../types/paymentCode";
+import { compact } from "../validators/common";
 import {
 	createPaymentCodeSchema,
+	listPaymentCodesSchema,
 	patchPaymentCodeSchema,
 } from "../validators/paymentCode.validator";
 
-export interface CreatePaymentCodeOptions {
-	paymentName: string;
-	amount: number;
-	financialAccountId: string | null;
-	name: string;
-	phoneNumber: string;
+export type { CreatePaymentCodeOptions } from "../types/paymentCode";
+
+function amount(input: AmountInput) {
+	return { currency: input.currency ?? "SLE", value: input.value };
+}
+
+function target(input: PaymentCodeRecurrentTargetInput) {
+	return compact({
+		expectedPaymentCount: input.expectedPaymentCount,
+		expectedPaymentTotal: input.expectedPaymentTotal
+			? amount(input.expectedPaymentTotal)
+			: undefined,
+	});
 }
 
 export class PaymentCodeAPI extends HttpClient {
 	private readonly path = "/payment-codes";
 
 	/**
-	 * Create a new USSD payment code.
+	 * Create a new USSD payment code. `amount` is in minor units and is sent as
+	 * given: `{ value: 1050 }` asks for SLE 10.50.
 	 */
 	async create(
 		options: CreatePaymentCodeOptions,
 		requestOptions?: MutationOptions,
 	): Promise<Result<CreatePaymentCodeResponse>> {
 		const validation = createPaymentCodeSchema.safeParse(options);
+		if (!validation.success) return this.invalid(validation.error);
 
-		if (!validation.success) {
-			return { success: false, error: new Error(validation.error.message) };
-		}
-
-		const bodyData = {
-			name: options.paymentName,
-			mode: "recurrent",
-			enable: true,
-			amount: {
-				currency: "SLE",
-				value: options.amount * 100, // minor units
-			},
-			duration: "1h30m",
-			customer: {
-				name: options.name,
-			},
-			reference: "",
-			authorizedPhoneNumber: options.phoneNumber,
-			recurrentPaymentTarget: {
-				expectedPaymentCount: 1,
-				expectedPaymentTotal: {
-					currency: "SLE",
-					value: options.amount * 100,
-				},
-			},
-			financialAccountId: options.financialAccountId || undefined,
-			metadata: {},
-		};
-
-		const idempotencyKey = this.idempotencyKey(requestOptions);
+		const body = compact({
+			...options,
+			amount: options.amount ? amount(options.amount) : undefined,
+			recurrentPaymentTarget: options.recurrentPaymentTarget
+				? target(options.recurrentPaymentTarget)
+				: undefined,
+		});
 
 		return this.request<CreatePaymentCodeResponse>({
 			method: "POST",
 			path: this.path,
-			body: bodyData,
-			idempotencyKey,
+			body,
+			idempotencyKey: this.idempotencyKey(requestOptions),
 		});
 	}
 
@@ -77,6 +69,8 @@ export class PaymentCodeAPI extends HttpClient {
 	async retrieve(
 		paymentCodeId: string,
 	): Promise<Result<RetrievePaymentCodeResponse>> {
+		if (!paymentCodeId) return this.invalid("paymentCodeId is required");
+
 		return this.request<RetrievePaymentCodeResponse>({
 			method: "GET",
 			path: `${this.path}/${paymentCodeId}`,
@@ -84,42 +78,55 @@ export class PaymentCodeAPI extends HttpClient {
 	}
 
 	/**
-	 * List a page of payment codes.
+	 * List a page of payment codes, optionally filtered.
 	 */
-	async list(options?: ListOptions): Promise<Result<ListPaymentCodesResponse>> {
+	async list(
+		options: ListPaymentCodesOptions = {},
+	): Promise<Result<ListPaymentCodesResponse>> {
+		const validation = listPaymentCodesSchema.safeParse(options);
+		if (!validation.success) return this.invalid(validation.error);
+
 		return this.request<ListPaymentCodesResponse>({
 			method: "GET",
 			path: this.path,
-			query: this.listQuery(options),
+			query: this.listQuery(options, {
+				ussd_code: options.ussdCode,
+				mode: options.mode,
+				status: options.status,
+			}),
 		});
 	}
 
 	/**
 	 * Update an existing payment code.
 	 * @param paymentCodeId - The unique identifier of the payment code.
-	 * @param body - The partial payment code data to update.
+	 * @param body - The fields to change; `null` clears a field.
 	 */
 	async update(
 		paymentCodeId: string,
-		body: Record<string, unknown>,
+		body: UpdatePaymentCodeOptions,
 		requestOptions?: MutationOptions,
 	): Promise<Result<UpdatePaymentCodeResponse>> {
 		if (!paymentCodeId) {
-			return { success: false, error: new Error("paymentCodeId is required") };
+			return this.invalid("paymentCodeId is required");
 		}
 
 		const validation = patchPaymentCodeSchema.safeParse(body);
-		if (!validation.success) {
-			return { success: false, error: new Error(validation.error.message) };
-		}
+		if (!validation.success) return this.invalid(validation.error);
 
-		const idempotencyKey = this.idempotencyKey(requestOptions);
+		const payload = compact({
+			...body,
+			amount: body.amount ? amount(body.amount) : body.amount,
+			recurrentPaymentTarget: body.recurrentPaymentTarget
+				? target(body.recurrentPaymentTarget)
+				: body.recurrentPaymentTarget,
+		});
 
 		return this.request<UpdatePaymentCodeResponse>({
 			method: "PATCH",
 			path: `${this.path}/${paymentCodeId}`,
-			body,
-			idempotencyKey,
+			body: payload,
+			idempotencyKey: this.idempotencyKey(requestOptions),
 		});
 	}
 
@@ -129,7 +136,7 @@ export class PaymentCodeAPI extends HttpClient {
 	 */
 	async delete(paymentCodeId: string): Promise<Result<void>> {
 		if (!paymentCodeId || paymentCodeId.trim() === "") {
-			return { success: false, error: new Error("paymentCodeId is required") };
+			return this.invalid("paymentCodeId is required");
 		}
 
 		return this.request<void>({

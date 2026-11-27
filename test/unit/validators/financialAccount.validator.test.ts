@@ -20,10 +20,30 @@ describe("createFinancialAccountSchema", () => {
 		});
 		expect(result.success).toBe(false);
 		if (!result.success) {
-			expect(result.error.issues[0].message).toContain(
+			expect(result.error.issues[0]?.message).toContain(
 				"Account name is required",
 			);
 		}
+	});
+
+	it("should validate reference, description and metadata", () => {
+		const result = createFinancialAccountSchema.safeParse({
+			accountName: "Org 7",
+			currency: "SLE",
+			reference: "org-7",
+			description: "Payouts for org 7",
+			metadata: { rapporteur_org: "7" },
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("should fail when description is over 150 characters", () => {
+		const result = createFinancialAccountSchema.safeParse({
+			accountName: "Org 7",
+			currency: "SLE",
+			description: "x".repeat(151),
+		});
+		expect(result.success).toBe(false);
 	});
 
 	it("should fail when currency is invalid", () => {
@@ -33,8 +53,8 @@ describe("createFinancialAccountSchema", () => {
 		});
 		expect(result.success).toBe(false);
 		if (!result.success) {
-			expect(result.error.issues[0].message).toContain(
-				"Currency must be either USD or SLE",
+			expect(result.error.issues[0]?.message).toContain(
+				"Currency must be either SLE or USD",
 			);
 		}
 	});
@@ -52,5 +72,18 @@ describe("patchFinancialAccountSchema", () => {
 	it("should fail when input is not an object", () => {
 		const result = patchFinancialAccountSchema.safeParse("invalid-string");
 		expect(result.success).toBe(false);
+	});
+
+	it("should fail on a field the API does not accept", () => {
+		const result = patchFinancialAccountSchema.safeParse({ currency: "SLE" });
+		expect(result.success).toBe(false);
+	});
+
+	it("should accept null to clear a field", () => {
+		const result = patchFinancialAccountSchema.safeParse({
+			reference: null,
+			metadata: { old_key: null },
+		});
+		expect(result.success).toBe(true);
 	});
 });

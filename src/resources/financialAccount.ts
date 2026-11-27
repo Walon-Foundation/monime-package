@@ -1,24 +1,26 @@
 import { HttpClient } from "../http";
-import type { ListOptions, MutationOptions, Result } from "../types";
+import type { MutationOptions, Result } from "../types";
 import type {
+	CreateFinancialAccountOptions,
 	CreateFinancialAccountResponse,
+	ListFinancialAccountsOptions,
 	ListFinancialAccountsResponse,
+	RetrieveFinancialAccountOptions,
 	RetrieveFinancialAccountResponse,
+	UpdateFinancialAccountOptions,
 	UpdateFinancialAccountResponse,
 } from "../types/financialAccount";
+import { compact } from "../validators/common";
 import {
 	createFinancialAccountSchema,
 	patchFinancialAccountSchema,
 } from "../validators/financialAccount.validator";
 
-export type Currency = "USD" | "SLE";
-
-export interface CreateFinancialAccountOptions {
-	accountName: string;
-	currency: Currency;
-	description?: string;
-	metadata?: Record<string, unknown>;
-}
+export type {
+	CreateFinancialAccountOptions,
+	RetrieveFinancialAccountOptions,
+	UpdateFinancialAccountOptions,
+} from "../types/financialAccount";
 
 export class FinancialAccountAPI extends HttpClient {
 	private readonly path = "/financial-accounts";
@@ -31,90 +33,83 @@ export class FinancialAccountAPI extends HttpClient {
 		requestOptions?: MutationOptions,
 	): Promise<Result<CreateFinancialAccountResponse>> {
 		const validation = createFinancialAccountSchema.safeParse(options);
+		if (!validation.success) return this.invalid(validation.error);
 
-		if (!validation.success) {
-			return { success: false, error: new Error(validation.error.message) };
-		}
-
-		const body = {
+		const body = compact({
 			name: options.accountName,
 			currency: options.currency,
-			description: options.description || "",
-			metadata: options.metadata || {},
-		};
-
-		const idempotencyKey = this.idempotencyKey(requestOptions);
+			reference: options.reference,
+			description: options.description,
+			metadata: options.metadata,
+		});
 
 		return this.request<CreateFinancialAccountResponse>({
 			method: "POST",
 			path: this.path,
 			body,
-			idempotencyKey,
+			idempotencyKey: this.idempotencyKey(requestOptions),
 		});
 	}
 
 	/**
 	 * Retrieve a specific financial account by ID.
 	 * @param financialAccountId - The unique identifier of the account.
+	 * @param options - Pass `{ withBalance: true }` to include the balance.
 	 */
 	async retrieve(
 		financialAccountId: string,
+		options: RetrieveFinancialAccountOptions = {},
 	): Promise<Result<RetrieveFinancialAccountResponse>> {
 		if (!financialAccountId || financialAccountId.trim() === "") {
-			return {
-				success: false,
-				error: new Error("financialAccountId is required"),
-			};
+			return this.invalid("financialAccountId is required");
 		}
 
 		return this.request<RetrieveFinancialAccountResponse>({
 			method: "GET",
 			path: `${this.path}/${financialAccountId}`,
+			query: { withBalance: options.withBalance },
 		});
 	}
 
 	/**
-	 * List a page of financial accounts.
+	 * List a page of financial accounts, optionally filtered.
 	 */
 	async list(
-		options?: ListOptions,
+		options: ListFinancialAccountsOptions = {},
 	): Promise<Result<ListFinancialAccountsResponse>> {
 		return this.request<ListFinancialAccountsResponse>({
 			method: "GET",
 			path: this.path,
-			query: this.listQuery(options),
+			query: this.listQuery(options, {
+				uvan: options.uvan,
+				reference: options.reference,
+				withBalance: options.withBalance,
+			}),
 		});
 	}
 
 	/**
 	 * Update an existing financial account.
 	 * @param financialAccountId - The unique identifier of the account.
-	 * @param body - The partial financial account data to update.
+	 * @param body - The fields to change; `null` clears a field.
 	 */
 	async update(
 		financialAccountId: string,
-		body: Record<string, unknown>,
+		body: UpdateFinancialAccountOptions,
 		requestOptions?: MutationOptions,
 	): Promise<Result<UpdateFinancialAccountResponse>> {
 		if (!financialAccountId) {
-			return {
-				success: false,
-				error: new Error("financialAccountId is required"),
-			};
+			return this.invalid("financialAccountId is required");
 		}
 
 		const validation = patchFinancialAccountSchema.safeParse(body);
-		if (!validation.success) {
-			return { success: false, error: new Error(validation.error.message) };
-		}
-
-		const idempotencyKey = this.idempotencyKey(requestOptions);
+		if (!validation.success) return this.invalid(validation.error);
 
 		return this.request<UpdateFinancialAccountResponse>({
 			method: "PATCH",
 			path: `${this.path}/${financialAccountId}`,
 			body,
-			idempotencyKey,
+			idempotencyKey: this.idempotencyKey(requestOptions),
 		});
 	}
 }

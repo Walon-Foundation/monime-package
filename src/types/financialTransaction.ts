@@ -1,114 +1,33 @@
-import type { Pagination } from "./core";
-export interface RetrieveTransactionResponse {
+import type { Amount, Metadata, OwnershipGraph } from "./core";
+
+/** One entry in a financial account's ledger. */
+export interface FinancialTransaction {
 	id: string;
-	type: string;
+	type: "credit" | "debit";
 	amount: Amount;
 	timestamp: string;
-	reference: string;
-	financialAccount: FinancialAccount;
-	originatingReversal: OriginatingReversal;
-	originatingFee: OriginatingFee;
-	ownershipGraph: OwnershipGraph;
-	//   metadata: Metadata;
+	reference: string | null;
+	financialAccount: {
+		id: string;
+		balance: { after: Amount } | null;
+	};
+	/** Set when this entry reverses an earlier one. */
+	originatingReversal: { originTxnId: string; originTxnRef: string } | null;
+	/** Set when this entry is a fee. */
+	originatingFee: { code: string } | null;
+	/** Leads to the payout, transfer or payment behind the entry. */
+	ownershipGraph: OwnershipGraph | null;
+	metadata: Metadata | null;
 }
 
-interface OwnershipGraph {
-	owner: Owner2;
+export interface ListFinancialTransactionsOptions {
+	limit?: number;
+	after?: string;
+	financialAccountId?: string;
+	reference?: string;
+	type?: "credit" | "debit";
 }
 
-interface Owner2 {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	owner: Owner;
-}
-
-interface Owner {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	//   owner: Metadata;
-}
-
-interface OriginatingFee {
-	code: string;
-}
-
-interface OriginatingReversal {
-	originTxnId: string;
-	originTxnRef: string;
-}
-
-interface FinancialAccount {
-	id: string;
-	balance: Balance;
-}
-
-interface Balance {
-	after: Amount;
-}
-
-interface Amount {
-	currency: string;
-	value: number;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-export interface ListTransactionsResponse {
-	result: Transaction[];
-	pagination: Pagination;
-}
-
-interface Transaction {
-	id: string;
-	type: string;
-	amount: Amount;
-	timestamp: string;
-	reference: string;
-	financialAccount: FinancialAccount;
-	originatingReversal: OriginatingReversal;
-	originatingFee: OriginatingFee;
-	ownershipGraph: OwnershipGraph;
-	//   metadata: Metadata;
-}
-
-interface OwnershipGraph {
-	owner: Owner2;
-}
-
-interface Owner2 {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	owner: Owner;
-}
-
-interface Owner {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	//   owner: Metadata;
-}
-
-interface OriginatingFee {
-	code: string;
-}
-
-interface OriginatingReversal {
-	originTxnId: string;
-	originTxnRef: string;
-}
-
-interface FinancialAccount {
-	id: string;
-	balance: Balance;
-}
-
-interface Balance {
-	after: Amount;
-}
-
-interface Amount {
-	currency: string;
-	value: number;
-}
+export type RetrieveTransactionResponse = FinancialTransaction;
+/** `data` of a list call is the page of entries; the cursor is in `pagination`. */
+export type ListTransactionsResponse = FinancialTransaction[];

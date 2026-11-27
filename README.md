@@ -95,7 +95,7 @@ Recommended to store credentials in `.env`:
 ```bash
 MONIME_SPACE_ID=spc-XXXXXXXX
 MONIME_ACCESS_TOKEN=mon_XXXXXXXX
-MONIME_VERSION=caph.2025-08-23 # Optional, defaults to latest
+MONIME_VERSION=caph.2025-08-23 # Optional; caph.2025-08-23 is sent when unset
 ```
 
 The `MonimeClient` will automatically look for these variables if no options are passed to the constructor.
@@ -140,7 +140,7 @@ Now all methods use the client’s credentials automatically.
 
 ```ts
 // ESM / TypeScript
-import { createClient, type DestinationOption } from "monime-package";
+import { createClient, type PayoutDestination } from "monime-package";
 
 // CommonJS
 // const { createClient } = require("monime-package");
@@ -161,395 +161,466 @@ type Result<T> = {
 };
 ```
 
-Every `list()` takes optional [pagination](#pagination) (`{ limit?, after? }`),
-and every create/update takes an optional trailing
-[`MutationOptions`](#idempotency) so you can supply your own idempotency key.
+Every `list()` takes optional [pagination](#pagination) (`{ limit?, after? }`)
+plus the filters that endpoint supports. On a list call `data` is the page
+itself (an array); the cursor is in `pagination`. Every create and update
+takes an optional trailing [`MutationOptions`](#idempotency), so you can supply
+your own idempotency key.
 
-The client exposes namespaced APIs under `client.<module>`. Below is the complete API reference:
+**Amounts are always in minor units** (cents): `{ value: 1050 }` is SLE 10.50,
+on every endpoint. `currency` is `"SLE"` (the default) or `"USD"`.
 
-### Payments (New)
+**Metadata** is a flat map of strings: at most 64 pairs, keys of 1-64
+characters from `[a-zA-Z0-9_-]` that don't begin with `_`, `-` or `monime`, and
+values of at most 100 characters. On update, `null` or `""` deletes a key.
 
-Manage all incoming payments (payins).
+Inputs are validated before any request is sent, so an invalid call never
+reaches the API: it returns `{ success: false, error }` with a
+`MonimeValidationError`.
+
+The client exposes namespaced APIs under `client.<module>`:
+
+### Payments
+
+Incoming payments (payins).
 
 ```ts
-// Retrieve payment details
-client.payment.retrieve(paymentId: string): Promise<Result<RetrievePaymentResponse>>
+client.payment.retrieve(paymentId: string): Promise<Result<Payment>>
 
-// List payments
-client.payment.list(options?: ListOptions): Promise<Result<ListPaymentsResponse>>
+client.payment.list(options?: {
+  limit?, after?,
+  orderNumber?: string,
+  financialAccountId?: string,
+  financialTransactionReference?: string,
+}): Promise<Result<Payment[]>>
 
-// Update payment
-client.payment.update(paymentId: string, body: any, requestOptions?: MutationOptions): Promise<Result<UpdatePaymentResponse>>
+client.payment.update(paymentId: string, body: {
+  name?: string | null,          // at most 100 characters
+  metadata?: MetadataInput | null,
+}, requestOptions?: MutationOptions): Promise<Result<Payment>>
 ```
 
-### Webhooks (New)
+A payment's `status` is `pending`, `processing` or `completed`: the API has no
+failed state for payments. `channel` says how it was paid (`momo`, `bank`,
+`card` or `wallet`, with the provider, reference and phone or account number).
 
-Manage webhooks for real-time notifications.
+### Webhooks
+
+Register endpoints for event notifications, and verify what they receive.
 
 ```ts
-// Create webhook
-client.webhook.create(body: CreateWebhookRequest, requestOptions?: MutationOptions): Promise<Result<CreateWebhookResponse>>
+client.webhook.create({
+  name: string,                    // 1-100 characters
+  url: string,                     // at most 255 characters
+  events: string[],                // 1-100 names, e.g. "payout.completed"
+  enabled?: boolean,               // default true
+  apiRelease?: "caph" | "siriusb", // default "caph"
+  headers?: Record<string, string>,
+  alertEmails?: string[],          // at most 2
+  verificationMethod?:
+    | { type: "HS256"; secret: string } // 32-256 characters
+    | { type: "ES256" },                // Monime returns a PEM public key
+  metadata?: MetadataInput,
+}, requestOptions?: MutationOptions): Promise<Result<Webhook>>
 
-// Retrieve webhook
-client.webhook.retrieve(webhookId: string): Promise<Result<GetWebhookResponse>>
+client.webhook.retrieve(webhookId: string): Promise<Result<Webhook>>
+client.webhook.list(options?: ListOptions): Promise<Result<Webhook[]>>
 
-// List webhooks
-client.webhook.list(options?: ListOptions): Promise<Result<ListWebhooksResponse>>
+// The verification method cannot change: create a new webhook to rotate it.
+client.webhook.update(webhookId: string, body: {
+  name?, url?, enabled?, apiRelease?, events?, headers?, alertEmails?, metadata?
+}, requestOptions?: MutationOptions): Promise<Result<Webhook>>
 
-// Update webhook
-client.webhook.update(webhookId: string, body: UpdateWebhookRequest, requestOptions?: MutationOptions): Promise<Result<UpdateWebhookResponse>>
-
-// Delete webhook
 client.webhook.delete(webhookId: string): Promise<Result<void>>
 ```
 
-### Receipts (New)
+The event names available on the `caph` release are exported as
+`WEBHOOK_EVENTS`.
 
-Manage payment receipts.
+#### Verifying deliveries
+
+Every delivery carries a `Monime-Signature: t=<unix>,v1=<base64>` header,
+signed over `t + "_" + rawBody`. Verify it against the **raw** body, before
+parsing it:
 
 ```ts
-// Retrieve receipt
-client.receipt.retrieve(orderNumber: string): Promise<Result<GetReceiptResponse>>
+import { parseWebhookEvent } from "monime-package";
 
-// Redeem receipt
-client.receipt.redeem(orderNumber: string, body: any, requestOptions?: MutationOptions): Promise<Result<RedeemReceiptResponse>>
+// e.g. in an Express handler using express.raw({ type: "application/json" })
+const event = parseWebhookEvent({
+  payload: req.body,                          // the raw bytes or string
+  header: req.header("monime-signature"),
+  secret: process.env.MONIME_WEBHOOK_SECRET,  // HS256 webhooks
+  // publicKey: process.env.MONIME_WEBHOOK_PUBLIC_KEY, // ES256 webhooks (PEM)
+});
+
+if (!event.success) {
+  return res.status(401).end(); // event.error.reason says why
+}
+
+// Deliveries can repeat: de-duplicate on event.data.event.id. `data` is a
+// partial snapshot, so fetch the object by event.data.object.id if you need more.
+switch (event.data!.event.name) {
+  case "payout.completed":
+  case "payout.failed":
+    // ...
+}
+res.status(200).end();
 ```
 
-### USSD OTPs (New)
+`verifyWebhookSignature(options)` does the check without decoding. Both refuse
+a delivery more than 300 seconds old or more than 60 seconds in the future
+(set `tolerance` and `futureTolerance` to change that), and both accept
+several `v1` values, for key rotation. Neither throws: a failure returns
+`{ success: false, error }` with a `MonimeWebhookSignatureError` whose `reason`
+is one of `missing_header`, `malformed_header`, `timestamp_out_of_tolerance`,
+`signature_mismatch`, `invalid_public_key`, `missing_verification_key` or
+`malformed_payload`.
 
-Generate and manage USSD OTP sessions.
+### Receipts
 
 ```ts
-// Create USSD OTP
-client.ussdOtp.create(body: CreateUssdOtpRequest, requestOptions?: MutationOptions): Promise<Result<CreateUssdOtpResponse>>
+client.receipt.retrieve(orderNumber: string): Promise<Result<Receipt>>
 
-// Retrieve a USSD OTP session by ID
-client.ussdOtp.retrieve(ussdOtpId: string): Promise<Result<RetrieveUssdOtpResponse>>
+client.receipt.redeem(orderNumber: string, body?: {
+  redeemAll?: boolean,
+  entitlements?: { key: string; units?: number }[], // units default to 1
+  metadata?: MetadataInput,
+}, requestOptions?: MutationOptions): Promise<Result<{ redeem: boolean; receipt: Receipt }>>
+```
 
-// List a page of USSD OTP sessions
-client.ussdOtp.list(options?: ListOptions): Promise<Result<ListUssdOtpsResponse>>
+### USSD OTPs
 
-// Delete a USSD OTP session
+```ts
+client.ussdOtp.create({
+  authorizedPhoneNumber: string,
+  verificationMessage?: string, // at most 255 characters
+  duration?: string,            // default "5m"
+  metadata?: MetadataInput,
+}, requestOptions?: MutationOptions): Promise<Result<UssdOtp>>
+
+client.ussdOtp.retrieve(ussdOtpId: string): Promise<Result<UssdOtp>>
+client.ussdOtp.list(options?: ListOptions): Promise<Result<UssdOtp[]>>
 client.ussdOtp.delete(ussdOtpId: string): Promise<Result<void>>
 ```
 
-### Provider KYC (New)
+### Provider KYC
 
-Get provider KYC details.
+Look up the registered holder of an account at a provider, for example to
+check a payee's name before a payout.
 
 ```ts
-// Retrieve provider KYC
-client.providerKyc.retrieve(providerId: string): Promise<Result<GetProviderKycResponse>>
+client.providerKyc.retrieve(
+  providerId: string, // e.g. "m17", "slb001"
+  accountId: string,  // the phone number or account number at that provider
+): Promise<Result<{
+  account: { id: string; name: string; holderName: string; metadata: Metadata | null };
+  provider: { id: string; type: "momo" | "bank" | "wallet"; name: string };
+}>>
 ```
 
 ### Financial Providers (Banks & MoMo)
 
-Look up the banks and mobile money providers supported in your space. These are
-exposed under `client.financialProvider`.
+The banks and mobile money providers operating in a country. The API requires
+the country.
 
 ```ts
-// Banks
-client.financialProvider.bank.retrieve(providerId: string): Promise<Result<RetrieveBankResponse>>
-client.financialProvider.bank.list(options?: ListOptions): Promise<Result<ListBanksResponse>>
+client.financialProvider.bank.retrieve(providerId: string): Promise<Result<Bank>>
+client.financialProvider.bank.list(country: string, options?: ListOptions): Promise<Result<Bank[]>>
 
-// Mobile money providers
-client.financialProvider.momo.retrieve(providerId: string): Promise<Result<RetrieveMomoResponse>>
-client.financialProvider.momo.list(options?: ListOptions): Promise<Result<ListMomosResponse>>
+client.financialProvider.momo.retrieve(providerId: string): Promise<Result<Momo>>
+client.financialProvider.momo.list(country: string, options?: ListOptions): Promise<Result<Momo[]>>
 ```
 
 **Example:**
 ```ts
-// List every supported mobile money provider
-const providers = await client.financialProvider.momo.list();
+// Which mobile money providers can receive payouts in Sierra Leone?
+const providers = await client.financialProvider.momo.list("SL");
 if (providers.success) {
-  providers.data!.result.forEach((p) => console.log(p.providerId, p.name));
+  for (const p of providers.data!) {
+    console.log(p.providerId, p.name, p.featureSet.payout.canPayTo);
+  }
 }
 ```
 
 ### Financial Accounts
 
-Manage digital wallets and financial accounts.
-
 ```ts
-// Create a new financial account
 client.financialAccount.create({
-  accountName: string,
-  currency: "USD" | "SLE",
-  description?: string,
-  metadata?: Record<string, any>
-}, requestOptions?: MutationOptions): Promise<Result<CreateFinancialAccountResponse>>
+  accountName: string,     // sent as `name`; at most 100 characters
+  currency: "SLE" | "USD",
+  reference?: string,      // your own reference, unique in the Space; at most 64
+  description?: string,    // at most 150 characters
+  metadata?: MetadataInput,
+}, requestOptions?: MutationOptions): Promise<Result<FinancialAccount>>
 
-// Retrieve account details by ID
-client.financialAccount.retrieve(financialAccountId: string): Promise<Result<RetrieveFinancialAccountResponse>>
+// `balance` is null unless you ask for it
+client.financialAccount.retrieve(financialAccountId: string, options?: {
+  withBalance?: boolean,
+}): Promise<Result<FinancialAccount>>
 
-// List a page of financial accounts
-client.financialAccount.list(options?: ListOptions): Promise<Result<ListFinancialAccountsResponse>>
+client.financialAccount.list(options?: {
+  limit?, after?, uvan?: string, reference?: string, withBalance?: boolean,
+}): Promise<Result<FinancialAccount[]>>
 
-// Update an existing financial account (partial)
-client.financialAccount.update(financialAccountId: string, body: Record<string, unknown>, requestOptions?: MutationOptions): Promise<Result<UpdateFinancialAccountResponse>>
+client.financialAccount.update(financialAccountId: string, body: {
+  name?: string | null, reference?: string | null,
+  description?: string | null, metadata?: MetadataInput | null,
+}, requestOptions?: MutationOptions): Promise<Result<FinancialAccount>>
 ```
-
-**Parameters:**
-- `name`: Account name (required)
-- `financialAccountId`: Unique account identifier (required)
 
 **Example:**
 ```ts
-// Create account
 const account = await client.financialAccount.create({
-  accountName: "My Wallet",
-  currency: "SLE"
+  accountName: "Org 7",
+  currency: "SLE",
+  reference: "org-7",
 });
 if (account.success) {
-  console.log("Account ID:", account.data.id);
+  console.log("Account ID:", account.data!.id, "UVAN:", account.data!.uvan);
 }
 
-// Retrieve account details
-const details = await client.financialAccount.retrieve("fa-123456");
+const details = await client.financialAccount.retrieve("fac-123456", {
+  withBalance: true,
+});
+console.log(details.data?.balance?.available.value); // minor units
 ```
 
 ### Internal Transfers
 
-Transfer funds between your financial accounts.
+Move money between financial accounts in the same Space.
 
 ```ts
-// Create internal transfer
 client.internalTransfer.create({
   sourceAccount: string,
   destinationAccount: string,
-  amount: number,
-  description?: string
-}, requestOptions?: MutationOptions): Promise<Result<CreateInternalTransferResponse>>
+  amount: number,           // minor units
+  currency?: "SLE" | "USD", // default "SLE"
+  description?: string,     // at most 150 characters
+  metadata?: MetadataInput,
+}, requestOptions?: MutationOptions): Promise<Result<InternalTransfer>>
 
-// Retrieve transfer details
-client.internalTransfer.retrieve(internalTransferId: string): Promise<Result<RetrieveInternalTransferResponse>>
+client.internalTransfer.retrieve(internalTransferId: string): Promise<Result<InternalTransfer>>
 
-// List a page of transfers
-client.internalTransfer.list(options?: ListOptions): Promise<Result<ListInternalTransfersResponse>>
+client.internalTransfer.list(options?: {
+  limit?, after?,
+  status?: "pending" | "processing" | "failed" | "completed",
+  sourceFinancialAccountId?, destinationFinancialAccountId?, financialTransactionReference?,
+}): Promise<Result<InternalTransfer[]>>
 
-// Update a transfer (description/metadata, pending only)
-client.internalTransfer.update(internalTransferId: string, body: Record<string, unknown>, requestOptions?: MutationOptions): Promise<Result<UpdateInternalTransferResponse>>
+// description (at most 255 characters) and metadata, while pending
+client.internalTransfer.update(internalTransferId: string, body: {
+  description?: string | null, metadata?: MetadataInput | null,
+}, requestOptions?: MutationOptions): Promise<Result<InternalTransfer>>
 
-// Cancel/delete a transfer
 client.internalTransfer.delete(internalTransferId: string): Promise<Result<void>>
 ```
 
-**Parameters:**
-- `sourceAccount`: Source financial account ID (required)
-- `destinationAccount`: Destination financial account ID (required)
-- `amount`: Transfer amount in SLE (required, must be > 0)
-- `internalTransferId`: Transfer ID for get/delete operations (required)
-
 **Example:**
 ```ts
-// Transfer 1000 SLE between accounts
-const transfer = await client.internalTransfer.create({
-  sourceAccount: "fa-source",
-  destinationAccount: "fa-dest",
-  amount: 1000
-});
-if (transfer.success) {
-  console.log("Transfer ID:", transfer.data.id);
-  console.log("Status:", transfer.data.status);
-}
+import { idempotencyKeyFor } from "monime-package";
+
+const transfer = await client.internalTransfer.create(
+  { sourceAccount: "fac-source", destinationAccount: "fac-dest", amount: 100000 }, // SLE 1,000.00
+  { idempotencyKey: idempotencyKeyFor("transfer:invoice-42") },
+);
 ```
 
 ### Payment Codes
 
-Generate USSD payment codes for mobile money transactions.
+USSD codes a customer dials to pay you. Field names match the API.
 
 ```ts
-// Create payment code
 client.paymentCode.create({
-  paymentName: string,
-  amount: number,
-  financialAccountId: string,
-  name: string,
-  phoneNumber: string,
-}, requestOptions?: MutationOptions): Promise<Result<CreatePaymentCodeResponse>>
+  name: string,                        // 3-64 characters, shown to the payer
+  mode?: "one_time" | "recurrent",     // default "one_time"
+  enable?: boolean,                    // default true
+  amount?: { currency?: "SLE" | "USD"; value: number }, // minor units
+  duration?: string,                   // default "10m", e.g. "1h30m"
+  customer?: { name?: string },
+  reference?: string,                  // at most 64 characters
+  authorizedProviders?: ("m17" | "m18")[],
+  authorizedPhoneNumber?: string,      // only this number may pay
+  recurrentPaymentTarget?: {           // for recurrent codes
+    expectedPaymentCount?: number,
+    expectedPaymentTotal?: { currency?: "SLE" | "USD"; value: number },
+  },
+  financialAccountId?: string,         // fac-…; the main account otherwise
+  metadata?: MetadataInput,
+}, requestOptions?: MutationOptions): Promise<Result<PaymentCode>>
 
-// Retrieve payment code details
-client.paymentCode.retrieve(paymentCodeId: string): Promise<Result<RetrievePaymentCodeResponse>>
+client.paymentCode.retrieve(paymentCodeId: string): Promise<Result<PaymentCode>>
 
-// List a page of payment codes
-client.paymentCode.list(options?: ListOptions): Promise<Result<ListPaymentCodesResponse>>
+client.paymentCode.list(options?: {
+  limit?, after?, ussdCode?: string, mode?: "one_time" | "recurrent",
+  status?: "pending" | "cancelled" | "processing" | "expired" | "completed",
+}): Promise<Result<PaymentCode[]>>
 
-// Update a payment code (partial)
-client.paymentCode.update(paymentCodeId: string, body: Record<string, unknown>, requestOptions?: MutationOptions): Promise<Result<UpdatePaymentCodeResponse>>
+// Any create field; null clears it
+client.paymentCode.update(paymentCodeId: string, body: UpdatePaymentCodeOptions,
+  requestOptions?: MutationOptions): Promise<Result<PaymentCode>>
 
-// Delete payment code
 client.paymentCode.delete(paymentCodeId: string): Promise<Result<void>>
 ```
 
-**Parameters:**
-- `paymentName`: Description for the payment (required)
-- `amount`: Payment amount in SLE (required, must be > 0)
-- `financialAccount`: Target financial account ID (required)
-- `username`: Customer name (required)
-- `phoneNumber`: Authorized phone number (required)
-- `paymentCodeId`: Payment code ID for get/delete operations (required)
-
 **Example:**
 ```ts
-// Create USSD payment code
 const paymentCode = await client.paymentCode.create({
-  paymentName: "Order #12345",
-  amount: 5000, // 50.00 SLE
-  financialAccountId: "fa-123456",
-  name: "John Doe",
-  phoneNumber: "0771234567"
+  name: "Order #12345",
+  amount: { value: 5000 }, // SLE 50.00
+  customer: { name: "John Doe" },
+  authorizedPhoneNumber: "+23277123456",
+  financialAccountId: "fac-123456",
 });
 
 if (paymentCode.success) {
-  console.log("USSD Code:", paymentCode.data.ussdCode);
-  console.log("Expires at:", paymentCode.data.expireTime);
+  console.log("USSD Code:", paymentCode.data!.ussdCode);
+  console.log("Expires at:", paymentCode.data!.expireTime);
 }
 ```
 
 ### Payouts
 
-Send money to mobile money providers, banks, or wallets.
+Send money to mobile money, a bank or a wallet.
 
 ```ts
-// Create payout
 client.payout.create({
-  amount: number,
-  destination: DestinationOption,
-  sourceAccount: string,
-}, requestOptions?: MutationOptions): Promise<Result<CreatePayoutResponse>>
+  amount: number,                 // minor units
+  currency?: "SLE" | "USD",       // default "SLE"
+  destination: PayoutDestination,
+  sourceAccount?: string,         // the Space's main account when left out
+  metadata?: MetadataInput,
+}, requestOptions?: MutationOptions): Promise<Result<Payout>>
 
-// List a page of payouts
-client.payout.list(options?: ListOptions): Promise<Result<ListPayoutsResponse>>
+client.payout.list(options?: {
+  limit?, after?,
+  status?: "pending" | "processing" | "completed" | "failed",
+  sourceFinancialAccountId?, sourceTransactionReference?, destinationTransactionReference?,
+}): Promise<Result<Payout[]>>
 
-// Retrieve specific payout
-client.payout.retrieve(payoutId: string): Promise<Result<RetrievePayoutResponse>>
+client.payout.retrieve(payoutId: string): Promise<Result<Payout>>
 
-// Update a payout (pre-processing only)
-client.payout.update(payoutId: string, body: Record<string, unknown>, requestOptions?: MutationOptions): Promise<Result<UpdatePayoutResponse>>
+// metadata only, before processing
+client.payout.update(payoutId: string, body: { metadata?: MetadataInput | null },
+  requestOptions?: MutationOptions): Promise<Result<Payout>>
 
-// Cancel payout
+// cancel, before processing
 client.payout.delete(payoutId: string): Promise<Result<void>>
 ```
 
-**Destination Types:**
+**Destinations:**
 ```ts
-type DestinationOption = 
-  | { type: "momo"; providerId: "m17" | "m18"; phoneNumber: string }
-  | { type: "bank"; providerId: "b01" | "b02" | "b03"; accountNumber: string }
-  | { type: "wallet"; providerId: "w01" | "w02"; walletId: string };
+type PayoutDestination =
+  | { type: "momo"; providerId: "m17" | "m18"; phoneNumber: string }           // Orange, Africell
+  | { type: "bank"; providerId: "slb001" | "slb004" | "slb007"; accountNumber: string }
+  | { type: "wallet"; providerId: "dw001"; walletId?: string };
 ```
 
-**Parameters:**
-- `amount`: Payout amount in SLE (required, must be > 0)
-- `destination`: Payout destination (required)
-- `sourceAccount`: Source financial account ID (required)
-- `payoutId`: Payout ID for get/delete operations (required)
+The provider IDs above are the ones in the API spec, and are exported as
+`MOMO_PROVIDER_IDS`, `BANK_PROVIDER_IDS` and `WALLET_PROVIDER_IDS`. Any other ID
+the API accepts works too; list the current ones with
+`client.financialProvider.bank.list("SL")`.
+
+A payout's `status` runs `pending` → `processing` → `completed` or `failed`. A
+failed payout's `failureDetail.code` is one of `PAYOUT_FAILURE_CODES`
+(`fund_insufficient`, `provider_account_blocked`, …). Fees are charged on top
+of the amount and appear in `fees` once processed.
 
 **Example:**
 ```ts
-// Mobile money payout
-const mobileMoneyPayout = await client.payout.create({
-  amount: 10000, // 100.00 SLE
-  destination: { type: "momo", providerId: "m17", phoneNumber: "0771234567" },
-  sourceAccount: "fa-123456"
-});
+import { idempotencyKeyFor } from "monime-package";
 
-// Bank transfer payout
-const bankPayout = await client.payout.create({
-  amount: 50000, // 500.00 SLE
-  destination: { type: "bank", providerId: "b01", accountNumber: "1234567890" },
-  sourceAccount: "fa-123456"
-});
+// Reuse the same key when retrying, or a timeout followed by a retry can pay twice.
+const payout = await client.payout.create(
+  {
+    amount: 10000, // SLE 100.00
+    destination: { type: "momo", providerId: "m17", phoneNumber: "+23276123456" },
+    sourceAccount: "fac-123456",
+    metadata: { invoice: "inv-42" },
+  },
+  { idempotencyKey: idempotencyKeyFor("payout:inv-42:1") },
+);
 ```
 
 ### Financial Transactions
 
-Query transaction history and details.
+The ledger of a financial account.
 
 ```ts
-// Retrieve transaction details
-client.financialTransaction.retrieve(transactionId: string): Promise<Result<RetrieveTransactionResponse>>
+client.financialTransaction.retrieve(transactionId: string): Promise<Result<FinancialTransaction>>
 
-// List a page of transactions
-client.financialTransaction.list(options?: ListOptions): Promise<Result<ListTransactionsResponse>>
+client.financialTransaction.list(options?: {
+  limit?, after?, financialAccountId?: string, reference?: string, type?: "credit" | "debit",
+}): Promise<Result<FinancialTransaction[]>>
 ```
 
-**Parameters:**
-- `transactionId`: Transaction ID (required)
+The API has no date filter: page through with the cursor. An entry that
+reverses another carries `originatingReversal`; a fee carries `originatingFee`.
 
 **Example:**
 ```ts
-// One page of transactions (defaults to 10; ask for more with `limit`)
-const transactions = await client.financialTransaction.list({ limit: 50 });
+const transactions = await client.financialTransaction.list({
+  financialAccountId: "fac-123456",
+  limit: 50,
+});
 if (transactions.success) {
-  transactions.data.forEach(tx => {
+  for (const tx of transactions.data!) {
     console.log(`${tx.type}: ${tx.amount.value} ${tx.amount.currency}`);
-  });
-
-  // Keep going while the API hands back a cursor.
+  }
   console.log("More pages?", transactions.pagination?.next != null);
 }
 ```
 
 ### Checkout Sessions
 
-Create hosted payment pages for seamless customer payments.
+Hosted payment pages. Field names match the API.
 
 ```ts
-// Create checkout session
 client.checkoutSession.create({
-  name: string,
-  amount: number,
-  quantity: number,
-  successUrl: string,
-  cancelUrl: string,
-  description?: string,
-  financialAccountId?: string,
-  primaryColor?: string,
-  images?: string[],
-}, requestOptions?: MutationOptions): Promise<Result<CreateCheckoutResponse>>
+  name: string,                  // at most 150 characters
+  lineItems: {                   // 1 to 16
+    name: string,                // at most 100 characters
+    price: { currency?: "SLE" | "USD"; value: number }, // minor units
+    quantity?: number,           // 1-100000, default 1
+    reference?: string,
+    description?: string,
+    images?: string[],           // up to 3
+  }[],
+  description?: string,          // at most 1000 characters
+  successUrl?: string,
+  cancelUrl?: string,
+  callbackState?: string,
+  reference?: string,
+  financialAccountId?: string,   // the main account otherwise
+  paymentOptions?: {             // every method is on by default
+    card?: { disable?: boolean },
+    bank?: { disable?, enabledProviders?, disabledProviders? },
+    momo?: { disable?, enabledProviders?, disabledProviders? },
+    wallet?: { disable?, enabledProviders?, disabledProviders? },
+  },
+  brandingOptions?: { primaryColor?: string },
+  metadata?: MetadataInput,
+}, requestOptions?: MutationOptions): Promise<Result<CheckoutSession>>
 
-// List a page of checkout sessions
-client.checkoutSession.list(options?: ListOptions): Promise<Result<ListCheckoutsResponse>>
-
-// Retrieve specific checkout session
-client.checkoutSession.retrieve(checkoutId: string): Promise<Result<RetrieveCheckoutResponse>>
-
-// Delete checkout session
+client.checkoutSession.list(options?: ListOptions): Promise<Result<CheckoutSession[]>>
+client.checkoutSession.retrieve(checkoutId: string): Promise<Result<CheckoutSession>>
 client.checkoutSession.delete(checkoutId: string): Promise<Result<void>>
 ```
 
-**Parameters:**
-- `name`: Product/service name (required)
-- `amount`: Price per item in SLE (required)
-- `quantity`: Number of items (required)
-- `successUrl`: Redirect URL after successful payment (required)
-- `cancelUrl`: Redirect URL when payment is cancelled (required)
-- `description`: Product description (optional)
-- `financialAccountId`: Target account for payments (optional)
-- `primaryColor`: Brand color in hex format (optional)
-- `images`: Product image URLs (optional)
-- `checkoutId`: Checkout session ID for get/delete operations (required)
-
 **Example:**
 ```ts
-// Create checkout for e-commerce
 const checkout = await client.checkoutSession.create({
   name: "Premium Subscription",
-  amount: 2500, // 25.00 SLE per month
-  quantity: 1,
+  lineItems: [{ name: "Premium (1 month)", price: { value: 2500 } }], // SLE 25.00
   successUrl: "https://myapp.com/success",
   cancelUrl: "https://myapp.com/cancel",
-  description: "Monthly premium subscription",
-  financialAccountId: "fa-123456",
-  primaryColor: "#3B82F6", // Blue color
-  images: ["https://myapp.com/images/premium.jpg"]
+  reference: "sub-0001",
+  brandingOptions: { primaryColor: "#3B82F6" },
 });
 
 if (checkout.success) {
-  // Redirect customer to checkout page
-  console.log("Checkout URL:", checkout.data.redirectUrl);
-  console.log("Order Number:", checkout.data.orderNumber);
+  // Send the customer to the hosted page
+  console.log("Checkout URL:", checkout.data!.redirectUrl);
 }
 ```
 
@@ -568,7 +639,7 @@ type ClientOptions = {
 ```
 
 - **Authentication**: Space ID and token are both required — pass them here or set the environment variables. The constructor throws if either is missing.
-- **Headers**: SDK automatically sets `Authorization`, `Monime-Space-Id`, `Monime-Version` (when configured) and `Idempotency-Key` (on create/update) for each call.
+- **Headers**: SDK automatically sets `Authorization`, `Monime-Space-Id`, `Monime-Version` (`caph.2025-08-23` unless you configure another) and `Idempotency-Key` (on create/update) for each call.
 
 ---
 
@@ -601,13 +672,15 @@ monime-package/
 │   ├── index.ts            # Public entry point — exports createClient, types, errors
 │   ├── client.ts           # MonimeClient — wires every resource to your credentials
 │   ├── http.ts             # Shared native `fetch` logic, headers, and error plumbing
-│   ├── error.ts            # MonimeError and its subclasses (auth, conflict, rate limit)
+│   ├── error.ts            # MonimeError and its subclasses (auth, conflict, rate limit, webhook signature)
+│   ├── idempotency.ts      # idempotencyKeyFor: stable UUIDv5 keys from your own references
+│   ├── webhookSignature.ts # verifyWebhookSignature / parseWebhookEvent
 │   ├── resources/          # One file per API resource (payment.ts, payout.ts, …)
 │   ├── types/              # TypeScript request/response interfaces per resource
 │   └── validators/         # Zod schemas used to validate inputs before a request
 ├── test/
 │   ├── e2e/                # End-to-end tests per resource
-│   └── unit/validators/    # Unit tests for the Zod validators
+│   └── unit/               # Unit tests: validators, idempotency keys, webhook signatures
 ├── examples/               # Runnable usage examples (see examples/README.md)
 ├── biome.json              # Biome linter/formatter config
 ├── tsup.config.ts          # Build config (dual CJS/ESM output)
@@ -629,7 +702,7 @@ Here are comprehensive examples showing real-world usage patterns. All methods t
 ### Complete E-commerce Integration
 
 ```ts
-import { createClient, type DestinationOption } from "monime-package";
+import { createClient, type PayoutDestination } from "monime-package";
 
 // Initialize client
 const client = createClient({
@@ -648,19 +721,23 @@ if (!businessAccount.success) {
 
 const accountId = businessAccount.data!.id;
 console.log(`Created account: ${accountId}`);
-console.log(`Balance: ${businessAccount.data!.balance.available.value} SLE`);
+console.log(`UVAN for deposits: ${businessAccount.data!.uvan}`);
 
 // Create checkout session for customer
 const checkout = await client.checkoutSession.create({
   name: "Digital Camera",
-  amount: 45000, // 450.00 SLE
-  quantity: 1,
+  description: "Professional DSLR Camera with lens kit",
   successUrl: "https://store.com/success",
   cancelUrl: "https://store.com/cancel",
-  description: "Professional DSLR Camera with lens kit",
   financialAccountId: accountId,
-  primaryColor: "#2563EB", // Brand blue
-  images: ["https://store.com/camera.jpg"],
+  lineItems: [
+    {
+      name: "DSLR camera with lens kit",
+      price: { value: 45000 }, // 450.00 SLE
+      images: ["https://store.com/camera.jpg"],
+    },
+  ],
+  brandingOptions: { primaryColor: "#2563EB" }, // Brand blue
 });
 
 if (checkout.success) {
@@ -675,11 +752,11 @@ if (checkout.success) {
 ```ts
 // 1. Generate USSD payment code for customer
 const paymentCode = await client.paymentCode.create({
-  paymentName: "Invoice #INV-2024-001",
-  amount: 15000, // 150.00 SLE
+  name: "Invoice #INV-2024-001",
+  amount: { value: 15000 }, // 150.00 SLE, in minor units
   financialAccountId: accountId,
-  name: "Customer Name",
-  phoneNumber: "0771234567",
+  customer: { name: "Customer Name" },
+  authorizedPhoneNumber: "+23277123456",
 });
 
 if (paymentCode.success) {
@@ -708,14 +785,15 @@ const paySupplier = async () => {
     destination: {
       type: "momo",
       providerId: "m17",
-      phoneNumber: "0779876543",
+      phoneNumber: "+23279876543",
     },
   });
 
   if (payout.success) {
     console.log(`Payout ID: ${payout.data!.id}`);
     console.log(`Status: ${payout.data!.status}`);
-    console.log(`Fees: ${payout.data!.fees.map(f => `${f.code}: ${f.amount.value}`)}`);
+    // Fees are charged on top of the amount; empty until processed.
+    console.log(`Fees: ${(payout.data!.fees ?? []).map(f => `${f.code}: ${f.amount.value}`)}`);
   }
 };
 ```
@@ -767,7 +845,7 @@ if (accounts.every(acc => acc.success)) {
 const transactions = await client.financialTransaction.list({ limit: 50 });
 
 if (transactions.success) {
-  const txs = transactions.data!.result;
+  const txs = transactions.data!; // a list call's data is the page itself
   
   // Group transactions by type
   const summary = txs.reduce((acc, tx) => {
@@ -785,9 +863,9 @@ if (transactions.success) {
   const accountIds = [...new Set(txs.map(tx => tx.financialAccount.id))];
   
   for (const accountId of accountIds) {
-    const account = await client.financialAccount.retrieve(accountId);
+    const account = await client.financialAccount.retrieve(accountId, { withBalance: true });
     if (account.success) {
-      console.log(`Account ${accountId}: ${account.data!.balance.available.value} SLE`);
+      console.log(`Account ${accountId}: ${account.data!.balance?.available.value} (minor units)`);
     }
   }
 }
@@ -859,21 +937,24 @@ try {
 
 Every create/update call attaches an `Idempotency-Key` header. If you don't supply one, the SDK generates a random key for that single call.
 
-A generated key only guards against an accidental double-submit *inside* one call. To make **retries** safe you must pass the same key on every attempt — otherwise each retry looks like a brand-new operation to Monime:
+A generated key only guards against an accidental double-submit *inside* one call. To make **retries** safe you must pass the same key on every attempt — otherwise each retry looks like a brand-new operation to Monime, and a timeout followed by a retry can pay twice.
+
+The simplest way is to derive the key from your own record with `idempotencyKeyFor(reference)`. It returns a UUIDv5 of the reference, as Monime's idempotency guide recommends, so the same reference always gives the same key, even across processes and restarts (the Go SDK derives the same key from the same reference):
 
 ```ts
-import { randomUUID } from "node:crypto";
+import { idempotencyKeyFor } from "monime-package";
 
-// One key per logical operation, reused across retries.
-const idempotencyKey = randomUUID();
+// One key per logical operation, reused across retries. Change the attempt
+// number only when you deliberately make a new attempt after a definite failure.
+const idempotencyKey = idempotencyKeyFor("payout:invoice-42:1");
 
 async function payoutWithRetry(attempts = 3) {
   for (let attempt = 1; attempt <= attempts; attempt++) {
     const result = await client.payout.create(
       {
-        amount: 100_00,
+        amount: 100_00, // minor units: SLE 100.00
         sourceAccount: "fac-...",
-        destination: { type: "momo", providerId: "m17", phoneNumber: "078000111" },
+        destination: { type: "momo", providerId: "m17", phoneNumber: "+23278000111" },
       },
       { idempotencyKey }, // same key each time
     );
@@ -886,7 +967,7 @@ async function payoutWithRetry(attempts = 3) {
 
 Keys are **Space-scoped**, so the same key used in two different Spaces never collides. Monime caches a successful result for 24 hours and de-duplicates at the transaction layer beyond that. Failed requests are *not* cached, so you can retry after a transient error with the same key.
 
-Reusing a key with a *different* body or URL returns `409` with reason `idempotency_key_in_use`, surfaced as a `MonimeConflictError`. Keys are capped at 64 characters.
+Reusing a key with a *different* body or URL returns `409` with reason `idempotency_key_in_use`, surfaced as a `MonimeConflictError`. A key must be 1 to 64 characters; anything else is refused before the request is sent.
 
 ---
 
@@ -897,7 +978,7 @@ List endpoints use forward cursor pagination. Every `list()` accepts `{ limit?, 
 ```ts
 const page = await client.payout.list({ limit: 30 });
 
-page.data;       // the items
+page.data;       // the items: the page itself, an array
 page.pagination; // { count: 30, next: "pyt-k6GMRZsCr61zfwCQtVemY2RrvQH" }
 ```
 
@@ -963,6 +1044,7 @@ await client.financialAccount.create({ accountName: "name", currency: "SLE" });
 | `MonimeAuthenticationError` | 401 | Invalid or missing access token |
 | `MonimeConflictError` | 409 | Usually `idempotency_key_in_use` — same key, different request |
 | `MonimeRateLimitError` | 429 | Adds `retryAfter` (seconds) and `limit` (`token-limit`, `space-limit` or `endpoint-limit`) |
+| `MonimeWebhookSignatureError` | 401 | Returned locally by `verifyWebhookSignature` / `parseWebhookEvent`; `reason` says what failed |
 | `MonimeError` | any other | Base class for everything else |
 
 ```ts
@@ -986,7 +1068,7 @@ if (!result.success && result.error instanceof MonimeRateLimitError) {
 
 ## Versioning
 
-This project follows semantic versioning (SemVer). See releases for notable changes.
+This project follows semantic versioning (SemVer). Notable changes, and how to migrate across a major version, are in [`CHANGELOG.md`](./CHANGELOG.md).
 
 ---
 
@@ -997,326 +1079,50 @@ This project follows semantic versioning (SemVer). See releases for notable chan
 
 ## TypeScript Types
 
-All result payload types are exported from the package for complete type safety:
+Every request and response type is exported from the package. The source of
+truth is [`src/types/`](./src/types); the main ones are:
 
 ```ts
 import type {
-  // Core types
-  ClientOptions,
-  
-  // Payment types
-  RetrievePaymentResponse,
-  ListPaymentsResponse,
-  UpdatePaymentResponse,
-  
-  // Webhook types
-  CreateWebhookRequest,
-  CreateWebhookResponse,
-  GetWebhookResponse,
-  ListWebhooksResponse,
-  UpdateWebhookRequest,
-  UpdateWebhookResponse,
-  
-  // Receipt types
-  GetReceiptResponse,
-  RedeemReceiptResponse,
-  
-  // USSD OTP types
-  CreateUssdOtpRequest,
-  CreateUssdOtpResponse,
-  
-  // Provider KYC types
-  GetProviderKycResponse,
-  
-  // Financial Account types
-  CreateFinancialAccountResponse,
-  RetrieveFinancialAccountResponse,
-  ListFinancialAccountsResponse,
+  // Core
+  ClientOptions, Result, Pagination, ListOptions, MutationOptions,
+  Amount, AmountInput, Currency, Metadata, MetadataInput, OwnershipGraph, Fee,
 
-  // Internal Transfer types
-  CreateInternalTransferResponse,
-  RetrieveInternalTransferResponse,
-  ListInternalTransfersResponse,
+  // Resources (each has Create/Retrieve/Update/List*Response aliases too)
+  FinancialAccount, InternalTransfer, Payout, PayoutDestination, PayoutStatus,
+  PayoutFailureCode, PaymentCode, CheckoutSession, Payment, PaymentChannel,
+  FinancialTransaction, Receipt, UssdOtp, Webhook, ProviderKyc, Bank, Momo,
 
-  // Payment Code types
-  CreatePaymentCodeResponse,
-  ListPaymentCodesResponse,
-  RetrievePaymentCodeResponse,
+  // Request options
+  CreateFinancialAccountOptions, CreatePayoutOptions, CreateInternalTransferOptions,
+  CreatePaymentCodeOptions, UpdatePaymentCodeOptions, CreateCheckoutOptions,
+  CreateWebhookRequest, UpdateWebhookRequest, CreateUssdOtpRequest, RedeemReceiptOptions,
 
-  // Payout types
-  DestinationOption,
-  CreatePayoutResponse,
-  ListPayoutsResponse,
-  RetrievePayoutResponse,
-
-  // Financial Transaction types
-  RetrieveTransactionResponse,
-  ListTransactionsResponse,
-  
-  // Checkout Session types
-  CreateCheckoutResponse,
-  ListCheckoutsResponse,
-  RetrieveCheckoutResponse,
+  // Webhook deliveries
+  WebhookEvent, WebhookEventName, WebhookVerifyOptions,
 } from "monime-package";
 ```
 
-### Core Type Definitions
+A few rules hold everywhere:
 
-#### Result Envelope
-All API responses follow this consistent pattern:
-```ts
-type Result<T> = {
-  success: boolean;
-  data?: T;
-  error?: Error | MonimeError;
-  pagination?: Pagination; // list endpoints only
-};
-
-type Pagination = {
-  count: number;       // items in this page
-  next: string | null; // cursor for the next page, null on the last one
-};
-
-type ListOptions = {
-  limit?: number; // 1-50, defaults to 10
-  after?: string; // cursor from a previous pagination.next
-};
-
-type MutationOptions = {
-  idempotencyKey?: string; // reuse across retries; generated when omitted
-};
-```
-
-#### Client Configuration
-```ts
-type ClientOptions = {
-  monimeSpaceId?: string; // falls back to MONIME_SPACE_ID
-  accessToken?: string;   // falls back to MONIME_ACCESS_TOKEN
-  monimeVersion?: "caph.2025-08-23" | "caph.2025-06-20"; // falls back to MONIME_VERSION
-};
-```
-
-#### Destination Options for Payouts
-```ts
-type DestinationOption = 
-  | {
-      type: "momo";
-      providerId: "m17" | "m18"; // MTN, Orange Money
-      phoneNumber: string;
-    }
-  | {
-      type: "bank";
-      providerId: "b01" | "b02" | "b03"; // Bank codes
-      accountNumber: string;
-    }
-  | {
-      type: "wallet";
-      providerId: "w01" | "w02"; // Wallet provider codes
-      walletId: string;
-    };
-```
-
-### Response Type Details
-
-#### Financial Account Types
-```ts
-// Account creation/retrieval response
-interface CreateFinancialAccount {
-  id: string;           // Unique account ID
-  uvan: string;         // Internal identifier
-  name: string;         // Account name
-  currency: string;     // Always "SLE"
-  reference: string;    // Account reference
-  description: string;  // Account description
-  balance: {
-    available: {
-      currency: string;
-      value: number;    // Balance in cents (SLE)
-    };
-  };
-  createTime: string;   // ISO timestamp
-  updateTime: string;   // ISO timestamp
-}
-```
-
-#### Internal Transfer Types
-```ts
-interface CreateInternalTransferResponse {
-  id: string;                    // Transfer ID
-  status: string;                // Transfer status
-  amount: {
-    currency: string;
-    value: number;               // Amount in cents
-  };
-  sourceFinancialAccount: { id: string };
-  destinationFinancialAccount: { id: string };
-  financialTransactionReference: string;
-  description: string;
-  failureDetail: {
-    code: string;
-    message: string;
-  };
-  ownershipGraph: {
-    owner: {
-      id: string;
-      type: string;
-      owner: {
-        id: string;
-        type: string;
-      };
-    };
-  };
-  createTime: string;
-  updateTime: string;
-}
-```
-
-#### Payment Code Types
-```ts
-interface CreatePaymentCodeResponse {
-  id: string;
-  mode: string;              // "recurrent"
-  status: string;            // Payment status
-  name: string;              // Payment name
-  amount: {
-    currency: string;
-    value: number;           // Amount in cents
-  };
-  enable: boolean;
-  expireTime: string;        // ISO timestamp
-  customer: { name: string };
-  ussdCode: string;          // USSD code for payment
-  reference: string;
-  authorizedProviders: string[];
-  authorizedPhoneNumber: string;
-  recurrentPaymentTarget: {
-    expectedPaymentCount: number;
-    expectedPaymentTotal: {
-      currency: string;
-      value: number;
-    };
-  };
-  financialAccountId: string;
-  processedPaymentData: {
-    amount: { currency: string; value: number };
-    orderId: string;
-    paymentId: string;
-    orderNumber: string;
-    channelData: {
-      providerId: string;
-      accountId: string;
-      reference: string;
-    };
-    financialTransactionReference: string;
-  };
-  createTime: string;
-  updateTime: string;
-  ownershipGraph: OwnershipGraph;
-}
-```
-
-#### Checkout Session Types
-```ts
-interface CreateCheckoutResponse {
-  id: string;
-  status: string;
-  name: string;
-  orderNumber: string;       // Generated order number
-  reference: string;
-  description: string;
-  redirectUrl: string;       // Checkout page URL
-  cancelUrl: string;
-  successUrl: string;
-  lineItems: {
-    data: Array<{
-      type: string;
-      id: string;
-      name: string;
-      price: { currency: string; value: number };
-      quantity: number;
-      reference: string;
-      description: string;
-      images: string[];
-    }>;
-  };
-  financialAccountId: string;
-  brandingOptions: {
-    primaryColor: string;
-  };
-  expireTime: string;
-  createTime: string;
-  ownershipGraph: OwnershipGraph;
-}
-```
-
-#### Common Types
-```ts
-// Pagination for list responses
-interface Pagination {
-  count: number;       // Number of items in this page (not a grand total)
-  next: string | null; // Cursor for the next page; null on the last page
-}
-
-// Ownership information
-interface OwnershipGraph {
-  owner: {
-    id: string;
-    type: string;
-    owner: {
-      id: string;
-      type: string;
-    };
-  };
-}
-
-// Amount representation
-interface Amount {
-  currency: string; // Always "SLE"
-  value: number;    // Amount in cents (multiply by 100 for SLE)
-}
-```
-
-### Type Usage Examples
+- **Amounts** are `{ currency, value }` with `value` in minor units (cents).
+- **List responses** are arrays: `ListPayoutsResponse` is `Payout[]`, and the
+  cursor is on `result.pagination`.
+- **Nullable fields** follow the API: `balance` is null unless asked for with
+  `withBalance`, `fees` stays null until a payout is processed, and so on.
 
 ```ts
-// Type-safe account creation
-const createAccountTyped = async (name: string): Promise<CreateFinancialAccountResponse | null> => {
-  const result = await client.financialAccount.create({
-    accountName: name,
-    currency: "SLE"
-  });
-  return result.success ? result.data! : null;
-};
-
-// Type-safe payout with validation
-const createMobileMoneyPayout = async (
-  amount: number,
+// Type-safe mobile money payout
+const pay = async (
+  amount: number, // minor units
   phoneNumber: string,
-  sourceAccount: string
-): Promise<CreatePayoutResponse | null> => {
-  const result = await client.payout.create({
-    amount,
-    sourceAccount,
-    destination: {
-      type: "momo",
-      providerId: "m17",
-      phoneNumber,
-    }
-  });
+  reference: string,
+): Promise<Payout | null> => {
+  const result = await client.payout.create(
+    { amount, destination: { type: "momo", providerId: "m17", phoneNumber } },
+    { idempotencyKey: idempotencyKeyFor(`payout:${reference}`) },
+  );
   return result.success ? result.data! : null;
-};
-
-// Type-safe transaction processing
-const processTransactions = async (): Promise<void> => {
-  const txResult = await client.financialTransaction.list();
-  
-  if (txResult.success && txResult.data) {
-    const transactions: ListTransactionsResponse = txResult.data;
-    
-    transactions.result.forEach((tx: RetrieveTransactionResponse) => {
-      console.log(`Transaction ${tx.id}: ${tx.amount.value / 100} ${tx.amount.currency}`);
-    });
-  }
 };
 ```
 

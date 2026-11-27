@@ -21,18 +21,25 @@ async function main() {
 
   const account = created.data!;
   console.log("Created account:", account.id);
-  console.log("Available balance:", account.balance.available.value, account.currency);
+  console.log("UVAN (to send money in):", account.uvan);
 
-  // 2. Retrieve it again by ID.
-  const fetched = await client.financialAccount.retrieve(account.id);
+  // 2. Retrieve it again by ID, with its balance (null unless asked for).
+  const fetched = await client.financialAccount.retrieve(account.id, {
+    withBalance: true,
+  });
   if (fetched.success) {
     console.log("Fetched account name:", fetched.data!.name);
+    console.log(
+      "Available balance (minor units):",
+      fetched.data!.balance?.available.value,
+      account.currency,
+    );
   }
 
   // 3. List every account in the space.
   const all = await client.financialAccount.list();
   if (all.success) {
-    console.log(`You have ${all.data!.result.length} account(s).`);
+    console.log(`You have ${all.data!.length} account(s).`);
   }
 }
 

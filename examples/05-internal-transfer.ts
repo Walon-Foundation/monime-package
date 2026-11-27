@@ -33,7 +33,7 @@ async function main() {
   // List all transfers.
   const all = await client.internalTransfer.list();
   if (all.success) {
-    console.log(`Total transfers: ${all.data!.result.length}`);
+    console.log(`Total transfers: ${all.data!.length}`);
   }
 }
 

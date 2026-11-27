@@ -25,16 +25,15 @@ export class WebhookAPI extends HttpClient {
 	): Promise<Result<CreateWebhookResponse>> {
 		const validation = createWebhookSchema.safeParse(options);
 
-		if (!validation.success) {
-			return { success: false, error: new Error(validation.error.message) };
-		}
+		if (!validation.success) return this.invalid(validation.error);
 
 		const idempotencyKey = this.idempotencyKey(requestOptions);
 
 		return this.request<CreateWebhookResponse>({
 			method: "POST",
 			path: this.path,
-			body: options,
+			// apiRelease is required by the API; caph is the latest release.
+			body: { ...options, apiRelease: options.apiRelease ?? "caph" },
 			idempotencyKey,
 		});
 	}
@@ -44,6 +43,8 @@ export class WebhookAPI extends HttpClient {
 	 * @param webhookId - The unique identifier of the webhook.
 	 */
 	async retrieve(webhookId: string): Promise<Result<GetWebhookResponse>> {
+		if (!webhookId) return this.invalid("webhookId is required");
+
 		return this.request<GetWebhookResponse>({
 			method: "GET",
 			path: `${this.path}/${webhookId}`,
@@ -64,18 +65,19 @@ export class WebhookAPI extends HttpClient {
 	/**
 	 * Update an existing webhook.
 	 * @param webhookId - The unique identifier of the webhook.
-	 * @param options - The updated webhook data.
+	 * @param options - The fields to change. The verification method cannot
+	 * change; create a new webhook to rotate it.
 	 */
 	async update(
 		webhookId: string,
 		options: UpdateWebhookRequest,
 		requestOptions?: MutationOptions,
 	): Promise<Result<UpdateWebhookResponse>> {
+		if (!webhookId) return this.invalid("webhookId is required");
+
 		const validation = updateWebhookSchema.safeParse(options);
 
-		if (!validation.success) {
-			return { success: false, error: new Error(validation.error.message) };
-		}
+		if (!validation.success) return this.invalid(validation.error);
 
 		const idempotencyKey = this.idempotencyKey(requestOptions);
 
@@ -92,6 +94,8 @@ export class WebhookAPI extends HttpClient {
 	 * @param webhookId - The unique identifier of the webhook.
 	 */
 	async delete(webhookId: string): Promise<Result<void>> {
+		if (!webhookId) return this.invalid("webhookId is required");
+
 		return this.request<void>({
 			method: "DELETE",
 			path: `${this.path}/${webhookId}`,

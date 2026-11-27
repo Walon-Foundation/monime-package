@@ -10,6 +10,8 @@ export class MomoAPI extends HttpClient {
 	 * @param providerId - The unique identifier of the MoMo provider.
 	 */
 	async retrieve(providerId: string): Promise<Result<RetrieveMomoResponse>> {
+		if (!providerId) return this.invalid("providerId is required");
+
 		return this.request<RetrieveMomoResponse>({
 			method: "GET",
 			path: `${this.path}/${providerId}`,
@@ -17,13 +19,21 @@ export class MomoAPI extends HttpClient {
 	}
 
 	/**
-	 * List a page of mobile money providers.
+	 * List a page of mobile money providers operating in a country.
+	 * @param country - ISO 3166-1 alpha-2 code, e.g. `SL`. The API requires it.
 	 */
-	async list(options?: ListOptions): Promise<Result<ListMomosResponse>> {
+	async list(
+		country: string,
+		options?: ListOptions,
+	): Promise<Result<ListMomosResponse>> {
+		if (!country || country.trim() === "") {
+			return this.invalid("country is required, e.g. SL");
+		}
+
 		return this.request<ListMomosResponse>({
 			method: "GET",
 			path: this.path,
-			query: this.listQuery(options),
+			query: this.listQuery(options, { country }),
 		});
 	}
 }

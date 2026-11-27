@@ -1,153 +1,70 @@
-import type { Pagination } from "./core";
-export interface CreateInternalTransferResponse {
+import type {
+	Amount,
+	Currency,
+	Metadata,
+	MetadataInput,
+	OwnershipGraph,
+} from "./core";
+
+export interface CreateInternalTransferOptions {
+	/** Financial account ID the money leaves (at most 64 characters). */
+	sourceAccount: string;
+	/** Financial account ID the money arrives in, in the same Space. */
+	destinationAccount: string;
+	/** In minor units: 1050 is SLE 10.50. */
+	amount: number;
+	/** Defaults to `"SLE"`. */
+	currency?: Currency;
+	/** At most 150 characters. */
+	description?: string;
+	metadata?: MetadataInput;
+}
+
+export const INTERNAL_TRANSFER_STATUSES = [
+	"pending",
+	"processing",
+	"failed",
+	"completed",
+] as const;
+export type InternalTransferStatus =
+	(typeof INTERNAL_TRANSFER_STATUSES)[number];
+
+export interface ListInternalTransfersOptions {
+	limit?: number;
+	after?: string;
+	status?: InternalTransferStatus;
+	sourceFinancialAccountId?: string;
+	destinationFinancialAccountId?: string;
+	financialTransactionReference?: string;
+}
+
+/** `null` clears the description; `null` or `""` deletes a metadata key. */
+export interface UpdateInternalTransferOptions {
+	/** At most 255 characters. */
+	description?: string | null;
+	metadata?: MetadataInput | null;
+}
+
+export interface InternalTransfer {
 	id: string;
-	status: string;
+	status: InternalTransferStatus;
 	amount: Amount;
-	sourceFinancialAccount: SourceFinancialAccount;
-	destinationFinancialAccount: SourceFinancialAccount;
-	financialTransactionReference: string;
-	description: string;
-	failureDetail: FailureDetail;
-	ownershipGraph: OwnershipGraph;
+	sourceFinancialAccount: { id: string };
+	destinationFinancialAccount: { id: string };
+	financialTransactionReference: string | null;
+	description: string | null;
+	failureDetail: {
+		code: "unknown" | "fund_insufficient";
+		message: string | null;
+	} | null;
+	ownershipGraph: OwnershipGraph | null;
 	createTime: string;
-	updateTime: string;
-	// metadata: Metadata;
+	updateTime: string | null;
+	metadata: Metadata | null;
 }
 
-interface OwnershipGraph {
-	owner: Owner2;
-}
-
-interface Owner2 {
-	id: string;
-	type: string;
-	// metadata: Metadata;
-	owner: Owner;
-}
-
-interface Owner {
-	id: string;
-	type: string;
-	// metadata: Metadata;
-	// owner: Metadata;
-}
-
-interface FailureDetail {
-	code: string;
-	message: string;
-}
-
-interface SourceFinancialAccount {
-	id: string;
-}
-
-interface Amount {
-	currency: string;
-	value: number;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-export interface ListInternalTransfersResponse {
-	result: Transfer[];
-	pagination: Pagination;
-}
-
-interface Transfer {
-	id: string;
-	status: string;
-	amount: Amount;
-	sourceFinancialAccount: SourceFinancialAccount;
-	destinationFinancialAccount: SourceFinancialAccount;
-	financialTransactionReference: string;
-	description: string;
-	failureDetail: FailureDetail;
-	ownershipGraph: OwnershipGraph;
-	createTime: string;
-	updateTime: string;
-	//   metadata: Metadata;
-}
-
-interface OwnershipGraph {
-	owner: Owner2;
-}
-
-interface Owner2 {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	owner: Owner;
-}
-
-interface Owner {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	//   owner: Metadata;
-}
-
-interface FailureDetail {
-	code: string;
-	message: string;
-}
-
-interface SourceFinancialAccount {
-	id: string;
-}
-
-interface Amount {
-	currency: string;
-	value: number;
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-export interface UpdateInternalTransferResponse
-	extends RetrieveInternalTransferResponse {}
-
-export interface RetrieveInternalTransferResponse {
-	id: string;
-	status: string;
-	amount: Amount;
-	sourceFinancialAccount: SourceFinancialAccount;
-	destinationFinancialAccount: SourceFinancialAccount;
-	financialTransactionReference: string;
-	description: string;
-	failureDetail: FailureDetail;
-	ownershipGraph: OwnershipGraph;
-	createTime: string;
-	updateTime: string;
-	//   metadata: Metadata;
-}
-
-interface OwnershipGraph {
-	owner: Owner2;
-}
-
-interface Owner2 {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	owner: Owner;
-}
-
-interface Owner {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	//   owner: Metadata;
-}
-
-interface FailureDetail {
-	code: string;
-	message: string;
-}
-
-interface SourceFinancialAccount {
-	id: string;
-}
-
-interface Amount {
-	currency: string;
-	value: number;
-}
+export type CreateInternalTransferResponse = InternalTransfer;
+export type RetrieveInternalTransferResponse = InternalTransfer;
+export type UpdateInternalTransferResponse = InternalTransfer;
+/** `data` of a list call is the page of transfers; the cursor is in `pagination`. */
+export type ListInternalTransfersResponse = InternalTransfer[];
