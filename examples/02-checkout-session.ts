@@ -1,20 +1,26 @@
 /**
  * Checkout sessions: create a hosted payment page and get its redirect URL.
  *
- * Amounts are in minor units of the currency (cents). `2500` = 25.00 SLE.
+ * Prices are in minor units of the currency (cents). `2500` = 25.00 SLE.
  */
 import { client } from "./client";
 
 async function main() {
   const checkout = await client.checkoutSession.create({
     name: "Premium Subscription",
-    amount: 2500, // 25.00 SLE per item
-    quantity: 1,
+    description: "Monthly premium subscription",
     successUrl: "https://myapp.com/success",
     cancelUrl: "https://myapp.com/cancel",
-    description: "Monthly premium subscription",
-    primaryColor: "#3B82F6",
-    images: ["https://myapp.com/images/premium.jpg"],
+    reference: "sub-2026-11-0001",
+    lineItems: [
+      {
+        name: "Premium (1 month)",
+        price: { currency: "SLE", value: 2500 }, // 25.00 SLE per item
+        quantity: 1,
+        images: ["https://myapp.com/images/premium.jpg"],
+      },
+    ],
+    brandingOptions: { primaryColor: "#3B82F6" },
   });
 
   if (!checkout.success) {
@@ -30,7 +36,7 @@ async function main() {
   // List existing checkout sessions.
   const all = await client.checkoutSession.list();
   if (all.success) {
-    console.log(`Total checkout sessions: ${all.data!.result.length}`);
+    console.log(`Total checkout sessions: ${all.data!.length}`);
   }
 }
 

@@ -26,13 +26,14 @@ async function main() {
   // 2. Hosted checkout page for the customer.
   const checkout = await client.checkoutSession.create({
     name: "Digital Camera",
-    amount: 45000, // 450.00 SLE
-    quantity: 1,
+    description: "Professional DSLR Camera with lens kit",
     successUrl: "https://store.com/success",
     cancelUrl: "https://store.com/cancel",
-    description: "Professional DSLR Camera with lens kit",
     financialAccountId: accountId,
-    primaryColor: "#2563EB",
+    lineItems: [
+      { name: "DSLR camera with lens kit", price: { value: 45000 } }, // 450.00 SLE
+    ],
+    brandingOptions: { primaryColor: "#2563EB" },
   });
   if (checkout.success) {
     console.log("2. Checkout URL:", checkout.data!.redirectUrl);
@@ -40,11 +41,10 @@ async function main() {
 
   // 3. USSD payment code as an alternative for customers without cards.
   const paymentCode = await client.paymentCode.create({
-    paymentName: "Invoice #INV-2024-001",
-    amount: 450, // 450.00 SLE (major units for payment codes)
+    name: "Invoice #INV-2024-001",
+    amount: { value: 45000 }, // 450.00 SLE, in minor units like everywhere else
     financialAccountId: accountId,
-    name: "Customer Name",
-    phoneNumber: "0771234567",
+    customer: { name: "Customer Name" },
   });
   if (paymentCode.success) {
     console.log("3. USSD code:", paymentCode.data!.ussdCode);
