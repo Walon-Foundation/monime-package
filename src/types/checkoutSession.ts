@@ -1,193 +1,106 @@
-import type { Pagination } from "./core";
+import type {
+	Amount,
+	AmountInput,
+	Metadata,
+	MetadataInput,
+	OwnershipGraph,
+} from "./core";
+import type {
+	BankProviderId,
+	MomoProviderId,
+	WalletProviderId,
+} from "./payout";
 
-export interface ListCheckoutsResponse {
-	result: CheckoutSession[];
-	Pagination: Pagination;
+/** One line on the hosted checkout page. */
+export interface CheckoutLineItemInput {
+	/** Only `custom` exists today; it is the default. */
+	type?: "custom";
+	/** At most 100 characters. */
+	name: string;
+	/** Unit price in minor units. Defaults to SLE. */
+	price: AmountInput;
+	/** 1 to 100,000; defaults to 1. */
+	quantity?: number;
+	/** At most 100 characters. */
+	reference?: string;
+	/** At most 100 characters. */
+	description?: string;
+	/** Up to 3 image URLs. */
+	images?: string[];
 }
 
-interface CheckoutSession {
-	id: string;
-	status: string;
+interface ProviderOption<P extends string> {
+	disable?: boolean;
+	enabledProviders?: (P | (string & {}))[];
+	disabledProviders?: (P | (string & {}))[];
+}
+
+/** Which payment methods the checkout page offers. All are on by default. */
+export interface CheckoutPaymentOptions {
+	card?: { disable?: boolean };
+	bank?: ProviderOption<BankProviderId>;
+	momo?: ProviderOption<MomoProviderId>;
+	wallet?: ProviderOption<WalletProviderId>;
+}
+
+/** Creates a hosted checkout session. Field names match the API. */
+export interface CreateCheckoutOptions {
+	/** At most 150 characters. */
 	name: string;
-	orderNumber: string;
-	reference: string;
-	description: string;
+	/** At most 1000 characters. */
+	description?: string;
+	cancelUrl?: string;
+	successUrl?: string;
+	/** Returned to you unchanged; at most 255 characters. */
+	callbackState?: string;
+	/** Your own reference; at most 255 characters. */
+	reference?: string;
+	/** Account the payment lands in; the Space's main one otherwise. */
+	financialAccountId?: string;
+	/** 1 to 16 items. */
+	lineItems: CheckoutLineItemInput[];
+	paymentOptions?: CheckoutPaymentOptions;
+	brandingOptions?: { primaryColor?: string };
+	metadata?: MetadataInput;
+}
+
+export type CheckoutSessionStatus =
+	| "pending"
+	| "cancelled"
+	| "expired"
+	| "completed";
+
+export interface CheckoutLineItem {
+	type: "custom";
+	name: string;
+	price: Amount;
+	quantity: number;
+	reference: string | null;
+	description: string | null;
+	images: string[] | null;
+}
+
+export interface CheckoutSession {
+	id: string;
+	status: CheckoutSessionStatus;
+	name: string;
+	orderNumber: string | null;
+	reference: string | null;
+	description: string | null;
+	/** The hosted page to send the payer to. */
 	redirectUrl: string;
 	cancelUrl: string;
 	successUrl: string;
-	lineItems: LineItems;
-	financialAccountId: string;
-	brandingOptions: BrandingOptions;
+	lineItems: { data: CheckoutLineItem[] | null };
+	financialAccountId: string | null;
+	brandingOptions: { primaryColor: string } | null;
 	expireTime: string;
 	createTime: string;
-	ownershipGraph: OwnershipGraph;
-	//   metadata: Metadata;
+	ownershipGraph: OwnershipGraph | null;
+	metadata: Metadata | null;
 }
 
-interface OwnershipGraph {
-	owner: Owner2;
-}
-
-interface Owner2 {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	owner: Owner;
-}
-
-interface Owner {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	//   owner: Metadata;
-}
-
-interface BrandingOptions {
-	primaryColor: string;
-}
-
-interface LineItems {
-	data: Datum[];
-}
-
-interface Datum {
-	type: string;
-	id: string;
-	name: string;
-	price: Price;
-	quantity: number;
-	reference: string;
-	description: string;
-	images: string[];
-}
-
-interface Price {
-	currency: string;
-	value: number;
-}
-
-//---------------------------------------------------------------------------------------------
-
-export interface RetrieveCheckoutResponse {
-	id: string;
-	status: string;
-	name: string;
-	orderNumber: string;
-	reference: string;
-	description: string;
-	redirectUrl: string;
-	cancelUrl: string;
-	successUrl: string;
-	lineItems: LineItems;
-	financialAccountId: string;
-	brandingOptions: BrandingOptions;
-	expireTime: string;
-	createTime: string;
-	ownershipGraph: OwnershipGraph;
-	//   metadata: Metadata;
-}
-
-interface OwnershipGraph {
-	owner: Owner2;
-}
-
-interface Owner2 {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	owner: Owner;
-}
-
-interface Owner {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	//   owner: Metadata;
-}
-
-interface BrandingOptions {
-	primaryColor: string;
-}
-
-interface LineItems {
-	data: Datum[];
-}
-
-interface Datum {
-	type: string;
-	id: string;
-	name: string;
-	price: Price;
-	quantity: number;
-	reference: string;
-	description: string;
-	images: string[];
-}
-
-interface Price {
-	currency: string;
-	value: number;
-}
-
-//-------------------------------------------------------------------------------------------------
-
-export interface CreateCheckoutResponse {
-	id: string;
-	status: string;
-	name: string;
-	orderNumber: string;
-	reference: string;
-	description: string;
-	redirectUrl: string;
-	cancelUrl: string;
-	successUrl: string;
-	lineItems: LineItems;
-	financialAccountId: string;
-	brandingOptions: BrandingOptions;
-	expireTime: string;
-	createTime: string;
-	ownershipGraph: OwnershipGraph;
-	//   metadata: Metadata;
-}
-
-interface OwnershipGraph {
-	owner: Owner2;
-}
-
-interface Owner2 {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	owner: Owner;
-}
-
-interface Owner {
-	id: string;
-	type: string;
-	//   metadata: Metadata;
-	//   owner: Metadata;
-}
-
-interface BrandingOptions {
-	primaryColor: string;
-}
-
-interface LineItems {
-	data: Datum[];
-}
-
-interface Datum {
-	type: string;
-	id: string;
-	name: string;
-	price: Price;
-	quantity: number;
-	reference: string;
-	description: string;
-	images: string[];
-}
-
-interface Price {
-	currency: string;
-	value: number;
-}
+export type CreateCheckoutResponse = CheckoutSession;
+export type RetrieveCheckoutResponse = CheckoutSession;
+/** `data` of a list call is the page of sessions; the cursor is in `pagination`. */
+export type ListCheckoutsResponse = CheckoutSession[];

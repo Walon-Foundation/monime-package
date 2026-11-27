@@ -1,102 +1,50 @@
 import { HttpClient } from "../http";
 import type { ListOptions, MutationOptions, Result } from "../types";
 import type {
+	CreateCheckoutOptions,
 	CreateCheckoutResponse,
 	ListCheckoutsResponse,
 	RetrieveCheckoutResponse,
 } from "../types/checkoutSession";
 import { createCheckoutSchema } from "../validators/checkoutSession.validator";
+import { compact } from "../validators/common";
 
-export interface CreateCheckoutOptions {
-	name: string;
-	amount: number;
-	quantity: number;
-	successUrl: string;
-	cancelUrl: string;
-	description?: string;
-	financialAccountId?: string;
-	primaryColor?: string;
-	images?: string[];
-}
+export type { CreateCheckoutOptions } from "../types/checkoutSession";
 
 export class CheckoutSessionAPI extends HttpClient {
 	private readonly path = "/checkout-sessions";
 
 	/**
-	 * Create a new checkout session for hosted payment pages.
+	 * Create a new checkout session for a hosted payment page. Send the payer
+	 * to the returned `redirectUrl`. Prices are in minor units.
 	 */
 	async create(
 		options: CreateCheckoutOptions,
 		requestOptions?: MutationOptions,
 	): Promise<Result<CreateCheckoutResponse>> {
 		const validation = createCheckoutSchema.safeParse(options);
+		if (!validation.success) return this.invalid(validation.error);
 
-		if (!validation.success) {
-			return { success: false, error: new Error(validation.error.message) };
-		}
-
-		const {
-			name,
-			description,
-			cancelUrl,
-			successUrl,
-			financialAccountId,
-			amount,
-			quantity,
-			images,
-			primaryColor,
-		} = options;
-
-		const body = {
-			name,
-			description,
-			cancelUrl,
-			successUrl,
-			callbackState: null,
-			reference: null,
-			financialAccountId: financialAccountId,
-			lineItems: [
-				{
-					type: "custom",
-					name,
+		const body = compact({
+			...options,
+			financialAccountId: options.financialAccountId || undefined,
+			lineItems: options.lineItems.map((item) =>
+				compact({
+					...item,
+					type: item.type ?? "custom",
 					price: {
-						currency: "SLE",
-						value: amount,
+						currency: item.price.currency ?? "SLE",
+						value: item.price.value,
 					},
-					quantity,
-					reference: null,
-					description: description,
-					images: images,
-				},
-			],
-			paymentOptions: {
-				card: { disable: false },
-				bank: {
-					disable: false,
-					enabledProviders: ["slb001", "slb004", "slb007"],
-				},
-				momo: {
-					disable: false,
-					enabledProviders: ["m17", "m18"],
-				},
-				wallet: {
-					disable: false,
-					enabledProviders: ["dw001"],
-				},
-			},
-			brandingOptions: {
-				primaryColor: primaryColor,
-			},
-			metadata: {},
-		};
-
-		const idempotencyKey = this.idempotencyKey(requestOptions);
+				}),
+			),
+		});
 
 		return this.request<CreateCheckoutResponse>({
 			method: "POST",
 			path: this.path,
 			body,
-			idempotencyKey,
+			idempotencyKey: this.idempotencyKey(requestOptions),
 		});
 	}
 
@@ -118,6 +66,8 @@ export class CheckoutSessionAPI extends HttpClient {
 	async retrieve(
 		checkoutId: string,
 	): Promise<Result<RetrieveCheckoutResponse>> {
+		if (!checkoutId) return this.invalid("checkoutId is required");
+
 		return this.request<RetrieveCheckoutResponse>({
 			method: "GET",
 			path: `${this.path}/${checkoutId}`,
@@ -129,6 +79,8 @@ export class CheckoutSessionAPI extends HttpClient {
 	 * @param checkoutId - The unique identifier of the checkout session.
 	 */
 	async delete(checkoutId: string): Promise<Result<void>> {
+		if (!checkoutId) return this.invalid("checkoutId is required");
+
 		return this.request<void>({
 			method: "DELETE",
 			path: `${this.path}/${checkoutId}`,
