@@ -6,9 +6,15 @@ All notable changes to `monime-package` are recorded here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-27
+
 Brings the SDK in line with the Monime API spec for release `caph.2025-08-23`
-(`https://docs.monime.io/apis/openapi.json`). It contains breaking changes and
-is planned as **2.0.0**.
+(`https://docs.monime.io/apis/openapi.json`).
+
+> **This minor release breaks the 1.1.x API** in the places marked
+> **BREAKING** below. Semantic versioning would call it 2.0.0. A range such as
+> `^1.1.9` will install it automatically, so pin `~1.1.9` (or `1.1.9`) until
+> your code follows the migration notes.
 
 ### Added
 

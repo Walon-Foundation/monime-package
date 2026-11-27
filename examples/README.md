@@ -84,5 +84,5 @@ every time, so a retry from another process or after a restart is still safe.
 
 Monime works in a currency's **minor units** (cents), and so does every method
 in this SDK: `45000` is 450.00 SLE. Payment codes and checkout prices take
-`{ currency?, value }`, where `currency` defaults to `"SLE"`. Before 2.0.0 the
+`{ currency?, value }`, where `currency` defaults to `"SLE"`. Before 1.2.0 the
 payment code helper took whole leones and multiplied by 100; it no longer does.
