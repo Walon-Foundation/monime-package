@@ -10,6 +10,8 @@ export class BankAPI extends HttpClient {
 	 * @param providerId - The unique identifier of the bank provider.
 	 */
 	async retrieve(providerId: string): Promise<Result<RetrieveBankResponse>> {
+		if (!providerId) return this.invalid("providerId is required");
+
 		return this.request<RetrieveBankResponse>({
 			method: "GET",
 			path: `${this.path}/${providerId}`,
@@ -17,13 +19,21 @@ export class BankAPI extends HttpClient {
 	}
 
 	/**
-	 * List a page of banks.
+	 * List a page of banks operating in a country.
+	 * @param country - ISO 3166-1 alpha-2 code, e.g. `SL`. The API requires it.
 	 */
-	async list(options?: ListOptions): Promise<Result<ListBanksResponse>> {
+	async list(
+		country: string,
+		options?: ListOptions,
+	): Promise<Result<ListBanksResponse>> {
+		if (!country || country.trim() === "") {
+			return this.invalid("country is required, e.g. SL");
+		}
+
 		return this.request<ListBanksResponse>({
 			method: "GET",
 			path: this.path,
-			query: this.listQuery(options),
+			query: this.listQuery(options, { country }),
 		});
 	}
 }
