@@ -73,13 +73,16 @@ key when retrying a failed call — the SDK otherwise generates a fresh key per
 call, which makes a retry look like a brand-new operation:
 
 ```ts
-const idempotencyKey = randomUUID();
+const idempotencyKey = idempotencyKeyFor("payout:invoice-42:1"); // or randomUUID()
 await client.payout.create({ ... }, { idempotencyKey });
 ```
 
+`idempotencyKeyFor(reference)` derives the same key from the same reference
+every time, so a retry from another process or after a restart is still safe.
+
 ## Notes on amounts
 
-Monime works in a currency's **minor units** (cents). Most methods take the raw
-minor-unit value (`45000` = 450.00 SLE). The **payment code** helper is the
-exception — it accepts a major-unit amount (`450` = 450.00 SLE) and converts it
-for you. Each example calls this out inline.
+Monime works in a currency's **minor units** (cents), and so does every method
+in this SDK: `45000` is 450.00 SLE. Payment codes and checkout prices take
+`{ currency?, value }`, where `currency` defaults to `"SLE"`. Before 2.0.0 the
+payment code helper took whole leones and multiplied by 100; it no longer does.
